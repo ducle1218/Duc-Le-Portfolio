@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duc Le | Mechanical Engineer</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .blueprint-grid {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    }
+    .dark .blueprint-grid {
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 25s linear infinite;
+    }
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-area {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- Header Navigation -->
+  <nav class="no-print sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <button id="theme-toggle" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-xs font-bold uppercase tracking-wider">
+        [ Toggle Theme ]
+      </button>
+
+      <div class="flex items-center gap-6 sm:gap-8">
+        <button onclick="switchTab('home')" class="tab-btn font-mono text-sm tracking-widest font-black uppercase text-rose-500 border-b-2 border-rose-500 py-1" id="btn-home">Home</button>
+        <button onclick="switchTab('resume')" class="tab-btn font-mono text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1" id="btn-resume">Resume</button>
+        <button onclick="switchTab('project')" class="tab-btn font-mono text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1" id="btn-project">Project</button>
+        <button onclick="switchTab('contact')" class="tab-btn font-mono text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1" id="btn-contact">Contact</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ======================== TAB: HOME ======================== -->
+  <div id="tab-home-content" class="tab-pane relative min-h-[calc(100vh-73px)] flex flex-col justify-between">
+    <div class="absolute inset-0 overflow-hidden bg-slate-900 dark:bg-slate-950 z-0">
+      
+      <video src="https://assets.mixkit.co/videos/preview/mixkit-background-of-a-digital-circuit-board-and-gears-41618-large.mp4" autoPlay loop muted playsInline class="absolute w-full h-full object-cover opacity-25 dark:opacity-15"></video>
+      
+      <div class="absolute inset-0 blueprint-grid opacity-20"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/30"></div>
+    </div>
+
+    <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
+      <div class="max-w-2xl bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 p-8 sm:p-12 rounded-3xl shadow-2xl">
+        <span class="font-mono text-xs tracking-[0.25em] text-rose-500 font-extrabold uppercase mb-3 inline-block">MECHANICAL ENGINEERING</span>
+        <h1 class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-2">Duc Le</h1>
+        <p class="font-mono text-sm tracking-widest text-slate-500 border-b-2 border-slate-100 dark:border-slate-800 pb-5 mb-5 max-w-xs mx-auto uppercase font-bold">Mechanical Engineer</p>
+        <p class="text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-300 mb-8">Mechanical engineering student and robotics specialist passionate about mechanical design, CAD modeling, and custom automation. Experienced in the VEX Robotics competition, mechanical prototyping, and advanced hands-on residential fabrication.</p>
+        <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-mono font-bold">
+          <button onclick="switchTab('project')" class="bg-rose-500 text-white px-5 py-2.5 rounded-full shadow-lg">Explore Projects ↗</button>
+          <button onclick="switchTab('contact')" class="border border-slate-200 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-full">Get in touch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Below the Fold Details -->
+    <div class="bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 relative z-10 py-16 px-6">
+      <div class="max-w-3xl mx-auto space-y-16">
+        <section class="space-y-6">
+          <h2 class="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 border-b pb-3">Work Experience</h2>
+          <div class="space-y-8">
+    <div class="relative pl-6 border-l-2 border-slate-100 dark:border-slate-900 last:border-0 group">
+      <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800 group-hover:bg-rose-500 transition-colors"></div>
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
+        <div>
+          <span class="font-bold text-slate-900 dark:text-white">Family Business</span>
+          <span class="text-slate-300 dark:text-slate-700 mx-2 select-none">—</span>
+          <span class="text-slate-500 dark:text-slate-400 text-sm font-medium">House Repair Specialist</span>
+        </div>
+        <span class="text-xs font-mono text-slate-400 dark:text-slate-600 font-semibold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-100 dark:border-slate-800">
+          May 2020 — March 2022
+        </span>
+      </div>
+      <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400 max-w-2xl whitespace-pre-line">
+        Repaired houses, structural elements such as doors, walls, and electrical components. Managed residential home expansion including room construction, part procurement, and schedule tracking.
+      </p>
+    </div>
+  </div>
+        </section>
+        <section class="space-y-6">
+          <h2 class="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 border-b pb-3">Expertise & Skills</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Engineering & CAD
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            AutoCAD
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Onshape
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            SolidWorks
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Reverse Engineering
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Mechanical Design
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Robotics & Electronics
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            VEX Robotics
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            V5 Brain
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Sensors & Automation
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Electronics
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Prototyping
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Software & Coding
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Python Coding
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            C++ Coding
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Java
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Algorithms
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Languages
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            English
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Vietnamese
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Chinese
+          </span>
+        
+      </div>
+    </div>
+  </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB: RESUME ======================== -->
+  <div id="tab-resume-content" class="tab-pane hidden max-w-5xl mx-auto px-6 py-12 space-y-8">
+    <div class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-xs">
+      <div>
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase font-mono text-rose-500">Curriculum Vitae</h1>
+        <p class="text-xs text-slate-500 mt-1">Ready for download, printing, or offline review.</p>
+      </div>
+      <button onclick="window.print()" class="px-5 py-2.5 bg-rose-500 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md">Print / Save as PDF</button>
+    </div>
+
+    <div class="print-area bg-white text-slate-900 border rounded-2xl shadow-xl max-w-4xl mx-auto p-8 sm:p-12 space-y-8">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 border-b-2 pb-6">
+        <div>
+          <h2 class="text-3xl font-black uppercase">Duc Le</h2>
+          <p class="text-sm font-mono font-extrabold text-rose-600 uppercase tracking-widest">Mechanical Engineer</p>
+        </div>
+        <div class="text-xs font-mono text-slate-600 space-y-1">
+          <p>Atlantic City, NJ</p>
+          <p>ducle1218@gmail.com</p>
+          <p>(609) 289-6897</p>
+          <p>github.com/ducle1218</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-2 space-y-6">
+          <div>
+            <h3 class="text-xs font-mono font-black text-slate-400 uppercase border-b pb-1.5">CAREER OBJECTIVE</h3>
+            <p class="text-xs sm:text-sm leading-relaxed text-slate-700 mt-2">Highly motivated mechanical engineering candidate with substantial expertise in AutoCAD, Onshape, VEX robotics modeling, and hands-on mechanical fabrication.</p>
+          </div>
+          <div>
+            <h3 class="text-xs font-mono font-black text-slate-400 uppercase border-b pb-1.5">EDUCATION</h3>
+            <p class="text-sm font-bold mt-2">Atlantic County Institute of Technology (ACIT)</p>
+            <p class="text-xs text-rose-600 font-mono">Technical High School Diploma Candidate | Sep 2022 - Present</p>
+          </div>
+          <div>
+            <h3 class="text-xs font-mono font-black text-slate-400 uppercase border-b pb-1.5">PRACTICAL EXPERIENCE</h3>
+            <div class="space-y-4 mt-2">
+    <div class="relative pl-6 border-l-2 border-slate-100 dark:border-slate-900 last:border-0 group">
+      <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800 group-hover:bg-rose-500 transition-colors"></div>
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
+        <div>
+          <span class="font-bold text-slate-900 dark:text-white">Family Business</span>
+          <span class="text-slate-300 dark:text-slate-700 mx-2 select-none">—</span>
+          <span class="text-slate-500 dark:text-slate-400 text-sm font-medium">House Repair Specialist</span>
+        </div>
+        <span class="text-xs font-mono text-slate-400 dark:text-slate-600 font-semibold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-100 dark:border-slate-800">
+          May 2020 — March 2022
+        </span>
+      </div>
+      <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400 max-w-2xl whitespace-pre-line">
+        Repaired houses, structural elements such as doors, walls, and electrical components. Managed residential home expansion including room construction, part procurement, and schedule tracking.
+      </p>
+    </div>
+  </div>
+          </div>
+        </div>
+        <div class="space-y-6 border-l pl-6">
+          <div>
+            <h3 class="text-xs font-mono font-black text-slate-400 uppercase border-b pb-1.5">TECHNICAL SPECIALTIES</h3>
+            <div class="space-y-4 mt-2">
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Engineering & CAD
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            AutoCAD
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Onshape
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            SolidWorks
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Reverse Engineering
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Mechanical Design
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Robotics & Electronics
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            VEX Robotics
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            V5 Brain
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Sensors & Automation
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Electronics
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Prototyping
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Software & Coding
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Python Coding
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            C++ Coding
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Java
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Algorithms
+          </span>
+        
+      </div>
+    </div>
+  
+    <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-900">
+      <h3 class="text-xs font-mono font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600 mb-3 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+        Languages
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            English
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Vietnamese
+          </span>
+        
+          <span class="text-xs px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 font-medium hover:border-rose-400 transition-colors">
+            Chinese
+          </span>
+        
+      </div>
+    </div>
+  </div>
+          </div>
+          <div>
+            <h3 class="text-xs font-mono font-black text-slate-400 uppercase border-b pb-1.5">AWARDS</h3>
+            <ul class="text-xs space-y-2 text-slate-700 list-disc pl-4 mt-2">
+              <li>VEX V5 Judge Award</li>
+              <li>6th Place Statewide Wind Turbine</li>
+              <li>Top 10 Academic Engineering Student</li>
+              <li>Top 10 Math Mayhem</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB: PROJECT ======================== -->
+  <div id="tab-project-content" class="tab-pane hidden max-w-6xl mx-auto px-6 py-12 space-y-10">
+    <div class="text-center space-y-2">
+      <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">CAD BLUEPRINT BLUEBOX</span>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">Portfolio Blueprint Boxes</h1>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-center gap-2 border-b pb-4 max-w-xl mx-auto">
+      <button onclick="filterProjects('ALL')" class="proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl">ALL</button>
+      <button onclick="filterProjects('INTERNSHIPS')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">INTERNSHIPS</button>
+      <button onclick="filterProjects('PERSONAL')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">PERSONAL</button>
+      <button onclick="filterProjects('STUDENT TEAMS')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">STUDENT TEAMS</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
+      
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="STUDENT TEAMS">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            STUDENT TEAMS
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            Competition Grade
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            High Stakes Competition Robot Build
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Designed a lightweight CAD-modeled chassis in Onshape and AutoCAD. Implemented dual-motor linear lifters and custom autonomous location sensors programmed in C++.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          Onshape, CAD, Robotics, Pneumatics, C++
+        </p>
+      </div>
+    </div>
+  
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="STUDENT TEAMS">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            STUDENT TEAMS
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            6th Place Statewide
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            Aerodynamic Wind Turbine Blade Assembly
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Optimized blade chord ratios and pitch angles for low wind speed start-ups. Awarded 6th place in the New Jersey State Wind Turbine Engineering Contest.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          Aerodynamics, Prototyping, 3D Printing, AutoCAD
+        </p>
+      </div>
+    </div>
+  
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="PERSONAL">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            PERSONAL
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            CAD Prototype Complete
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            3-Gear Planetary Drive Transmission
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Calculated torque multipliers, gear module ratios, and shaft tooth loads. Modeled full animation assembly in SolidWorks to test mechanical tolerances.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          SolidWorks, Gear Design, CNC Milling, G-Code
+        </p>
+      </div>
+    </div>
+  
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="INTERNSHIPS">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            INTERNSHIPS
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            Deployment Ready
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            Industrial Sheet Metal Core Lifter
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Formulated custom structural linkage tolerances for heavy-duty material handling. Designed pneumatic release check-valves to guarantee workplace safety factors.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          Pneumatics, Mechanical Linkages, Material Selection
+        </p>
+      </div>
+    </div>
+  
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="PERSONAL">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            PERSONAL
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            Testing Phase
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            Double-Axis Solar Tracking Rig
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Engineered sensor-driven alignment frame tracking real-time sun angles. Programmed adaptive automation routines using Python to boost photovoltaic output by 28%.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          Python, Sensors, CAD, Actuators, Reverse Engineering
+        </p>
+      </div>
+    </div>
+  
+    <div class="project-card relative bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-category="INTERNSHIPS">
+      <div class="absolute inset-0 blueprint-grid opacity-15 pointer-events-none"></div>
+      <div class="p-6 relative z-10 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-black px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+            INTERNSHIPS
+          </span>
+          <span class="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">
+            Design Locked
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <h3 class="font-extrabold text-neutral-900 dark:text-white text-lg tracking-tight hover:text-rose-500 transition-colors">
+            Custom Hydraulic Actuator Assembly
+          </h3>
+          <p class="text-xs sm:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+            Synthesized fluid flow equations and cylinder seal boundaries. Conducted finite element analysis (FEA) on support frames to prevent material fatigue failures.
+          </p>
+        </div>
+      </div>
+      <div class="p-6 pt-0 relative z-10 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/30">
+        <p class="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-black mb-1.5">
+          Tech Stack / CAD Tools
+        </p>
+        <p class="text-xs font-mono text-neutral-600 dark:text-neutral-300">
+          FEA Analysis, SolidWorks, Fluids, Stress Testing
+        </p>
+      </div>
+    </div>
+  
+    </div>
+  </div>
+
+  <!-- ======================== TAB: CONTACT ======================== -->
+  <div id="tab-contact-content" class="tab-pane hidden max-w-4xl mx-auto px-6 py-12 space-y-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 bg-white dark:bg-slate-900 border rounded-3xl p-8 sm:p-12 relative shadow-2xl">
+      <div class="absolute inset-0 blueprint-grid opacity-10"></div>
+      <div class="space-y-6 relative z-10">
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Let's Talk</h2>
+        <form onsubmit="alert('Message Transmitted! (Form Demo only)')" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Your Name *</label>
+            <input type="text" required class="w-full px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900" placeholder="Your Name" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Email *</label>
+            <input type="email" required class="w-full px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900" placeholder="your.email@example.com" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Message *</label>
+            <textarea rows="4" required class="w-full px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900" placeholder="Your Message"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-[#ff1756] text-white font-mono uppercase text-xs py-3 rounded-xl font-bold">SEND MESSAGE</button>
+        </form>
+      </div>
+
+      <div class="space-y-6 relative z-10 border-l pl-10">
+        <h2 class="text-3xl font-black">Contact Info</h2>
+        <p class="text-sm">Feel free to connect directly via LinkedIn or email:</p>
+        <p class="text-sm font-bold">Email: ducle1218@gmail.com</p>
+        <p class="text-sm font-bold">LinkedIn: linkedin.com/in/ducle</p>
+      </div>
+    </div>
+    <div class="text-center">
+      <button onclick="switchTab('home')" class="bg-[#ff1756] text-white font-mono uppercase tracking-widest px-12 py-3 rounded-full text-xs font-bold">HOME</button>
+    </div>
+  </div>
+
+  <footer class="no-print border-t border-slate-100 dark:border-slate-900 text-center py-8 text-[10px] font-mono text-slate-400">
+    <p>© 2026 Duc Le. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Tab switching engine
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId + '-content').classList.remove('hidden');
+      
+      // Update button highlights
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-rose-500', 'border-rose-500');
+        btn.classList.add('text-slate-500', 'border-transparent');
+      });
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('text-rose-500', 'border-rose-500');
+        activeBtn.classList.remove('text-slate-500', 'border-transparent');
+      }
+      window.scrollTo(0,0);
+    }
+
+    // Projects filtering engine
+    function filterProjects(cat) {
+      const cards = document.querySelectorAll('.project-card');
+      cards.forEach(card => {
+        if (cat === 'ALL' || card.getAttribute('data-category') === cat) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      
+      // Update active state of filter buttons
+      document.querySelectorAll('.proj-filter-btn').forEach(btn => {
+        if (btn.innerText === cat) {
+          btn.className = "proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl";
+        } else {
+          btn.className = "proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500";
+        }
+      });
+    }
+
+    // Theme toggle engine
+    const themeBtn = document.getElementById('theme-toggle');
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+    themeBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  </script>
+</body>
+</html>

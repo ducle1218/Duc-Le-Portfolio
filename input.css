@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* Your site toggles dark mode by adding a "dark" class higher up the tree
+   (that's what the old `darkMode: 'class'` config did). Tailwind v4 moved
+   this setting from JS config into CSS, so this line is the replacement. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Replaces the old `theme.extend.fontFamily.sans` from the CDN config block. */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+/* Safety net: Tailwind v4 auto-detects which files to scan for class names,
+   but pinning it explicitly guarantees it finds every class in this file
+   regardless of where you run the build from. */
+@source "./index.html";

@@ -1,0 +1,43 @@
+name: Build and deploy site
+
+on:
+  push:
+    branches: [main]   # change this if your default branch is called something else (e.g. master)
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Tailwind
+        run: npm install tailwindcss @tailwindcss/cli
+
+      - name: Build CSS
+        run: npx @tailwindcss/cli -i ./input.css -o ./output.css --minify
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .   # uploads the whole repo root (index.html + freshly-built output.css + your src/ assets)
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

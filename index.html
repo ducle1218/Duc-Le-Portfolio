@@ -669,39 +669,17 @@
         <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Professional Resume</h1>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <a href="src/assets/images/duc_le_resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
+        <a href="src/assets/resume/Duc_Le_Resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
           <span>Download Resume PDF</span>
         </a>
       </div>
     </div>
 
-    <!-- High Fidelity 1-Column Engineering Resume Sheet -->
-    <div class="resume-pdf-card relative w-full max-w-[83.33%] mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xl flex flex-col aspect-[8.5/11] origin-top scale-[1.2] mb-[21.57%]">
-      <img
-        id="resume-image"
-        src="src/assets/images/Duc_Le_Resume_preview.png"
-        alt="Duc Le's Professional Resume"
-        loading="lazy"
-        class="w-full h-full object-contain rounded-2xl"
-      />
-      <!-- Invisible clickable overlays mimicking the real hyperlinks embedded in the PDF -->
-      <a href="https://github.com/ducle1218" target="_blank" rel="noopener noreferrer"
-        aria-label="GitHub"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 65.36%; top: 8.92%; width: 4.90%; height: 1.18%;"
-      ></a>
-      <a href="https://www.linkedin.com/in/duc-le-35a330412/" target="_blank" rel="noopener noreferrer"
-        aria-label="LinkedIn"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 72.44%; top: 8.92%; width: 7.30%; height: 1.18%;"
-      ></a>
-      <a href="http://ducle1218.github.io/Duc-Le-Portfolio" target="_blank" rel="noopener noreferrer"
-        aria-label="Portfolio"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 81.37%; top: 8.92%; width: 7.30%; height: 1.18%;"
-      ></a>
+    <div class="live-resume-paper">
+      <iframe id="resume-frame" src="src/assets/resume/resume.html" title="Duc Le — Professional Resume" loading="lazy"></iframe>
     </div>
+    <script src="src/scripts/resume-presentation.js" defer></script>
   </div>
 
   <!-- ======================== TAB: PROJECT ======================== -->

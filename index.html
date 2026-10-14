@@ -563,6 +563,8 @@
     .border-white { border-color: #fff; }
     .dark\:border-slate-950:where(.dark, .dark *) { border-color: var(--color-slate-950, #020617); }
   </style>
+  <link rel="stylesheet" href="src/styles/projects.css">
+  <script src="src/scripts/project-presentation.js" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -836,440 +838,14 @@
     <p>© 2026 Duc Le. All rights reserved.</p>
   </footer>
 
+  <script src="src/scripts/engineering-projects.js"></script>
   <script>
     // Detailed projects documentation database
 
     const PROJECT_DETAILS = {
-      "box-11": `
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
-  <div class="lg:col-span-7 space-y-8">
-    <div class="space-y-2">
-      <div class="flex flex-wrap items-center gap-2.5">
-        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans">FEA &amp; GD&amp;T</h2>
-        <span class="font-mono text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/50">Documenting</span>
-      </div>
-      <p class="font-mono text-xs text-rose-500 font-bold uppercase tracking-wider">Simulation and tolerancing on 3D-printed robot parts</p>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-xs">
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">ROLE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Designer</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">CATEGORY</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Personal Project</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TOOL</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Onshape</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">CASE STUDY</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Robot Aligner</span>
-      </div>
-    </div>
-
-    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-      <h4 class="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">Skills Demonstrated</h4>
-      <div class="flex flex-wrap gap-2">
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Onshape</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">FEA / Structural Simulation</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Impact Load Estimation</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">GD&amp;T</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Hand-Calc Validation</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">FDM Print Design</span>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg> Project Overview</h3>
-      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">This project documents how I use finite element analysis and GD&amp;T on my own designs. I use one part as the case study: the aligner on my VEX robot, which squares the robot up against a surface and takes repeated hard hits. I checked it with FEA before trusting it in a match, then documented how it needs to fit its mating parts.</p>
-      <div class="grid grid-cols-3 gap-3 pt-1">
-        <!-- FILL IN: replace the dashes with your real numbers from the simulation -->
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">—</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Peak Stress</p>
-        </div>
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">—</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Safety Factor</p>
-        </div>
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">—</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Load Cases</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- FILL IN: replace each italic prompt with your own text and numbers -->
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg> Case Study: Aligner Impact Analysis</h3>
-      <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed -mt-2">How I went from a real impact to a stress result I could check, step by step.</p>
-      <div class="relative space-y-6 pl-8">
-        <div class="absolute left-[9px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-800"></div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-rose-500 border-4 border-white dark:border-slate-950 shadow-sm"></span>
-          <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Requirements</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">What the aligner does, what it hits and how often, and the pass/fail target (for example a minimum safety factor and a weight limit).</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Load estimate</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">How you converted the impact into a force: robot mass, speed at contact, and stopping distance (F is about 0.5 m v squared divided by d). Show a low, medium, and high case.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Simulation setup</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">Material and why, fixed supports, where the load is applied, mesh size, and the strength value you used for the printed material (and why it is conservative).</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Results</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">Peak stress and where it occurs for each load case, the safety factor, and whether the answer stopped changing when you refined the mesh.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Hand check</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">A simple beam or bending calculation of the same loading, and how close it came to the simulation.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Design change</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">What the results made you change (fillet, thickness, print orientation) with before and after stress.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Physical test</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">What happened on the robot or in a drop test, including any cracks or failures and what you did about them.</em></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 16.5 7.5 21 21 7.5 16.5 3z"/><path d="m7.5 8.5 1 1M10.5 5.5l1 1M13.5 2.5l1 1M4.5 11.5l1 1"/></svg> Case Study: Aligner Tolerancing</h3>
-      <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed -mt-2">How tolerances and GD&amp;T apply to a printed part that has to fit. Still being documented.</p>
-      <div class="relative space-y-6 pl-8">
-        <div class="absolute left-[9px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-800"></div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-rose-500 border-4 border-white dark:border-slate-950 shadow-sm"></span>
-          <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Fit requirements</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">Which features on the aligner have to fit or mate (holes, pegs, mounting surfaces) and what clearance each one needs.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Printer tolerance data</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">Measured results from test prints (nominal vs. actual hole and peg sizes) and the clearance or press-fit values you now use for your printer.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Toleranced drawing</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">The aligner drawing with dimensions and GD&T callouts (for example position of the mounting holes, flatness of the contact face) and why each one is there.</em></p>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">What changed</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1"><em class="text-slate-400 dark:text-slate-500">Any part you reprinted or redesigned because of a tolerance problem, and what you learned about printing to fit.</em></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="lg:col-span-5 space-y-6">
-    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
-      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">Simulation</span>
-        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Stress Plot</h4>
-      </div>
-      <img loading="lazy" decoding="async" src="src/assets/images/fea-gdt/aligner-stress-plot.jpg" alt="Onshape stress plot of the aligner under impact load" class="w-full" onerror="this.remove()" />
-      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Von Mises stress on the aligner at the estimated impact load. Add the load value and peak location here.</div>
-    </div>
-    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
-      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">Design</span>
-        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Aligner CAD</h4>
-      </div>
-      <img loading="lazy" decoding="async" src="src/assets/images/fea-gdt/aligner-cad.jpg" alt="CAD model of the aligner" class="w-full" onerror="this.remove()" />
-      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Final aligner geometry in Onshape. Add the key dimensions and print orientation here.</div>
-    </div>
-    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
-      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">GD&amp;T</span>
-        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Toleranced Drawing</h4>
-      </div>
-      <img loading="lazy" decoding="async" src="src/assets/images/fea-gdt/aligner-drawing.jpg" alt="Dimensioned drawing of the aligner with GD&amp;T callouts" class="w-full" onerror="this.remove()" />
-      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Add the drawing here once it is finished.</div>
-    </div>
-  </div>
-</div>
-`,
-      "box-12": `
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
-  <div class="lg:col-span-7 space-y-8">
-    <div class="space-y-2">
-      <div class="flex flex-wrap items-center gap-2.5">
-        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans">Quadruped Robot</h2>
-        <span class="font-mono text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/50">In Progress</span>
-      </div>
-      <p class="font-mono text-xs text-rose-500 font-bold uppercase tracking-wider">A four-legged walking robot (working title)</p>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-xs">
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">ROLE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Independent Builder</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">CATEGORY</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Personal Project</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TIMELINE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Oct 2026 — Present</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TYPE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Learning Project</span>
-      </div>
-    </div>
-
-    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-      <h4 class="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">Skills Demonstrated</h4>
-      <div class="flex flex-wrap gap-2">
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Robotics</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Real-Time Tracking</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Mechanical Design</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Independent R&amp;D</span>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg> Project Overview</h3>
-      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">I want to build a four-legged robot, like the Boston Dynamics dog, that walks using real-time tracking. This is a learning project rather than a major build: the goal is to understand how legged robots move and balance by making a small one myself.</p>
-    </div>
-
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Development Log</h3>
-      <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed -mt-2">Running notes from the build, newest first. Updated as work continues.</p>
-      <div class="relative space-y-6 pl-8">
-        <div class="absolute left-[9px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-800"></div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-rose-500 border-4 border-white dark:border-slate-950 shadow-sm"></span>
-          <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Oct 2026</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Started the project. Goal: a four-legged robot that walks using <strong class="text-slate-900 dark:text-white">real-time tracking</strong>, built mainly to learn how legged robots work.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="lg:col-span-5 space-y-6">
-    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
-      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">Progress</span>
-        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Concept</h4>
-      </div>
-      <img loading="lazy" decoding="async" src="src/assets/images/quadruped/quadruped-concept.jpg" alt="Early concept or CAD of the quadruped robot" class="w-full" onerror="this.remove()" />
-      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Add a sketch or early CAD here once you have one.</div>
-    </div>
-  </div>
-</div>
-`,
-      "box-7": `
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
-  <!-- Left: narrative -->
-  <div class="lg:col-span-7 space-y-8">
-    <div class="space-y-2">
-      <div class="flex flex-wrap items-center gap-2.5">
-        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans">
-          Volumetric Display
-        </h2>
-        <span class="font-mono text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/50">
-          In Progress
-        </span>
-      </div>
-      <p class="font-mono text-xs text-rose-500 font-bold uppercase tracking-wider">
-        Swept-Surface Glasses-Free 3D Display
-      </p>
-    </div>
-
-    <!-- Metadata Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-xs">
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">ROLE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Independent Builder</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">CATEGORY</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Personal Project</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TIMELINE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">2025 — Present</span>
-      </div>
-      <div>
-        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">CURRENT PHASE</span>
-        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Mechanical CAD</span>
-      </div>
-    </div>
-
-    <!-- Skills Demonstrated -->
-    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-      <h4 class="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">
-        Skills Demonstrated
-      </h4>
-      <div class="flex flex-wrap gap-2">
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
-          <img src="src/assets/images/logos/onshape_logo.png" alt="Onshape logo" class="w-3 h-3" />
-          Onshape
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
-          <img src="src/assets/images/logos/solidworks_icon.png" alt="SolidWorks logo" class="w-3 h-3" />
-          SolidWorks
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">FEA / Structural Simulation</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Snap-Fit &amp; DFM Design</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Motor &amp; Drivetrain Selection</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">FDM Print Optimization</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Independent R&D</span>
-      </div>
-    </div>
-
-    <!-- Overview -->
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg>
-        Project Overview
-      </h3>
-      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-        Basically it's a fake hologram — instead of a flat screen, a physical surface spins fast enough that synced LEDs paint a 3D image right into the air, and you can walk around it and see it from any angle, no headset or glasses needed. I got hooked on the idea after watching the video on the right and figured I'd try building my own version. Right now I'm heads-down in CAD — picking the motor, running structural sims, figuring out how the rotating assembly doesn't fly apart at speed — before I even touch the electronics or rendering side.
-      </p>
-      <div class="grid grid-cols-3 gap-3 pt-1">
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">20</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Radial Arms</p>
-        </div>
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">4,500°/s</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Sim Speed</p>
-        </div>
-        <div class="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-3.5 text-center">
-          <p class="font-mono font-black text-xl text-rose-600 dark:text-rose-400 leading-none">195x</p>
-          <p class="font-mono text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1.5">Stress Margin</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Highlights -->
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg>
-        Core Highlights
-      </h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-2 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          </span>
-          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Switched the spinning surface from one solid wall to <strong class="text-slate-900 dark:text-white">20 thin radial arms</strong> instead. Way less drag at speed, and if I ever want a bigger display I just make the arms longer instead of redesigning the whole thing.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-2 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
-          </span>
-          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Came up with a <strong class="text-slate-900 dark:text-white">3-point snap-fit joint</strong> connecting the center rod to the arms, filleted so the load spreads across all three points instead of blowing out one spot.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-2 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6m-6 0H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v10a2 2 0 01-2 2h-2" /></svg>
-          </span>
-          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Ran an FEA sim in Onshape on the center rod spinning at ~4,500 deg/s and got a peak stress of about <strong class="text-slate-900 dark:text-white">23 psi</strong>. PLA can handle roughly 12,000 psi, so there's a ton of margin left.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4 space-y-2 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" /></svg>
-          </span>
-          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Landed on a <strong class="text-slate-900 dark:text-white">brushless outrunner gimbal motor</strong> plus a slip ring to get power across the spinning joint, then redesigned the center rod so both route through it cleanly.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Development Log -->
-    <div class="space-y-4">
-      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        Development Log
-      </h3>
-      <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed -mt-2">
-        Running notes from the build, newest first. Updated as work continues.
-      </p>
-      <div class="relative space-y-6 pl-8">
-        <div class="absolute left-[9px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-800"></div>
-
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-rose-500 border-4 border-white dark:border-slate-950 shadow-sm"></span>
-          <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Aug 12</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Ran the center rod sim at 4,500 deg/s in Onshape. Max stress came out to <strong class="text-slate-900 dark:text-white">23 psi</strong> vs PLA's ~12,000 psi limit, so there's a ton of room to spare. Also test-fit three arms onto the rod to make sure the snap connection actually holds its shape under a ~0.28 lbf load.</p>
-          <div class="grid grid-cols-2 gap-2 mt-2">
-            <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug12-rod-fea.jpg" alt="Onshape FEA sim of the center rod" class="w-full rounded-xl border border-slate-200 dark:border-slate-800" />
-            <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug12-arm-fea.jpg" alt="Onshape FEA sim of a support arm" class="w-full rounded-xl border border-slate-200 dark:border-slate-800" />
-          </div>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Aug 11</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Added a new section to the rod to route power through the slip ring and stretched it out to fit all 10 arms plus the extra height from the gimbal motor. Also locked in the switch from the solid wall to <strong class="text-slate-900 dark:text-white">20 radial arms</strong>. Less drag, easier to scale up later. Next up: sim whether the arm snap-fits actually survive spinning that fast.</p>
-          <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug11-full-assembly.jpg" alt="Full CAD assembly with 20 radial arms" class="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-800 mt-2" />
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Aug 9 – 10</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Started looking into the electronics side, which is honestly the scarier half of this build. Picked the <strong class="text-slate-900 dark:text-white">gimbal motor</strong> over two faster options since it was closest to my target speed without being overkill, pulled in CAD models for the ESP32 and the magnetic encoder, and reused the motor mount to also hold the slip ring.</p>
-          <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug10-motor-coupling.jpg" alt="Motor to center rod attachment part" class="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-800 mt-2" />
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Aug 6 – 8</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Tried a slide-in snap connection between the rod and support structure. Not happy with it yet, so I'm just using screws for now until I revisit it. Also cut a wall segment's print time from about 10 hours down to <strong class="text-slate-900 dark:text-white">1–2 hours</strong> by hollowing it into a lattice instead of printing it solid.</p>
-          <div class="grid grid-cols-2 gap-2 mt-2">
-            <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug7-snap-sketch.jpg" alt="Hand sketch of the snap-fit connection" class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white" />
-            <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug8-lattice-slice.jpg" alt="Slicer preview of the hollow lattice wall" class="w-full rounded-xl border border-slate-200 dark:border-slate-800" />
-          </div>
-        </div>
-        <div class="relative">
-          <span class="absolute -left-8 top-0.5 w-[19px] h-[19px] rounded-full bg-white dark:bg-slate-950 border-4 border-slate-300 dark:border-slate-700"></span>
-          <span class="font-mono text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Aug 4 – 5</span>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-1">Compared the swept-surface idea against an LED matrix and an oscillating panel, and went with swept surface. It scales easier and doesn't get that flat/2D look the other two get when you view them off-angle. Picked a <strong class="text-slate-900 dark:text-white">1,000 RPM motor</strong> and started roughing out the first motor mount in CAD.</p>
-          <img loading="lazy" decoding="async" src="src/assets/images/volumetric/dev-aug4-concept-sketch.jpg" alt="Original hand-drawn concept sketch for the swept-surface idea" class="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white mt-2" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Right: Inspiration Video -->
-  <div class="lg:col-span-5 space-y-6">
-    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
-      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">Inspiration</span>
-        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">The Video That Started This</h4>
-      </div>
-      <div class="relative overflow-hidden aspect-4/3 bg-slate-950">
-        <iframe
-          class="absolute inset-0 w-full h-full"
-          src="https://www.youtube.com/embed/CCuybyAO8fs"
-          title="Video that inspired the Volumetric Display build"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-          loading="lazy"
-        ></iframe>
-      </div>
-      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-        Not my footage — I don't have my own demo yet, so this is the video that got me hooked on the idea in the first place. Basically a fake hologram: no actual 3D image, just a fast-spinning surface tricking your eyes. <a href="https://www.youtube.com/watch?v=CCuybyAO8fs" target="_blank" rel="noopener" class="text-rose-500 font-bold hover:underline">Watch it on YouTube ↗</a>
-      </div>
-    </div>
-  </div>
-</div>
-`,
+      "box-11": ENGINEERING_PROJECTS.fea,
+      "box-12": ENGINEERING_PROJECTS.quadruped,
+      "box-7": ENGINEERING_PROJECTS.volumetric,
       "box-6": `
 <div class="space-y-12 text-left">
   <!-- Top Branding Section -->
@@ -1963,12 +1539,7 @@
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t1-c1-1-multimeter.png" alt="Measuring voltage drop across the LED and resistor with a multimeter"
-    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Measuring voltage drop across the LED and resistor with a multimeter</p>
-</div><div class="my-3 max-w-md mx-auto">
+    <div class="my-3 max-w-md mx-auto">
   <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
     onerror="this.closest('div').style.display='none'">
     <source src="src/assets/video/arduino/t1-c1-1-multimeter.mp4" type="video/mp4">
@@ -2800,12 +2371,7 @@ if(digitalRead(button3) == LOW){ redValue=0;   greenValue=125; blueValue=255; } 
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-c3e-circuit.jpg" alt="4th button added for subtractive color control"
-    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">4th button added for subtractive color control</p>
-</div><div class="my-3 max-w-md mx-auto">
+    <div class="my-3 max-w-md mx-auto">
   <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
     onerror="this.closest('div').style.display='none'">
     <source src="src/assets/video/arduino/t3-c3d.mp4" type="video/mp4">
@@ -2839,12 +2405,7 @@ if(digitalRead(button1) == LOW &amp;&amp; redValue &lt; 255) {
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-3e-circuit.jpg" alt="RGB LED glowing blue after a random-color button press"
-    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">RGB LED lit with a random color</p>
-</div><div class="my-3 max-w-md mx-auto">
+    <div class="my-3 max-w-md mx-auto">
   <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
     onerror="this.closest('div').style.display='none'">
     <source src="src/assets/video/arduino/t3-c3e.mp4" type="video/mp4">
@@ -2909,12 +2470,7 @@ if(digitalRead(button1) == LOW &amp;&amp; redValue &lt; 255) {
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3 max-w-md mx-auto">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-c4-1-monitor.png" alt="Serial Monitor reading 700 steps, next to the code that produced it"
-    class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Monitor reads 700 steps (3.43V)</p>
-</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
 <div class="relative group/code my-2">
   <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
   Serial.begin(9600);
@@ -2942,12 +2498,7 @@ void loop() {
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-c4a-circuit.jpg" alt="Two equal resistors wired to split 5V in half"
-    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Two equal resistors splitting the 5V rail in half</p>
-</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
 <div class="relative group/code my-2">
   <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>// same analogRead(0) code as Challenge 4.1</code></pre>
   <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
@@ -2967,12 +2518,7 @@ void loop() {
     </div>
   </summary>
   <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-    <div class="my-3">
-  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-c4b-circuit.jpg" alt="4.7kΩ and 330Ω resistors wired to target a 4.5V output"
-    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
-    onerror="this.closest('div').style.display='none'" />
-  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">4.7kΩ + 330Ω resistor pair targeting 4.5V</p>
-</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
 <div class="relative group/code my-2">
   <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>// same analogRead(0) code as Challenge 4.1</code></pre>
   <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
@@ -9041,88 +8587,88 @@ void loop() {
 
     const TIMELINE_ITEMS = [
       {
-        id: 'box-11', title: 'FEA & GD&T', subtitle: 'Personal Project', category: 'PERSONAL',
-        dateLabel: '2026', location: 'Independent Build', icon: 'ruler', iconImage: '',
-        image: 'src/assets/images/fea-gdt/aligner-stress-plot.jpg', imageFit: 'cover',
-        tags: ['Onshape', 'FEA Simulation', 'GD&T'],
-        desc: 'Applying <strong>FEA</strong> and <strong>GD&T</strong> to 3D-printed parts, using the aligner from my VEX robot as the case study.\n• Checked the aligner against repeated impact loading with a stress simulation in Onshape.\n• Documenting how its fits and tolerances are specified (write-up in progress).'
+        id: 'box-12', title: 'Quadruped Robot', subtitle: 'Prototype in progress', category: 'PERSONAL',
+        dateLabel: 'Oct 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: '',
+        image: 'src/assets/images/quadruped-robot/folded-configuration.webp', imageFit: 'contain',
+        tags: ['Onshape', '3D Printing', 'Mechanism Design'],
+        desc: "Developing a <strong>folding quadruped</strong> with Ethan: servo packaging, printed fit checks, and a chassis redesign from 160 to 225 mm. One leg actuated; walking remains in development."
       },
       {
-        id: 'box-12', title: 'Quadruped Robot', subtitle: 'Personal Project', category: 'PERSONAL',
-        dateLabel: 'Oct 2026 — Present', location: 'Independent Build', icon: 'orbit', iconImage: '',
-        image: 'src/assets/images/quadruped/quadruped-concept.jpg', imageFit: 'cover',
-        tags: ['Robotics', 'Real-Time Tracking', 'Learning Project'],
-        desc: 'A four-legged walking robot in the spirit of the Boston Dynamics dog, built as a <strong>learning project</strong>.\n• Goal: walk using real-time tracking.\n• Early stage: documenting the build as it goes.'
-      },
-      {
-        id: 'box-7', title: 'Volumetric Display', subtitle: 'Personal Project', category: 'PERSONAL',
-        dateLabel: '2025 — Present', location: 'Independent Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
-        image: 'src/assets/images/volumetric_display.jpg', imageFit: 'cover',
+        id: 'box-7', title: 'Volumetric Display', subtitle: 'Mechanical development', category: 'PERSONAL',
+        dateLabel: 'Aug 2026 — Present', location: 'Independent Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
+        image: 'src/assets/images/volumetric-display/radial-arm-assembly.webp', imageFit: 'contain',
         tags: ['Onshape', 'SolidWorks', 'FEA Simulation'],
-        desc: 'It\'s basically an in-progress hologram: a physical volume swept fast enough that synced LEDs render true 3D imagery, viewable from <strong>any angle</strong>.\n• Rebuilt the rotating surface from a solid wall to <strong>20 lightweight radial arms</strong> driven by a brushless outrunner motor. Cuts aerodynamic drag at speed and lets the display scale by lengthening an arm instead of redesigning a whole panel.\n• Ran FEA on the center rod at <strong>~4,500 deg/s</strong> and found a peak stress of just <strong>23 psi</strong> against PLA\'s ~12,000 psi limit. That\'s enough margin to keep iterating the arm and snap-fit design without risking a mid-spin failure.'
+        desc: "From a solid wall to <strong>20 radial arms</strong>. A mechanical design study in printable joints, motor packaging, and preliminary structural analysis for a swept-volume display."
+      },
+      {
+        id: 'box-11', title: 'FEA & GD&T', subtitle: 'Documentation in progress', category: 'PERSONAL',
+        dateLabel: '2026', location: 'Independent Build', icon: 'ruler', iconImage: '',
+        image: 'src/assets/images/fea/vex-robot-assembly-cad.png', imageFit: 'contain',
+        tags: ['Onshape', 'FEA Simulation', 'GD&T'],
+        desc: "A developing study of the VEX robot aligner: connecting <strong>impact loading, printed-part design, and critical fits</strong>. Analysis documentation is in progress."
       },
       {
         id: 'box-3', title: 'SolidWorks CAD to Manufacturing Readiness', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: '2025 — Present', location: 'Independent Build', icon: 'ruler', iconImage: 'src/assets/images/logos/solidworks-cad-icon.png',
         image: 'src/assets/images/cswa_solidworks_practice.jpg', imageFit: 'cover',
         tags: ['SolidWorks', 'GD&T', 'DFM/DFA'],
-        desc: 'Working through the official SOLIDWORKS CSWA problem set to build CAD fluency for modeling parts.\n• Completed ' + CSWA_COMPLETED_COUNT + ' official practice problems spanning <strong>Levels 1-4</strong>, working from basic part creation up through complex parts with genuinely tricky geometry (no multi-body assemblies or sheet metal yet, that\'s still ahead).\n• Currently working on adding full <strong>GD&T-toleranced drawings</strong> and DFM/DFA reviews to select parts, checking tolerancing, tooling access, and cost the same way a part would be checked before going to production.'
+        desc: "Building CAD fluency through official CSWA practice parts. Extending selected models into <strong>toleranced drawings and manufacturing reviews</strong>."
       },
       {
         id: 'box-6', title: 'Vex Pushback Capstone', subtitle: 'Lead Robotics Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2025 — Apr 2026', location: 'Atlantic County Institute of Technology', icon: 'gear', iconImage: 'src/assets/images/logos/vex-capstone-icon.png',
         image: 'src/assets/images/capstone/Sprocket_Robot_CAD.png', imageFit: 'contain',
         tags: ['Onshape CAD', 'AutoCAD', 'C++', 'PID Control'],
-        desc: 'Designed and built a <strong>Judge\'s Award-winning</strong> competition robot as lead designer for a 4-person student team, taking it from a blank CAD file to a fully functional robot.\n• Designed a 6-motor drivetrain with an L-shaped intake mechanism on top to collect the balls, all in Onshape. Iterated the geometry across multiple revisions to break <strong>50+ points</strong> in skills trials while staying inside the competition\'s 18-inch cube size limit.\n• Built a sensor-based odometry system so our autonomous code ran reliably and consistently every match, paired with PID control to correct the robot if it drifted off its intended path. That let the robot run a fully autonomous <strong>3-ball routine</strong>, replacing the drifting open-loop navigation that held back prior teams, and finished in the <strong>top 25%</strong> at competition.'
+        desc: "Led CAD and mechanism design for a four-person team’s <strong>Judge’s Award-winning robot</strong>. Iterated the drivetrain, intake, and sensor-based autonomous control."
       },
       {
         id: 'box-4', title: 'Launch Vehicle Project', subtitle: 'Lead Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2024 — May 2025', location: 'Atlantic County Institute of Technology', icon: 'pencil', iconImage: 'src/assets/images/logos/launch-vehicle-icon.png',
         image: 'src/assets/images/launch_vehicle_cross_section.png', imageFit: 'contain',
         tags: ['MATLAB', 'SolidWorks', 'Structural Modeling'],
-        desc: '• Co-engineered a <strong>125ft orbital rocket\'s</strong> mission-critical staging, using MATLAB to optimize propulsion for a <strong>4,500 lb payload</strong>.\n• Modeled aerodynamic stress on the fairings and specified the Aluminum 6063-T5 shell design.'
+        desc: "A student launch-vehicle design study: <strong>staging, propulsion, and structural modeling</strong> for a 4,500 lb target payload using MATLAB and SolidWorks."
       },
       {
         id: 'box-1', title: 'High Stakes Competition Robot Build', subtitle: 'Robotics Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2025', location: 'Atlantic County Institute of Technology', icon: 'wrench', iconImage: 'src/assets/images/logos/robot-build-icon.png',
         image: 'src/assets/images/High_Stake_Robot.png', imageFit: 'cover',
         tags: ['Onshape', 'AutoCAD', 'C++'],
-        desc: '• Engineered a competition-ready chassis in <strong>Onshape</strong> and AutoCAD.\n• Programmed dual-motor lifters with custom <strong>C++ autonomy</strong> code for pinpoint positioning.'
+        desc: "Designed a competition robot chassis in <strong>Onshape and AutoCAD</strong>, then programmed dual-motor lifters and autonomous routines in C++."
       },
       {
         id: 'box-5', title: 'Arduino Electronics', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: 'Feb 2024', location: 'Independent Build', icon: 'bolt', iconImage: 'src/assets/images/logos/arduino-icon.png',
         image: 'src/assets/images/arduino/Arduino_Physical_Breadboard.jpg', imageFit: 'cover',
         tags: ['Arduino', 'C++', 'Circuit Design'],
-        desc: '• Built an 8-key synthesizer powered by a <strong>single Arduino analog pin</strong>.\n• Used a custom resistor ladder to decode button presses into <strong>real-time tone output</strong>.'
+        desc: "Built an <strong>eight-key Arduino synthesizer</strong> using a resistor ladder and one analog input. Circuit experiments connect physical wiring to real-time sound."
       },
       {
         id: 'box-8', title: 'Tower Design Project', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2024', location: 'Atlantic County Institute of Technology', icon: 'triangle', iconImage: 'src/assets/images/logos/tower-icon.png',
         image: 'src/assets/images/tower/Tower_Testing_Setup.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Structural Design', 'Load Testing'],
-        desc: '• CAD-modeled and built an 11" balsa tower with real <strong>tolerancing and torsional bracing</strong>.\n• The tower held 45 lbs — over <strong>1,200x its own weight</strong> — before failing under load testing.'
+        desc: "Designed and load-tested an 11-inch balsa tower with torsional bracing. The structure supported <strong>45 lb</strong> before failure."
       },
       {
         id: 'box-9', title: 'Sensor Challenge', subtitle: 'Team: Electrifying Tempest', category: 'STUDENT TEAMS',
         dateLabel: 'June 2023', location: 'Atlantic County Institute of Technology', icon: 'radar', iconImage: 'src/assets/images/logos/sensor-challenge-icon.png',
         image: 'src/assets/images/sensor-challenge/Sensor_Warehouse_Course.jpg', imageFit: 'cover',
         tags: ['Autonomy', 'Sonar', 'Sensor Fusion'],
-        desc: '• Programmed and tuned a robot to autonomously <strong>line-follow</strong> a warehouse course.\n• Used sonar to <strong>precisely park between boxes</strong>, refined through rapid iterative testing.'
+        desc: "Tuned a robot to <strong>follow a warehouse course and park between boxes</strong> using line sensors and sonar, refining behavior through iterative testing."
       },
       {
         id: 'box-10', title: 'Putt-Putt Boat: Straight-Line Redesign', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'May 2023', location: 'Atlantic County Institute of Technology', icon: 'wave', iconImage: 'src/assets/images/logos/puttputt-icon.png',
         image: 'src/assets/images/putt-putt/PuttPutt_Boat_Photo.jpg', imageFit: 'cover',
         tags: ['Rapid Prototyping'],
-        desc: '• Diagnosed the root cause of a straight-line drift bug in a <strong>candle-powered jet boat</strong>.\n• Redesigned it with an offset twin-straw exhaust, running <strong>58% faster</strong> than baseline while meeting all constraints.'
+        desc: "Diagnosed drift in a candle-powered boat and redesigned its twin-straw exhaust. The revised design ran <strong>58% faster</strong> than the baseline."
       },
       {
         id: 'box-2', title: 'Wind Turbine Competition', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Mar 2023', location: 'Atlantic County Institute of Technology', icon: 'wind', iconImage: 'src/assets/images/logos/wind-turbine-icon.png',
         image: 'src/assets/images/wind-turbine-notebook/wt-test-p8-3blade-12in.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Aerodynamics', '3D Printing'],
-        desc: '• Blade Iteration: Tuned blade geometry and pitch angle for <strong>low wind speeds</strong>.\n• Result: Landed <strong>6th place statewide</strong> against dozens of competing designs.'
+        desc: "Iterated blade geometry and pitch for low wind speeds. The student team’s design placed <strong>6th statewide</strong>."
       },
     ];
 

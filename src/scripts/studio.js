@@ -2,14 +2,33 @@
 (() => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const root = document.documentElement;
+  const theme = document.getElementById('theme-toggle');
+  function applyTheme() {
+    const dark = root.classList.contains('dark');
+    theme.textContent = dark ? 'Light mode ☀' : 'Dark mode ☾';
+    theme.setAttribute('aria-pressed',String(dark));
+    theme.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
+  }
+  theme.addEventListener('click',()=>{
+    root.classList.toggle('dark');
+    try { localStorage.setItem('portfolio-theme',root.classList.contains('dark')?'dark':'light'); } catch(e) {}
+    applyTheme();
+  });
+  applyTheme();
+  const sound = document.getElementById('film-sound');
+  sound.addEventListener('click',()=>{
+    film.muted=!film.muted;
+    sound.textContent=film.muted?'Unmute sound':'Mute sound';
+    sound.setAttribute('aria-pressed',String(!film.muted));
+  });
   const motion = document.getElementById('motion-toggle');
   const film = document.getElementById('hero-bg-video');
   const filmButton = document.getElementById('film-toggle');
   const machine = document.querySelector('.hero-machine');
   const features = {
-    robot:{id:'box-12',image:'quadruped-robot/folded-configuration.webp',alt:'CAD of the quadruped robot with all four legs folded beneath its chassis',label:'01 / QUADRUPED ROBOT',title:'Four legs. One compact fold.',status:'Latest CAD configuration · prototype in progress'},
-    display:{id:'box-7',image:'volumetric-display/radial-arm-assembly.webp',alt:'CAD of a volumetric display rotor with twenty radial arms',label:'02 / VOLUMETRIC DISPLAY',title:'A new dimension for light.',status:'20-arm rotor architecture · mechanical development'},
-    fea:{id:'box-11',image:'fea/aligner-load-stress.png',alt:'Stress contour of the two-plate robot aligner',label:'03 / STRUCTURAL ANALYSIS',title:'See where the load goes.',status:'Two-plate aligner · preliminary FEA'}
+    robot:{id:'box-12',image:'quadruped-robot/hero-cutout.png',alt:'CAD of the quadruped robot with all four legs folded beneath its chassis',label:'01 / QUADRUPED ROBOT',title:'Four legs. One compact fold.',status:'Latest CAD configuration · prototype in progress'},
+    display:{id:'box-7',image:'volumetric-display/hero-cutout.png',alt:'CAD of a volumetric display rotor with twenty radial arms',label:'02 / VOLUMETRIC DISPLAY',title:'A new dimension for light.',status:'20-arm rotor architecture · mechanical development'},
+    fea:{id:'box-11',image:'fea/hero-cutout.png',alt:'Stress contour of the two-plate robot aligner',label:'03 / STRUCTURAL ANALYSIS',title:'See where the load goes.',status:'Two-plate aligner · preliminary FEA'}
   };
   const featureButtons = [...document.querySelectorAll('[data-feature]')];
   const stage = document.querySelector('.machine-stage');
@@ -42,7 +61,7 @@
   function applyMotion() {
     root.classList.toggle('motion-paused',paused);
     motion.setAttribute('aria-pressed',String(paused));
-    motion.innerHTML = paused ? 'Enable motion <span>▶</span>' : 'Pause motion <span>Ⅱ</span>';
+    motion.innerHTML = paused ? 'Enable animation <span>▶</span>' : 'Pause animation <span>Ⅱ</span>';
     syncFilm();
   }
   motion.addEventListener('click',()=>{paused=!paused;applyMotion();});

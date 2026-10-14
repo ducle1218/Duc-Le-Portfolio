@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>try{document.documentElement.classList.toggle("dark",localStorage.getItem("portfolio-theme")==="dark")}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Duc Le | Mechanical Engineer</title>
   <meta name="description" content="Portfolio of Duc Le, a mechanical engineering student specializing in CAD design and mechanical prototyping. Projects spanning VEX Robotics, launch vehicles, wind turbine systems, and embedded electronics.">
@@ -565,8 +566,8 @@
   </style>
   <link rel="stylesheet" href="src/styles/projects.css?v=20261014-2">
   <script src="src/scripts/project-presentation.js" defer></script>
-  <link rel="stylesheet" href="src/styles/studio.css?v=20261014-3">
-  <script src="src/scripts/studio.js?v=20261014-3" defer></script>
+  <link rel="stylesheet" href="src/styles/studio.css?v=20261014-4">
+  <script src="src/scripts/studio.js?v=20261014-4" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -575,7 +576,7 @@
   <!-- Header Navigation -->
   <nav class="no-print sticky top-0 z-40 bg-white/65 dark:bg-slate-950/65 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-3 sm:px-6 py-3 sm:py-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
-      <button class="studio-brand" onclick="switchTab('home')" aria-label="Duc Le home"><span>Duc Le<small>Mechanical engineering</small></span></button>
+      <div class="brand-controls"><button class="studio-brand" onclick="switchTab('home')" aria-label="Duc Le home"><span>Duc Le<small>Mechanical engineering</small></span></button><button id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">Dark mode ☾</button></div>
       <div class="flex items-center gap-3 sm:gap-8 overflow-x-auto">
         <button onclick="switchTab('home')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-rose-500 border-b-2 border-rose-500 py-1 whitespace-nowrap shrink-0" id="btn-home">Home</button>
         <button onclick="switchTab('resume')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-resume">Resume</button>
@@ -590,7 +591,6 @@
   <div id="tab-home-content" class="tab-pane relative flex-1 flex flex-col">
 
     <section id="hero-fold" class="studio-hero">
-      <div class="hero-topline"><span><i></i> DUC LE / MECHANICAL ENGINEERING STUDENT</span><span>RUTGERS UNIVERSITY · NEW JERSEY</span></div>
       <div class="hero-composition">
         <div class="hero-copy">
           <h1>Mechanical design.<br><em>Built to learn.</em></h1>
@@ -602,22 +602,21 @@
           <span class="machine-orbit orbit-one" aria-hidden="true"></span><span class="machine-orbit orbit-two" aria-hidden="true"></span>
           <span class="machine-cross cross-one" aria-hidden="true">+</span><span class="machine-cross cross-two" aria-hidden="true">+</span>
           <span class="machine-label">01 / QUADRUPED ROBOT</span>
-          <img draggable="false" src="src/assets/images/quadruped-robot/folded-configuration.webp" alt="CAD of the quadruped robot with all four legs folded beneath its chassis" fetchpriority="high" width="1147" height="601">
+          <img draggable="false" src="src/assets/images/quadruped-robot/hero-cutout.png" alt="CAD of the quadruped robot with all four legs folded beneath its chassis" fetchpriority="high" width="1147" height="601">
           <span class="machine-caption"><span>Four legs. One compact fold.<small>Latest CAD configuration · prototype in progress</small></span><span class="machine-arrow">↗</span></span>
         </button>
-        <div class="machine-selector" aria-label="Featured engineering projects"><button data-feature="robot" aria-pressed="true">01 <span>Robotics</span></button><button data-feature="display" aria-pressed="false">02 <span>Light</span></button><button data-feature="fea" aria-pressed="false">03 <span>Forces</span></button></div>
+        <div class="machine-selector" aria-label="Featured engineering projects"><button data-feature="robot" aria-pressed="true">01 <span>Robotics</span></button><button data-feature="display" aria-pressed="false">02 <span>Light</span></button><button data-feature="fea" aria-pressed="false">03 <span>Forces</span></button></div><button id="motion-toggle" class="showcase-motion" aria-pressed="false">Pause animation Ⅱ</button>
         </div>
       </div>
-      <div class="hero-bottom"><button onclick="document.getElementById('featured-projects-section').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})">SCROLL TO DISCOVER <span>↓</span></button><button id="motion-toggle" aria-pressed="false">Pause motion <span>Ⅱ</span></button></div>
     </section>
     <section id="featured-projects-section" class="studio-section">
-      <div class="section-heading"><div><p class="studio-eyebrow">01 / SELECTED WORK</p><h2>Ideas, made <em>tangible.</em></h2></div><p>Real parts. Real constraints.<br>A closer look at how I work.</p></div>
+      <div class="section-heading"><h2>Featured Project</h2></div>
       <div id="home-project-list"></div>
-      <div class="section-end"><button class="studio-text-button" onclick="switchTab('project')">All 12 projects <span>↗</span></button></div>
+      <div class="section-end"><button class="studio-button" onclick="switchTab('project')">View all 12 projects <span>↗</span></button></div>
     </section>
     <section class="workbench-section">
-      <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>The best part?<br><em>Making it real.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><span><strong>01</strong>Model the idea</span><span><strong>02</strong>Build the part</span><span><strong>03</strong>Learn from the test</span></div></div>
-      <figure class="workbench-film"><video id="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
+      <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>The best part?<br><em>Making it real.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><div><strong>CAD & mechanisms</strong><p>Onshape and SolidWorks · servo packaging, folding linkages, and assembly fit.</p></div><div><strong>Prototyping & fabrication</strong><p>FDM printing · fit checks, locating features, and iterative hardware builds.</p></div><div><strong>Analysis & testing</strong><p>Preliminary FEA · defined load cases, stress interpretation, and physical testing.</p></div></div></div>
+      <figure class="workbench-film"><video id="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><div class="film-controls"><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><button id="film-sound" aria-pressed="false">Unmute sound</button></div><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
     </section>
     <section class="studio-contact-cta"><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Ready to learn.<br>Ready to <em>contribute.</em></h2><button onclick="switchTab('contact')" aria-label="Get in touch" class="contact-orbit">↗</button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
   </div>
@@ -8977,7 +8976,7 @@ void loop() {
     })();
 
     // This release uses one deliberately art-directed palette.
-    document.documentElement.classList.remove('dark', 'theme-test');
+    document.documentElement.classList.remove('theme-test');
     const CONTACT_STORAGE_KEY = "contact_submission_counts";
 
     function getContactSubmissionCounts() {

@@ -8,7 +8,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   
   <link href="output.css" rel="stylesheet">
   
@@ -565,6 +565,8 @@
   </style>
   <link rel="stylesheet" href="src/styles/projects.css?v=20261014-2">
   <script src="src/scripts/project-presentation.js" defer></script>
+  <link rel="stylesheet" href="src/styles/studio.css?v=20261014-1">
+  <script src="src/scripts/studio.js?v=20261014-1" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -573,14 +575,11 @@
   <!-- Header Navigation -->
   <nav class="no-print sticky top-0 z-40 bg-white/65 dark:bg-slate-950/65 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-3 sm:px-6 py-3 sm:py-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
-      <button id="theme-toggle" class="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0" title="Toggle Light/Dark Mode">
-        <!-- Rendered by JS -->
-      </button>
-
+      <button class="studio-brand" onclick="switchTab('home')" aria-label="Duc Le home"><span class="brand-symbol">d<span>l</span>.</span><span>Duc Le<small>Mechanical engineering</small></span></button>
       <div class="flex items-center gap-3 sm:gap-8 overflow-x-auto">
         <button onclick="switchTab('home')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-rose-500 border-b-2 border-rose-500 py-1 whitespace-nowrap shrink-0" id="btn-home">Home</button>
         <button onclick="switchTab('resume')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-resume">Resume</button>
-        <button onclick="switchTab('project')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-project">Project</button>
+        <button onclick="switchTab('project')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-project">Projects</button>
         <button onclick="switchTab('contact')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-contact">Contact</button>
       </div>
     </div>
@@ -590,76 +589,38 @@
   <!-- ======================== TAB: HOME ======================== -->
   <div id="tab-home-content" class="tab-pane relative flex-1 flex flex-col">
 
-    <!-- Hero Fold (video is confined to this box only, not the whole tab) -->
-    <div id="hero-fold" class="relative flex flex-col justify-between" style="min-height: 100vh;">
-      <div class="absolute inset-0 overflow-hidden bg-slate-900 dark:bg-slate-950 z-0">
-        <div id="hero-video-wrap" class="absolute inset-0 pointer-events-none select-none w-full h-full overflow-hidden">
-          <video
-            id="hero-bg-video"
-            class="absolute inset-0 w-full h-full object-cover object-[center_28%] opacity-35 dark:opacity-20"
-            autoplay muted loop playsinline preload="metadata"
-            poster="src/assets/video/Portfolio_Background_Video_poster.jpg"
-          >
-            <source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4">
-          </video>
+    <section id="hero-fold" class="studio-hero">
+      <div class="hero-topline"><span><i></i> DUC LE / ENGINEERING IN PROGRESS</span><span>RUTGERS UNIVERSITY · NEW JERSEY</span></div>
+      <div class="hero-composition">
+        <div class="hero-copy">
+          <h1>Curiosity,<br><em>in motion.</em></h1>
+          <p>From folding robots to experiments with light.<br>I turn “what if” into parts I can hold.</p>
+          <div class="hero-actions"><button class="studio-button" onclick="switchTab('project')">Explore my work <span>↗</span></button><button class="studio-text-button" onclick="switchTab('resume')">Meet the engineer <span>↗</span></button></div>
         </div>
-        <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(2,6,23,0.5) 0%, rgba(2,6,23,0.5) 4%, transparent 40%, transparent 75%, rgba(2,6,23,0.3) 100%);"></div>
-      </div>
-
-      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
-        <div id="hero-card" class="max-w-4xl bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/80 p-8 sm:p-12 rounded-3xl shadow-2xl transition-all duration-300">
-          <p class="hero-identity">Duc Le <span> / </span> Mechanical Engineering</p>
-          <h1 class="hero-headline">Designed in CAD.<br>Refined in the real world.</h1>
-          <p class="hero-summary">Mechanisms, prototypes, and the decisions behind them.<br>Explore my work in mechanical design, fabrication, and analysis.</p>
-          <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-mono font-bold">
-            <button onclick="switchTab('project')" class="bg-rose-500 text-white px-5 py-2.5 rounded-full shadow-lg">Explore Projects ↗</button>
-            <button onclick="switchTab('contact')" class="border border-slate-200 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-full">Get in touch</button>
-          </div>
+        <div class="machine-stage">
+        <button class="hero-machine" data-project="box-12" onclick="showProjectDetail(this.dataset.project)" aria-label="Explore the folding quadruped robot">
+          <span class="machine-orbit orbit-one" aria-hidden="true"></span><span class="machine-orbit orbit-two" aria-hidden="true"></span>
+          <span class="machine-cross cross-one" aria-hidden="true">+</span><span class="machine-cross cross-two" aria-hidden="true">+</span>
+          <span class="machine-label">01 / QUADRUPED ROBOT</span>
+          <img src="src/assets/images/quadruped-robot/folded-configuration.webp" alt="CAD of the quadruped robot with all four legs folded beneath its chassis" fetchpriority="high" width="1147" height="601">
+          <span class="machine-caption"><span>Four legs. One compact fold.<small>Latest CAD configuration · prototype in progress</small></span><span class="machine-arrow">↗</span></span>
+        </button>
+        <div class="machine-selector" aria-label="Featured engineering projects"><button data-feature="robot" aria-pressed="true">01 <span>Robotics</span></button><button data-feature="display" aria-pressed="false">02 <span>Light</span></button><button data-feature="fea" aria-pressed="false">03 <span>Forces</span></button></div>
         </div>
       </div>
-
-      <!-- Scroll Down Indicator -->
-      <div class="relative z-10 text-center scroll-indicator" style="padding-bottom: 24px;">
-        <div class="w-5 h-5 mx-auto border-r-[3px] border-b-[3px] border-rose-400 dark:border-rose-400/80 transform rotate-45 mt-1.5"></div>
-      </div>
-    </div>
-
-    <!-- Below the Fold Details -->
-    <div class="bg-transparent dark:bg-slate-950 dark:border-t dark:border-slate-900 relative z-10 pb-16 px-6" style="padding-top: 76px;">
-      <div class="max-w-6xl mx-auto space-y-16">
-        <section class="space-y-8" id="featured-projects-section">
-          <div class="flex flex-col items-center text-center space-y-1">
-            <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">
-              PROJECTS
-            </span>
-            <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Featured Projects
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md">
-              A direct look at what I've built — the problem, the approach, and the tools behind each one.
-            </p>
-          </div>
-
-          <div id="home-project-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-          </div>
-
-          <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <button
-              onclick="switchTab('project')"
-              class="px-8 py-3.5 bg-[#ff1756] hover:bg-[#e0104a] text-white font-mono text-xs font-black uppercase rounded-full transition-all hover:scale-105"
-            >
-              VIEW ALL PROJECTS
-            </button>
-            <button
-              onclick="switchTab('resume')"
-              class="px-8 py-3.5 bg-[#ff1756] hover:bg-[#e0104a] text-white font-mono text-xs font-black uppercase rounded-full transition-all hover:scale-105"
-            >
-              RESUME
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
+      <div class="hero-bottom"><span>CAD → PROTOTYPE → TEST → REPEAT</span><button onclick="document.getElementById('featured-projects-section').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})">SCROLL TO DISCOVER <span>↓</span></button><button id="motion-toggle" aria-pressed="false">Pause motion <span>Ⅱ</span></button></div>
+    </section>
+    <div class="discipline-strip" aria-label="Mechanical design, robotics, prototyping, and analysis"><div aria-hidden="true"><span>MECHANICAL DESIGN</span><b>✳</b><span>ROBOTICS</span><b>✳</b><span>PROTOTYPING</span><b>✳</b><span>ANALYSIS</span><b>✳</b><span>MECHANICAL DESIGN</span><b>✳</b><span>ROBOTICS</span><b>✳</b><span>PROTOTYPING</span><b>✳</b><span>ANALYSIS</span><b>✳</b></div></div>
+    <section id="featured-projects-section" class="studio-section">
+      <div class="section-heading"><div><p class="studio-eyebrow">01 / SELECTED WORK</p><h2>Ideas, made <em>tangible.</em></h2></div><p>Real parts. Real constraints.<br>A closer look at how I work.</p></div>
+      <div id="home-project-list"></div>
+      <div class="section-end"><span>A growing collection of builds, experiments, and lessons.</span><button class="studio-text-button" onclick="switchTab('project')">All 12 projects <span>↗</span></button></div>
+    </section>
+    <section class="workbench-section">
+      <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>The best part?<br><em>Making it real.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><span><strong>01</strong>Model the idea</span><span><strong>02</strong>Build the part</span><span><strong>03</strong>Learn from the test</span></div></div>
+      <figure class="workbench-film"><video id="hero-bg-video" muted loop playsinline preload="none" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
+    </section>
+    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / WHAT’S NEXT?</p><h2>Let’s build<br>something <em>interesting.</em></h2><button onclick="switchTab('contact')" aria-label="Get in touch" class="contact-orbit">↗</button><p>Have a project, a question, or a challenge?<br>I’d love to hear about it.</p></section>
   </div>
 
   <!-- ======================== TAB: RESUME ======================== -->
@@ -685,9 +646,9 @@
   <!-- ======================== TAB: PROJECT ======================== -->
   <div id="tab-project-content" class="tab-pane hidden flex-1 max-w-[95vw] xl:max-w-7xl mx-auto px-6 py-12 space-y-10">
     <div class="project-page-heading">
-      <p class="project-eyebrow">ENGINEERING PORTFOLIO</p>
-      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">Projects</h1>
-      <p class="project-page-intro">From CAD to the workbench.<br>Design decisions, prototypes, and results.</p>
+      <p class="project-eyebrow">THE BUILDS. THE EXPERIMENTS. THE PROCESS.</p>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">A collection of <em>curiosity.</em></h1>
+      <p class="project-page-intro">Robotics, mechanisms, and ideas brought into the physical world.<br>Pick a project. Follow the process.</p>
     </div>
 
     <div class="project-filter-bar flex flex-wrap items-center gap-2">
@@ -733,7 +694,7 @@
   <div id="tab-contact-content" class="tab-pane hidden flex-1 max-w-[95vw] xl:max-w-[90rem] mx-auto px-6 py-12 space-y-12">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-[6.5rem] bg-white dark:bg-slate-900 border rounded-3xl p-6 sm:p-8 md:p-12 relative shadow-2xl">
       <div class="space-y-6 relative z-10">
-        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Let's Talk</h2>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Good things start<br>with a conversation.</h2>
         <div id="contact-form-container">
           <form id="contact-form" onsubmit="handleStaticContactSubmit(event)" class="space-y-4">
             <div>
@@ -774,8 +735,8 @@
               </div>
               <div>
                 <p class="text-[10px] font-mono text-slate-400 uppercase">Email Me Directly</p>
-                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=duc.le.portfoliowebsite@gmail.com" target="_blank" rel="noopener noreferrer" class="text-sm font-extrabold text-slate-900 dark:text-white hover:text-rose-500 transition-colors">
-                  duc.le@gmail.com
+                <a href="mailto:ducle1218@gmail.com" target="_blank" rel="noopener noreferrer" class="text-sm font-extrabold text-slate-900 dark:text-white hover:text-rose-500 transition-colors">
+                  ducle1218@gmail.com
                 </a>
               </div>
             </div>
@@ -814,7 +775,7 @@
   </div>
 
   <footer class="no-print border-t border-slate-100 dark:border-slate-900 text-center py-8 text-[10px] font-mono text-slate-400">
-    <p>© 2026 Duc Le. All rights reserved.</p>
+    <p>Duc Le © 2026 <span class="footer-note">Curiosity is a work in progress.</span></p>
   </footer>
 
   <script src="src/scripts/engineering-projects.js?v=20261014-2"></script>
@@ -8762,7 +8723,7 @@ void loop() {
       </div>`;
     }
 
-    const HOME_PROJECT_LIST_LIMIT = 9;
+    const HOME_PROJECT_LIST_LIMIT = 3;
 
     function renderHomeProjectList() {
       const container = document.getElementById('home-project-list');
@@ -8784,28 +8745,7 @@ void loop() {
     }
     renderProjectPageList();
 
-    // ======================== Hero Fold Exact Sizing ========================
-    // Sizes #hero-fold to exactly (viewport height − actual nav height)
-    // using real measured pixels instead of a hardcoded guess baked into a
-    // CSS class. This is deliberately plain inline-style JS rather than a
-    // Tailwind utility class: this site loads a pre-built output.css, so a
-    // brand-new arbitrary-value class (e.g. min-h-[calc(100vh-73px)]) has no
-    // guarantee of existing in that compiled stylesheet unless the build is
-    // rerun. Setting the pixel value directly here always works regardless.
-    function sizeHeroFold() {
-      const nav = document.querySelector('nav');
-      const hero = document.getElementById('hero-fold');
-      if (!nav || !hero) return;
-      const navHeight = nav.getBoundingClientRect().height;
-      hero.style.minHeight = Math.ceil(window.innerHeight - navHeight + 4) + 'px';
-    }
-    sizeHeroFold();
-    window.addEventListener('resize', sizeHeroFold);
-    window.addEventListener('orientationchange', sizeHeroFold);
-    if (document.readyState !== 'complete') {
-      window.addEventListener('load', sizeHeroFold);
-    }
-
+    // Retained timeline renderer for older project views.
     function buildTimelineEntryHTML(item, posInWindow) {
       const reverse = posInWindow % 2 === 0; // 0 and 2 reversed, 1 normal — matches original zigzag
       const alignClass = reverse ? 'md:items-end' : 'md:items-start';
@@ -8959,7 +8899,7 @@ void loop() {
       // user comes back, so it isn't burning CPU/battery in the background.
       const heroVideo = document.getElementById('hero-bg-video');
       if (heroVideo) {
-        if (tabId === 'home') {
+        if (tabId === 'home' && !document.documentElement.classList.contains('motion-paused') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && heroVideo.dataset.userPlaying === 'true') {
           heroVideo.play().catch(() => {});
         } else {
           heroVideo.pause();
@@ -9037,130 +8977,8 @@ void loop() {
       cards.forEach(function (card) { grid.appendChild(card); });
     })();
 
-    // Theme toggle engine (Light / Dark / Test Mode)
-    const themeBtn = document.getElementById('theme-toggle');
-    const docEl = document.documentElement;
-    const bodyEl = document.body;
-
-    // Create and append floating sparkles for Test Mode if they don't exist
-    let sparklesContainer = document.getElementById('test-mode-sparkles');
-    if (!sparklesContainer) {
-      sparklesContainer = document.createElement('div');
-      sparklesContainer.id = 'test-mode-sparkles';
-      sparklesContainer.className = 'absolute inset-0 pointer-events-none overflow-hidden z-20 hidden';
-      sparklesContainer.innerHTML = 
-        '<svg class="absolute w-6 h-6 text-purple-400/60 top-[15%] left-[8%] animate-star-twinkle-spin" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>' +
-        '<svg class="absolute w-5 h-5 text-pink-400/50 top-[10%] right-[12%] animate-star-slow-spin" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>' +
-        '<svg class="absolute w-7 h-7 text-indigo-400/60 bottom-[25%] left-[10%] animate-star-twinkle-spin" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>' +
-        '<svg class="absolute w-6 h-6 text-purple-400/50 bottom-[18%] right-[8%] animate-star-slow-spin" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>' +
-        '<svg class="absolute w-4 h-4 text-pink-400/70 top-2/3 left-[5%] animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>' +
-        '<svg class="absolute w-5 h-5 text-indigo-400/50 top-[45%] right-[6%] animate-star-twinkle-spin" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>';
-      bodyEl.appendChild(sparklesContainer);
-    }
-
-    let currentTheme = localStorage.getItem('theme') || 'light';
-
-    function applyTheme(theme) {
-      currentTheme = theme;
-      if (theme === 'test') {
-        docEl.classList.remove('dark');
-        docEl.classList.add('theme-test');
-        localStorage.setItem('theme', 'test');
-        themeBtn.className = "flex items-center gap-1.5 px-3 py-1.5 border border-purple-200 bg-white/95 rounded-lg font-mono text-xs font-bold uppercase tracking-wider text-purple-700 shadow-xs cursor-pointer";
-        themeBtn.innerHTML = '<svg class="w-3.5 h-3.5 text-purple-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg><span class="hidden sm:inline font-extrabold text-purple-700">TEST MODE ✨</span>';
-        
-        bodyEl.className = "bg-gradient-to-tr from-[#f5f3ff] via-[#fdf2f8] to-[#eef2ff] text-indigo-950 font-sans antialiased min-h-screen flex flex-col justify-between relative select-none";
-        
-        if (sparklesContainer) sparklesContainer.classList.remove('hidden');
-
-        // Dynamic element overrides
-        const navEl = document.querySelector('nav');
-        if (navEl) navEl.className = "no-print sticky top-0 z-40 bg-purple-50/70 border-b border-purple-100/60 backdrop-blur-md px-6 py-4 text-indigo-950";
-
-        const heroCard = document.getElementById('hero-card');
-        if (heroCard) {
-          heroCard.className = "max-w-2xl backdrop-blur-xl border border-purple-200/65 p-8 sm:p-12 rounded-3xl transition-all hover:scale-[1.01] duration-500 bg-white/80 text-indigo-950 shadow-xl shadow-purple-200/30";
-          const h1 = heroCard.querySelector('h1');
-          if (h1) h1.className = "text-4xl sm:text-5xl font-black tracking-tight text-purple-900 mb-2 font-sans";
-          const sub = heroCard.querySelector('p');
-          if (sub) sub.className = "font-sans text-base sm:text-lg leading-relaxed text-purple-700/90 normal-case tracking-normal mb-8";
-        }
-
-        const contactCard = document.querySelector('#tab-contact-content > div');
-        if (contactCard) {
-          contactCard.className = "grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 border rounded-3xl p-6 sm:p-8 md:p-12 relative transition-all duration-300 bg-white/80 border-purple-200/60 shadow-xl shadow-purple-200/30";
-        }
-      } else if (theme === 'dark') {
-        docEl.classList.remove('theme-test');
-        docEl.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        themeBtn.className = "flex items-center gap-1.5 px-3 py-1.5 border border-slate-800 bg-slate-950 rounded-lg font-mono text-xs font-bold uppercase tracking-wider text-slate-300 hover:bg-slate-900 cursor-pointer";
-        themeBtn.innerHTML = '<svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg><span class="hidden sm:inline">DARK MODE</span>';
-        
-        bodyEl.className = "bg-slate-950 text-slate-200 font-sans antialiased min-h-screen flex flex-col justify-between relative select-none";
-        
-        if (sparklesContainer) sparklesContainer.classList.add('hidden');
-
-        const navEl = document.querySelector('nav');
-        if (navEl) navEl.className = "no-print sticky top-0 z-40 bg-slate-950/80 border-b border-slate-900 backdrop-blur-md px-6 py-4 text-slate-200";
-
-        const heroCard = document.getElementById('hero-card');
-        if (heroCard) {
-          heroCard.className = "max-w-2xl bg-slate-900/70 border border-slate-800/80 p-8 sm:p-12 rounded-3xl transition-all hover:scale-[1.01] duration-500 text-white shadow-2xl";
-          const h1 = heroCard.querySelector('h1');
-          if (h1) h1.className = "text-4xl sm:text-5xl font-black tracking-tight text-white mb-2 font-sans";
-          const sub = heroCard.querySelector('p');
-          if (sub) sub.className = "font-sans text-base sm:text-lg leading-relaxed text-slate-300 normal-case tracking-normal mb-8";
-        }
-
-        const contactCard = document.querySelector('#tab-contact-content > div');
-        if (contactCard) {
-          contactCard.className = "grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 md:p-12 relative shadow-2xl";
-        }
-      } else {
-        docEl.classList.remove('theme-test');
-        docEl.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        themeBtn.className = "flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 bg-white rounded-lg font-mono text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 cursor-pointer";
-        themeBtn.innerHTML = '<svg class="w-3.5 h-3.5 text-amber-500 animate-spin-slow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><span class="hidden sm:inline">LIGHT MODE</span>';
-        
-        bodyEl.className = "bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between relative select-none";
-        
-        if (sparklesContainer) sparklesContainer.classList.add('hidden');
-
-        const navEl = document.querySelector('nav');
-        if (navEl) navEl.className = "no-print sticky top-0 z-40 bg-white/80 border-b border-slate-100 backdrop-blur-md px-6 py-4 text-slate-800";
-
-        const heroCard = document.getElementById('hero-card');
-        if (heroCard) {
-          heroCard.className = "max-w-2xl bg-white/75 border border-slate-200/50 p-8 sm:p-12 rounded-3xl transition-all hover:scale-[1.01] duration-500 text-slate-900 shadow-2xl";
-          const h1 = heroCard.querySelector('h1');
-          if (h1) h1.className = "text-4xl sm:text-5xl font-black tracking-tight text-slate-900 mb-2 font-sans";
-          const sub = heroCard.querySelector('p');
-          if (sub) sub.className = "font-sans text-base sm:text-lg leading-relaxed text-slate-600 normal-case tracking-normal mb-8";
-        }
-
-        const contactCard = document.querySelector('#tab-contact-content > div');
-        if (contactCard) {
-          contactCard.className = "grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 md:p-12 relative shadow-2xl";
-        }
-      }
-    }
-
-    // Apply saved theme or default
-    applyTheme(currentTheme);
-
-    themeBtn.addEventListener('click', () => {
-      if (currentTheme === 'light') {
-        applyTheme('dark');
-      } else if (currentTheme === 'dark') {
-        applyTheme('test');
-      } else {
-        applyTheme('light');
-      }
-    });
-
-    const CONTACT_MAX_PER_EMAIL = 5;
+    // This release uses one deliberately art-directed palette.
+    document.documentElement.classList.remove('dark', 'theme-test');
     const CONTACT_STORAGE_KEY = "contact_submission_counts";
 
     function getContactSubmissionCounts() {

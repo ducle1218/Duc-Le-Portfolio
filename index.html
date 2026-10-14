@@ -608,9 +608,9 @@
 
       <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
         <div id="hero-card" class="max-w-4xl bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/80 p-8 sm:p-12 rounded-3xl shadow-2xl transition-all duration-300">
-          <h1 class="font-black text-slate-900 dark:text-white mb-2 whitespace-nowrap" style="font-size: clamp(1.1rem, 4.5vw, 1.875rem);">Duc Le <span class="text-neutral-400 dark:text-neutral-600 font-medium">|</span> Mechanical Engineering</h1>
-          <div class="border-b-2 border-slate-100 dark:border-slate-800 pb-5 mb-5 max-w-sm mx-auto"></div>
-          <p class="normal-case font-sans tracking-normal text-base sm:text-lg leading-relaxed text-slate-800 dark:text-slate-100 font-semibold mb-8">"Scientists study the world as it is; engineers create the world that has never been." <span class="block font-mono text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 mt-2">— Theodore von Kármán</span></p>
+          <p class="hero-identity">Duc Le <span> / </span> Mechanical Engineering</p>
+          <h1 class="hero-headline">Designed in CAD.<br>Refined in the real world.</h1>
+          <p class="hero-summary">Mechanisms, prototypes, and the decisions behind them.<br>Explore my work in mechanical design, fabrication, and analysis.</p>
           <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-mono font-bold">
             <button onclick="switchTab('project')" class="bg-rose-500 text-white px-5 py-2.5 rounded-full shadow-lg">Explore Projects ↗</button>
             <button onclick="switchTab('contact')" class="border border-slate-200 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-full">Get in touch</button>
@@ -669,49 +669,28 @@
         <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Professional Resume</h1>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <a href="src/assets/images/duc_le_resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
+        <a href="src/assets/resume/Duc_Le_Resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
           <span>Download Resume PDF</span>
         </a>
       </div>
     </div>
 
-    <!-- High Fidelity 1-Column Engineering Resume Sheet -->
-    <div class="resume-pdf-card relative w-full max-w-[83.33%] mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xl flex flex-col aspect-[8.5/11] origin-top scale-[1.2] mb-[21.57%]">
-      <img
-        id="resume-image"
-        src="src/assets/images/Duc_Le_Resume_preview.png"
-        alt="Duc Le's Professional Resume"
-        loading="lazy"
-        class="w-full h-full object-contain rounded-2xl"
-      />
-      <!-- Invisible clickable overlays mimicking the real hyperlinks embedded in the PDF -->
-      <a href="https://github.com/ducle1218" target="_blank" rel="noopener noreferrer"
-        aria-label="GitHub"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 65.36%; top: 8.92%; width: 4.90%; height: 1.18%;"
-      ></a>
-      <a href="https://www.linkedin.com/in/duc-le-35a330412/" target="_blank" rel="noopener noreferrer"
-        aria-label="LinkedIn"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 72.44%; top: 8.92%; width: 7.30%; height: 1.18%;"
-      ></a>
-      <a href="http://ducle1218.github.io/Duc-Le-Portfolio" target="_blank" rel="noopener noreferrer"
-        aria-label="Portfolio"
-        class="absolute cursor-pointer hover:bg-rose-500/10 transition-colors rounded"
-        style="left: 81.37%; top: 8.92%; width: 7.30%; height: 1.18%;"
-      ></a>
+    <div class="live-resume-paper">
+      <iframe id="resume-frame" src="src/assets/resume/resume.html" title="Duc Le — Professional Resume" loading="lazy"></iframe>
     </div>
+    <script src="src/scripts/resume-presentation.js" defer></script>
   </div>
 
   <!-- ======================== TAB: PROJECT ======================== -->
   <div id="tab-project-content" class="tab-pane hidden flex-1 max-w-[95vw] xl:max-w-7xl mx-auto px-6 py-12 space-y-10">
-    <div class="text-center space-y-2">
+    <div class="project-page-heading">
+      <p class="project-eyebrow">ENGINEERING PORTFOLIO</p>
       <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">Projects</h1>
-      <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest block">click around and explore!</span>
+      <p class="project-page-intro">From CAD to the workbench.<br>Design decisions, prototypes, and results.</p>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-2 border-b pb-4 max-w-xl mx-auto">
+    <div class="project-filter-bar flex flex-wrap items-center gap-2">
       <button onclick="filterProjects('ALL')" class="proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl">ALL</button>
       <button onclick="filterProjects('INTERNSHIPS')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">INTERNSHIPS</button>
       <button onclick="filterProjects('PERSONAL')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">PERSONAL</button>
@@ -8591,84 +8570,84 @@ void loop() {
         dateLabel: 'Oct 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: '',
         image: 'src/assets/images/quadruped-robot/folded-configuration.webp', imageFit: 'contain',
         tags: ['Onshape', '3D Printing', 'Mechanism Design'],
-        desc: "Developing a <strong>folding quadruped</strong> with Ethan: servo packaging, printed fit checks, and a chassis redesign from 160 to 225 mm. One leg actuated; walking remains in development."
+        desc: "A folding quadruped developed with Ethan.\n• <strong>Mechanism packaging:</strong> extended the chassis 160 → 225 mm and shortened upper legs 143 → 135 mm.\n• <strong>Design for assembly:</strong> iterated locating slots, servo-axis alignment, and mirrored printed supports.\n• <strong>Hardware progress:</strong> four legs assembled; one leg actuated. Walking control is next."
       },
       {
         id: 'box-7', title: 'Volumetric Display', subtitle: 'Mechanical development', category: 'PERSONAL',
-        dateLabel: 'Aug 2026 — Present', location: 'Independent Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
+        dateLabel: 'Aug 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
         image: 'src/assets/images/volumetric-display/radial-arm-assembly.webp', imageFit: 'contain',
         tags: ['Onshape', 'SolidWorks', 'FEA Simulation'],
-        desc: "From a solid wall to <strong>20 radial arms</strong>. A mechanical design study in printable joints, motor packaging, and preliminary structural analysis for a swept-volume display."
+        desc: "Mechanical architecture for a swept-volume LED display.\n• <strong>Rotor redesign:</strong> replaced a broad wall with 20 modular radial arms to reduce exposed area.\n• <strong>Integration:</strong> packaged the motor, slip ring, and split printable shaft.\n• <strong>Preliminary FEA:</strong> arm model reported ~23 psi at 0.28 lbf; dynamic validation remains ahead."
       },
       {
-        id: 'box-11', title: 'FEA & GD&T', subtitle: 'Documentation in progress', category: 'PERSONAL',
+        id: 'box-11', title: 'FEA & GD&T', subtitle: 'Structural analysis', category: 'PERSONAL',
         dateLabel: '2026', location: 'Independent Build', icon: 'ruler', iconImage: '',
-        image: 'src/assets/images/fea/vex-robot-assembly-cad.png', imageFit: 'contain',
+        image: 'src/assets/images/fea/aligner-load-stress.png', imageFit: 'contain',
         tags: ['Onshape', 'FEA Simulation', 'GD&T'],
-        desc: "A developing study of the VEX robot aligner: connecting <strong>impact loading, printed-part design, and critical fits</strong>. Analysis documentation is in progress."
+        desc: "Structural study of a two-plate VEX robot aligner.\n• <strong>Load definition:</strong> applied −200 lbf in Y to each plate in the assembly model.\n• <strong>Stress distribution:</strong> examined the load path around cutouts, holes, and spacers.\n• <strong>Next refinement:</strong> validate constraints and material inputs, then document critical fits."
       },
       {
         id: 'box-3', title: 'SolidWorks CAD to Manufacturing Readiness', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: '2025 — Present', location: 'Independent Build', icon: 'ruler', iconImage: 'src/assets/images/logos/solidworks-cad-icon.png',
         image: 'src/assets/images/cswa_solidworks_practice.jpg', imageFit: 'cover',
         tags: ['SolidWorks', 'GD&T', 'DFM/DFA'],
-        desc: "Building CAD fluency through official CSWA practice parts. Extending selected models into <strong>toleranced drawings and manufacturing reviews</strong>."
+        desc: "Developing CAD models into manufacturing documentation.\n• <strong>Parametric modeling:</strong> built parts from official CSWA practice exercises.\n• <strong>Manufacturing readiness:</strong> extending selected models into toleranced drawings and DFM/DFA reviews."
       },
       {
         id: 'box-6', title: 'Vex Pushback Capstone', subtitle: 'Lead Robotics Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2025 — Apr 2026', location: 'Atlantic County Institute of Technology', icon: 'gear', iconImage: 'src/assets/images/logos/vex-capstone-icon.png',
         image: 'src/assets/images/capstone/Sprocket_Robot_CAD.png', imageFit: 'contain',
         tags: ['Onshape CAD', 'AutoCAD', 'C++', 'PID Control'],
-        desc: "Led CAD and mechanism design for a four-person team’s <strong>Judge’s Award-winning robot</strong>. Iterated the drivetrain, intake, and sensor-based autonomous control."
+        desc: "Lead robotics designer on a four-person capstone team.\n• <strong>Mechanical design:</strong> iterated drivetrain and intake mechanisms in Onshape.\n• <strong>Controls integration:</strong> developed sensor-based autonomous behavior and PID control.\n• <strong>Recognition:</strong> team earned the Judge’s Award."
       },
       {
         id: 'box-4', title: 'Launch Vehicle Project', subtitle: 'Lead Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2024 — May 2025', location: 'Atlantic County Institute of Technology', icon: 'pencil', iconImage: 'src/assets/images/logos/launch-vehicle-icon.png',
         image: 'src/assets/images/launch_vehicle_cross_section.png', imageFit: 'contain',
         tags: ['MATLAB', 'SolidWorks', 'Structural Modeling'],
-        desc: "A student launch-vehicle design study: <strong>staging, propulsion, and structural modeling</strong> for a 4,500 lb target payload using MATLAB and SolidWorks."
+        desc: "Student launch-vehicle design study for a 4,500 lb target payload.\n• <strong>System sizing:</strong> explored staging and propulsion using MATLAB.\n• <strong>Mechanical development:</strong> modeled vehicle structure and packaging in SolidWorks."
       },
       {
         id: 'box-1', title: 'High Stakes Competition Robot Build', subtitle: 'Robotics Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2025', location: 'Atlantic County Institute of Technology', icon: 'wrench', iconImage: 'src/assets/images/logos/robot-build-icon.png',
         image: 'src/assets/images/High_Stake_Robot.png', imageFit: 'cover',
         tags: ['Onshape', 'AutoCAD', 'C++'],
-        desc: "Designed a competition robot chassis in <strong>Onshape and AutoCAD</strong>, then programmed dual-motor lifters and autonomous routines in C++."
+        desc: "Competition robot chassis and mechanism development.\n• <strong>CAD & fabrication planning:</strong> designed the chassis in Onshape and AutoCAD.\n• <strong>Motion control:</strong> programmed dual-motor lifters and autonomous routines in C++."
       },
       {
         id: 'box-5', title: 'Arduino Electronics', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: 'Feb 2024', location: 'Independent Build', icon: 'bolt', iconImage: 'src/assets/images/logos/arduino-icon.png',
         image: 'src/assets/images/arduino/Arduino_Physical_Breadboard.jpg', imageFit: 'cover',
         tags: ['Arduino', 'C++', 'Circuit Design'],
-        desc: "Built an <strong>eight-key Arduino synthesizer</strong> using a resistor ladder and one analog input. Circuit experiments connect physical wiring to real-time sound."
+        desc: "An eight-key Arduino synthesizer built on a breadboard.\n• <strong>Circuit design:</strong> read a resistor-ladder keyboard through one analog input.\n• <strong>Embedded programming:</strong> translated physical button inputs into real-time sound."
       },
       {
         id: 'box-8', title: 'Tower Design Project', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2024', location: 'Atlantic County Institute of Technology', icon: 'triangle', iconImage: 'src/assets/images/logos/tower-icon.png',
         image: 'src/assets/images/tower/Tower_Testing_Setup.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Structural Design', 'Load Testing'],
-        desc: "Designed and load-tested an 11-inch balsa tower with torsional bracing. The structure supported <strong>45 lb</strong> before failure."
+        desc: "An 11-inch balsa tower designed for load testing.\n• <strong>Structural design:</strong> incorporated torsional bracing into the tower geometry.\n• <strong>Physical testing:</strong> supported 45 lb before failure."
       },
       {
         id: 'box-9', title: 'Sensor Challenge', subtitle: 'Team: Electrifying Tempest', category: 'STUDENT TEAMS',
         dateLabel: 'June 2023', location: 'Atlantic County Institute of Technology', icon: 'radar', iconImage: 'src/assets/images/logos/sensor-challenge-icon.png',
         image: 'src/assets/images/sensor-challenge/Sensor_Warehouse_Course.jpg', imageFit: 'cover',
         tags: ['Autonomy', 'Sonar', 'Sensor Fusion'],
-        desc: "Tuned a robot to <strong>follow a warehouse course and park between boxes</strong> using line sensors and sonar, refining behavior through iterative testing."
+        desc: "Autonomous navigation through a warehouse-style course.\n• <strong>Sensor integration:</strong> combined line following and sonar-based distance sensing.\n• <strong>Iterative tuning:</strong> refined navigation and parking between boxes through repeated trials."
       },
       {
         id: 'box-10', title: 'Putt-Putt Boat: Straight-Line Redesign', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'May 2023', location: 'Atlantic County Institute of Technology', icon: 'wave', iconImage: 'src/assets/images/logos/puttputt-icon.png',
         image: 'src/assets/images/putt-putt/PuttPutt_Boat_Photo.jpg', imageFit: 'cover',
         tags: ['Rapid Prototyping'],
-        desc: "Diagnosed drift in a candle-powered boat and redesigned its twin-straw exhaust. The revised design ran <strong>58% faster</strong> than the baseline."
+        desc: "A candle-powered boat redesigned for straight-line travel.\n• <strong>Failure diagnosis:</strong> investigated drift and revised the twin-straw exhaust.\n• <strong>Measured improvement:</strong> the revised boat ran 58% faster than the baseline."
       },
       {
         id: 'box-2', title: 'Wind Turbine Competition', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Mar 2023', location: 'Atlantic County Institute of Technology', icon: 'wind', iconImage: 'src/assets/images/logos/wind-turbine-icon.png',
         image: 'src/assets/images/wind-turbine-notebook/wt-test-p8-3blade-12in.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Aerodynamics', '3D Printing'],
-        desc: "Iterated blade geometry and pitch for low wind speeds. The student team’s design placed <strong>6th statewide</strong>."
+        desc: "Blade development for a low-wind-speed turbine competition.\n• <strong>Rapid iteration:</strong> varied blade geometry and pitch with CAD and 3D printing.\n• <strong>Competition result:</strong> the team placed 6th statewide."
       },
     ];
 

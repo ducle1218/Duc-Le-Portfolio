@@ -1,0 +1,447 @@
+[
+  {
+    "text": "Duc Le",
+    "runs": [
+      {
+        "text": "Duc Le"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Piscataway, NJ    •   ducle1218@gmail.com    •   (609) 289-6897    •   GitHub  •   LinkedIn •   Portfolio",
+    "runs": [
+      {
+        "text": "Piscataway"
+      },
+      {
+        "text": ", NJ"
+      },
+      {
+        "text": "    •   "
+      },
+      {
+        "text": "ducle1218@gmail.com",
+        "url": "mailto:ducle1218@gmail.com"
+      },
+      {
+        "text": "    •   "
+      },
+      {
+        "text": "(609) 289-6897"
+      },
+      {
+        "text": "    •  "
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "GitHub",
+        "url": "https://github.com/ducle1218"
+      },
+      {
+        "text": "  •   "
+      },
+      {
+        "text": "LinkedIn",
+        "url": "https://www.linkedin.com/in/duc-le-35a330412/"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "•"
+      },
+      {
+        "text": "   "
+      },
+      {
+        "text": "Portfolio",
+        "url": "http://ducle1218.github.io/Duc-Le-Portfolio"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "First-year mechanical engineering student at Rutgers with hands-on experience in CAD, FEA, and competition robotics.",
+    "runs": [
+      {
+        "text": "First-year mechanical engineering student at Rutgers with hands-on experience in CAD, FEA, and competition robotics."
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "EDUCATION",
+    "runs": [
+      {
+        "text": "EDUCATION"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Rutgers University–New Brunswick\t\t\t\t\t\t\t                Expected May 2030",
+    "runs": [
+      {
+        "text": "Rutgers University–New Brunswick\t\t\t\t\t\t\t                "
+      },
+      {
+        "text": "Expected May 2030"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "B.S. Mechanical Engineering\t\t\t\t\t\t\t\t     \t\t    GPA: N/A",
+    "runs": [
+      {
+        "text": "B.S. Mechanical Engineering\t\t\t\t\t\t\t\t     \t\t    "
+      },
+      {
+        "text": "GPA: N/A"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Relevant coursework: \u000bATLANTIC COUNTY INSTITUTE OF TECHNOLOGY\t\t\t\t\t\t\t               \tJune 2026",
+    "runs": [
+      {
+        "text": "Relevant coursework: "
+      },
+      {
+        "text": "\u000bATLANTIC COUNTY INSTITUTE OF TECHNOLOGY\t\t\t\t\t\t\t               \t"
+      },
+      {
+        "text": "June 2026"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Academy of Math, Engineering, and Science\t\t\t\t\t\t\t\t\t     GPA: 4.2",
+    "runs": [
+      {
+        "text": "Academy of Math, Engineering, and Science\t\t\t\t\t\t\t\t\t     "
+      },
+      {
+        "text": "GPA: 4.2"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "PROJECTS",
+    "runs": [
+      {
+        "text": "PROJECTS"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "FEA & GD&T | Personal Project \t\t\t     \t\t\t\t                \t            October 2026 - Present",
+    "runs": [
+      {
+        "text": "FEA & GD&T"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "| Personal Project"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "\t\t\t     \t\t\t\t                \t            October 2026 - Present"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Applying finite element analysis in Onshape to check that 3D-printed robot parts survive impact loading, using the VEX robot's aligner as the case study",
+    "runs": [
+      {
+        "text": "Applying finite element analysis in Onshape to check that 3D-printed robot parts survive impact loading, using the VEX robot's aligner as the case study"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Converting measured robot mass and speed into an estimated impact load, then comparing simulation stress against a hand calculation",
+    "runs": [
+      {
+        "text": "Converting measured robot mass and speed into an estimated impact load, then comparing simulation stress against a hand calculation"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Documenting fits and tolerances on the aligner with a dimensioned drawing and GD&T callouts for printed parts",
+    "runs": [
+      {
+        "text": "Documenting fits and tolerances on the aligner with a dimensioned drawing and GD&T callouts for printed parts"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Volumetric Display | Collaborative Project \t\t\t     \t\t\t\t              August 2026 - Present",
+    "runs": [
+      {
+        "text": "Volumetric Display"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "| Collaborative Project"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "\t\t\t     \t\t\t\t              August 2026 - Present"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Collaborating on a swept-surface 3D display where a fast-spinning surface and synced LEDs form an image viewable from any angle; handling mechanical design in Onshape",
+    "runs": [
+      {
+        "text": "Collaborating on a swept-surface 3D display where a fast-spinning surface and synced LEDs form an image viewable from any angle; handling mechanical design in Onshape"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Redesigned the rotating surface from a solid wall to 20 lightweight radial arms to cut drag; cut one wall segment's print time from ~10 hours to 1–2 by hollowing it into a lattice",
+    "runs": [
+      {
+        "text": "Redesigned the rotating surface from a solid wall to 20 lightweight radial arms to cut drag; cut one wall segment's print time from ~10 hours to 1–2 by hollowing it into a lattice"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Ran FEA on the center rod at ~4,500°/s and designed 3-point snap-fit joints to spread load across the arms",
+    "runs": [
+      {
+        "text": "Ran FEA on the center rod at ~4,500°/s and designed 3-point snap-fit joints to spread load across the arms"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Quadruped Robot | Personal Project \t\t\t     \t\t\t\t            October 2026 - Present",
+    "runs": [
+      {
+        "text": "Quadruped Robot"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "| Personal Project"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "\t\t\t     \t\t\t\t            October 2026 - Present"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Collaborating on a four-legged robot modeled on the Boston Dynamics dog, built to learn how legged robots walk and balance using real-time tracking",
+    "runs": [
+      {
+        "text": "Collaborating on a four-legged robot modeled on the Boston Dynamics dog, built to learn how legged robots walk and balance using real-time tracking"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Sprocket | Team Leader & Lead Designer\t\t\t       \t\t\t\t               Sept 2025 – Apr 2026 ",
+    "runs": [
+      {
+        "text": "Sprocket"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "| Team Leader & Lead Designer"
+      },
+      {
+        "text": "\t\t\t       \t\t\t\t               Sept 2025 – Apr 2026 "
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Led CAD design in Onshape and AutoCAD for a 4-person team, building a competition robot from scratch that solved prior teams' failures in weight, navigation drift, and documentation",
+    "runs": [
+      {
+        "text": "Led CAD design in Onshape and AutoCAD for a 4-person team, building a competition robot from scratch that solved prior teams' failures in weight, navigation drift, and documentation"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Designed the sensor mounts and tracking-wheel hardware for a closed-loop odometry and PID navigation system",
+    "runs": [
+      {
+        "text": "Designed the sensor mounts and tracking-wheel hardware for a closed-loop odometry and PID navigation system"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Won Judge's Award for engineering process and documentation; placed 3rd at SkillsUSA",
+    "runs": [
+      {
+        "text": "Won Judge's Award for engineering process and documentation; placed 3rd at SkillsUSA"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Launch Vehicle Project  | Lead Designer, EGR 101 (Embry-Riddle) \t\t          \t\t             Sept 2024 – May 2025 ",
+    "runs": [
+      {
+        "text": "Launch Vehicle Project  "
+      },
+      {
+        "text": "| Lead Designer, EGR 101 (Embry-Riddle)"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "\t\t          \t\t             Sept 2024 – May 2025 "
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Led design of a 125 ft two-stage orbital rocket concept for a 4-person team, sized to carry a 4,500 lb payload to low Earth orbit",
+    "runs": [
+      {
+        "text": "Led design of a 125 ft two-stage orbital rocket concept for a 4-person team, sized to carry a 4,500 lb payload to low Earth orbit"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Ran structural calculations for max dynamic pressure, sizing a 1/16-inch Aluminum 6063-T5 skin and titanium matrix composite bulkheads, and built a spreadsheet to check applied stress against allowable",
+    "runs": [
+      {
+        "text": "Ran structural calculations for max dynamic pressure, sizing a 1/16-inch Aluminum 6063-T5 skin and titanium matrix composite bulkheads, and built a spreadsheet to check applied stress against allowable"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "Modeled staging and orbital trajectory in MATLAB and the vehicle in SolidWorks",
+    "runs": [
+      {
+        "text": "Modeled staging and orbital trajectory in MATLAB and the vehicle in SolidWorks"
+      }
+    ],
+    "bullet": true
+  },
+  {
+    "text": "TECHNICAL SKILLS",
+    "runs": [
+      {
+        "text": "TECHNICAL SKILLS"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "CAD & Analysis: Onshape (FEA), SolidWorks, AutoCAD ",
+    "runs": [
+      {
+        "text": "CAD & Analysis:"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "Onshape (FEA), SolidWorks, AutoCAD "
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Design & Fabrication: Mechanical Design, 3D Printing (FDM), Reverse Engineering",
+    "runs": [
+      {
+        "text": "Design & Fabrication:"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "Mechanical Design, 3D Printing (FDM), Reverse Engineering"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Programming & Tools: C++, Python, MATLAB, Excel / Google Sheets",
+    "runs": [
+      {
+        "text": "Programming & Tools:"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "C++, Python, MATLAB, Excel / Google Sheets"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Languages: English, Vietnamese, Chinese",
+    "runs": [
+      {
+        "text": "Languages:"
+      },
+      {
+        "text": " "
+      },
+      {
+        "text": "English, Vietnamese, Chinese"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "HONORS & AWARDS",
+    "runs": [
+      {
+        "text": "HONORS & AWARDS"
+      }
+    ],
+    "bullet": false
+  },
+  {
+    "text": "Top 10 Academic Student: Recognized for academic excellence at ACIT.",
+    "runs": [
+      {
+        "text": "Top 10 Academic Student: Recognized for academic excellence at ACIT."
+      }
+    ],
+    "bullet": false
+  }
+]

@@ -27,9 +27,9 @@
 #projects-grid,
 #home-project-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
-  gap: 1.75rem;
+  gap: 1.4rem;
 }
 
 :is(#projects-grid, #home-project-list) > .portfolio-card {
@@ -37,9 +37,9 @@
   height: 100%;
   overflow: hidden;
   border: 1px solid var(--project-line);
-  border-radius: 1.1rem;
+  border-radius: 1.4rem;
   background: var(--project-paper);
-  box-shadow: 0 4px 14px rgb(24 33 47 / 3%);
+  box-shadow: 0 2px 4px rgb(24 33 47 / 2%), 0 12px 36px rgb(24 33 47 / 4%);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
@@ -61,7 +61,7 @@
   display: block;
   height: auto;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 11;
   flex: none;
   overflow: hidden;
   background: var(--project-soft);
@@ -107,7 +107,7 @@
   flex: 1;
   flex-direction: column;
   gap: 0.8rem;
-  padding: 1.5rem 1.6rem 1.4rem;
+  padding: 1.35rem;
 }
 
 .portfolio-card .project-card-body > * {
@@ -116,7 +116,7 @@
 
 .portfolio-card h3 {
   color: var(--project-ink);
-  font-size: clamp(1.18rem, 1.6vw, 1.45rem);
+  font-size: clamp(1.18rem, 1.6vw, 1.4rem);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.035em;
@@ -159,8 +159,8 @@
   flex: 1;
   padding: 0.15rem 0 0.4rem;
   color: var(--project-muted);
-  font-size: 0.9rem;
-  line-height: 1.7;
+  font-size: 0.85rem;
+  line-height: 1.65;
 }
 
 .portfolio-card .project-card-description strong {
@@ -650,6 +650,171 @@
   color: #9ba9bc;
   font-size: 0.72rem;
   text-align: center;
+}
+
+/* A quieter frame lets the engineering images and evidence lead. */
+#tab-project-content {
+  width: 100%;
+  max-width: 1440px;
+  padding: clamp(2.5rem, 5vw, 5rem) clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.project-page-heading {
+  position: relative;
+  padding-bottom: 1.7rem;
+  border-bottom: 1px solid var(--project-line);
+}
+
+.project-eyebrow {
+  margin-bottom: 0.8rem;
+  color: var(--project-accent);
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.project-page-heading h1 {
+  color: var(--project-ink);
+  font-size: clamp(2.7rem, 5vw, 4.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+}
+
+.project-page-intro {
+  margin-top: 1rem;
+  color: var(--project-muted);
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  line-height: 1.55;
+}
+
+.project-filter-bar {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.project-filter-bar .proj-filter-btn {
+  border-radius: 100px;
+  padding: 0.65rem 1rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border-color: var(--project-line);
+}
+
+.project-filter-bar .proj-filter-btn:focus-visible {
+  outline: 3px solid var(--project-accent);
+  outline-offset: 3px;
+}
+
+.project-filter-bar .proj-filter-btn:not(.bg-rose-500) {
+  color: var(--project-muted);
+  background: var(--project-paper);
+}
+
+.portfolio-card .project-card-description > p {
+  margin-bottom: 0.8rem;
+  color: var(--project-ink);
+  font-weight: 500;
+}
+
+.portfolio-card .project-card-description ul {
+  margin-left: 0.95rem;
+}
+
+.portfolio-card .project-card-description li {
+  padding-left: 0.15rem;
+  margin-top: 0.55rem;
+}
+
+.portfolio-card .project-card-description li::marker {
+  color: var(--project-accent);
+  font-size: 0.75em;
+}
+
+.portfolio-card .project-card-description strong {
+  font-weight: 700;
+}
+
+.portfolio-card .project-card-link {
+  margin-top: 0.25rem;
+  padding: 0.7rem 0;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+#hero-card {
+  border-radius: 2rem;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 18%);
+}
+
+.hero-identity {
+  margin-bottom: 1.4rem;
+  color: var(--project-muted);
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  font-weight: 600;
+}
+
+.hero-identity span {
+  color: var(--project-accent);
+  padding: 0 0.4rem;
+}
+
+.hero-headline {
+  color: var(--project-ink);
+  font-size: clamp(2rem, 4.5vw, 3.9rem);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+}
+
+.hero-summary {
+  margin: 1.5rem auto 2rem;
+  max-width: 36rem;
+  color: var(--project-muted);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  line-height: 1.7;
+}
+
+#tab-resume-content {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.live-resume-paper {
+  overflow: hidden;
+  border: 1px solid var(--project-line);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 12px 50px rgb(24 33 47 / 6%);
+}
+
+#resume-frame {
+  display: block;
+  width: 100%;
+  min-height: 650px;
+  border: 0;
+}
+
+.case-study .case-note {
+  border-radius: 1rem;
+}
+
+@media (min-width: 1000px) {
+  .project-page-intro {
+    position: absolute;
+    right: 0;
+    bottom: 1.9rem;
+    margin: 0;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1099px) {
+  #projects-grid,
+  #home-project-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {

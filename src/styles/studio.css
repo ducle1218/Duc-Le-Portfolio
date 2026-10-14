@@ -113,3 +113,18 @@ footer { border-top:1px solid var(--project-line)!important; padding:28px 4vw!im
 @keyframes machine-float{0%,100%{transform:translateY(0) rotate(-9deg)}50%{transform:translateY(-10px) rotate(5deg)}}
 @media(max-width:760px){.hero-copy h1{font-size:clamp(43px,9.5vw,70px)}.studio-brand{font-size:17px}.studio-contact-cta>p:last-child{max-width:78%}}
 @media(max-width:760px){.hero-machine img{height:65%;max-width:92%;margin-bottom:24px}}
+
+/* Consistent screenshot presentation: retain the original CAD and analysis evidence. */
+html,body{overflow-x:clip;scrollbar-width:none!important;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+.studio-hero{overflow:hidden}
+.hero-machine,.hero-machine *,.machine-selector,.machine-selector *,nav button{user-select:none!important;-webkit-user-select:none!important}
+.hero-machine{background:none;mix-blend-mode:normal}
+.hero-machine img{width:86%;height:68%;padding:14px;background:#f3f4f7;object-fit:contain;border:1px solid var(--project-line);border-radius:16px;mix-blend-mode:normal;animation:none;transform:none;will-change:auto;box-shadow:0 16px 40px #20212608}
+.hero-machine:hover img{filter:none}
+.machine-label{top:0;background:white}
+.hero-bottom{justify-content:flex-end;gap:32px}
+.section-end{justify-content:flex-end}
+.workbench-film video{width:100%;height:auto;aspect-ratio:auto;max-height:none;object-fit:contain;filter:none;background:#11151b}
+#film-toggle{bottom:48px}
+@media(max-width:760px){.hero-machine img{width:90%;max-width:90%;height:64%;margin-bottom:24px;padding:8px;border-radius:10px}.hero-bottom{flex-wrap:nowrap}.hero-bottom button{font-size:8px}.workbench-film video{aspect-ratio:auto}.machine-label{font-size:8px}}

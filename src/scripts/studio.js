@@ -29,6 +29,12 @@
   }
   featureButtons.forEach(button=>button.addEventListener('click',()=>selectFeature(button)));
   let paused = reduced.matches;
+  let filmVisible = false;
+  let filmManuallyPaused = false;
+  function syncFilm() {
+    if (paused || filmManuallyPaused || !filmVisible || document.hidden) film.pause();
+    else film.play().catch(updateFilmButton);
+  }
   function updateFilmButton() {
     filmButton.innerHTML = film.paused ? 'Play film <span>▶</span>' : 'Pause film <span>Ⅱ</span>';
     filmButton.setAttribute('aria-label',film.paused?'Play robot build video':'Pause robot build video');
@@ -37,13 +43,13 @@
     root.classList.toggle('motion-paused',paused);
     motion.setAttribute('aria-pressed',String(paused));
     motion.innerHTML = paused ? 'Enable motion <span>▶</span>' : 'Pause motion <span>Ⅱ</span>';
-    if (paused) { film.pause(); film.dataset.userPlaying='false'; }
+    syncFilm();
   }
   motion.addEventListener('click',()=>{paused=!paused;applyMotion();});
   reduced.addEventListener('change',()=>{paused=reduced.matches;applyMotion();});
   filmButton.addEventListener('click',()=>{
-    if (film.paused) {film.dataset.userPlaying='true';film.play().catch(updateFilmButton);}
-    else {film.dataset.userPlaying='false';film.pause();}
+    if (film.paused) {filmManuallyPaused=false;film.play().catch(updateFilmButton);}
+    else {filmManuallyPaused=true;film.pause();}
   });
   film.addEventListener('play',updateFilmButton);
   film.addEventListener('pause',updateFilmButton);
@@ -64,8 +70,8 @@
     observer.observe(el);
   });
   new IntersectionObserver(entries=>entries.forEach(entry=>{
-    if(!entry.isIntersecting)film.pause();
-    else if(film.dataset.userPlaying==='true'&&!paused)film.play().catch(()=>{});
+    filmVisible=entry.isIntersecting;
+    syncFilm();
   }),{threshold:.15}).observe(film);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)film.pause();});
+  document.addEventListener('visibilitychange',syncFilm);
 })();

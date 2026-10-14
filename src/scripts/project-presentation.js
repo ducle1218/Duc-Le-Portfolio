@@ -15,6 +15,22 @@
   let returnFocus = null;
   let previousOverflow = '';
 
+  function enhanceSkillLogos(root) {
+    root.querySelectorAll('.project-card-skills span, .case-tools span, .legacy-case-study span').forEach(tag => {
+      if (tag.querySelector('img') || tag.children.length) return;
+      const label = tag.textContent.trim().toLowerCase();
+      const file = /^(3d printing|fdm printing|design for printing|printed-part design)$/.test(label) ? 'bambu-logo.png' :
+        /^onshape(?: fea)?$/.test(label) ? 'onshape_logo.png' : label === 'solidworks' ? 'solidworks_icon.png' : null;
+      if (!file) return;
+      const logo = document.createElement('img');
+      logo.src = 'src/assets/images/logos/' + file;
+      logo.alt = '';
+      logo.className = 'skill-logo';
+      tag.classList.add('skill-with-logo');
+      tag.prepend(logo);
+    });
+  }
+
   function enhanceCards(root) {
     root.querySelectorAll(':scope > [onclick]').forEach((card) => {
       if (card.dataset.presentationReady) return;
@@ -35,6 +51,7 @@
       sections.forEach((section, index) => {
         if (classes[index]) section.classList.add(classes[index]);
       });
+      enhanceSkillLogos(card);
 
       // "Personal / Personal Project" repeats the same label twice.
       const badges = sections[1];
@@ -155,6 +172,7 @@
     Array.from(root.children).forEach((child) => {
       if (!child.classList.contains('case-study')) child.classList.add('legacy-case-study');
     });
+    enhanceSkillLogos(root);
     root.querySelectorAll('img').forEach((image) => {
       if (image.dataset.zoomReady || image.closest('a, button, [data-no-lightbox]') ||
           /\/logos\//.test(image.getAttribute('src') || '') || !image.alt) return;

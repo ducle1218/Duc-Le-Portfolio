@@ -3,9 +3,10 @@
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const root = document.documentElement;
   const theme = document.getElementById('theme-toggle');
+  theme.innerHTML = '<span class="theme-sky" aria-hidden="true"><span class="theme-sun">☀</span><span class="theme-moon">☾</span></span><span class="theme-label"></span>';
   function applyTheme() {
     const dark = root.classList.contains('dark');
-    theme.textContent = dark ? 'Light mode ☀' : 'Dark mode ☾';
+    theme.querySelector('.theme-label').textContent = dark ? 'Dark mode' : 'Light mode';
     theme.setAttribute('aria-pressed',String(dark));
     theme.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
   }

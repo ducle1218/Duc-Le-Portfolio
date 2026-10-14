@@ -565,8 +565,8 @@
   </style>
   <link rel="stylesheet" href="src/styles/projects.css?v=20261014-2">
   <script src="src/scripts/project-presentation.js" defer></script>
-  <link rel="stylesheet" href="src/styles/studio.css?v=20261014-1">
-  <script src="src/scripts/studio.js?v=20261014-1" defer></script>
+  <link rel="stylesheet" href="src/styles/studio.css?v=20261014-2">
+  <script src="src/scripts/studio.js?v=20261014-2" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -575,7 +575,7 @@
   <!-- Header Navigation -->
   <nav class="no-print sticky top-0 z-40 bg-white/65 dark:bg-slate-950/65 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-3 sm:px-6 py-3 sm:py-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
-      <button class="studio-brand" onclick="switchTab('home')" aria-label="Duc Le home"><span class="brand-symbol">d<span>l</span>.</span><span>Duc Le<small>Mechanical engineering</small></span></button>
+      <button class="studio-brand" onclick="switchTab('home')" aria-label="Duc Le home"><span>Duc Le<small>Mechanical engineering</small></span></button>
       <div class="flex items-center gap-3 sm:gap-8 overflow-x-auto">
         <button onclick="switchTab('home')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-rose-500 border-b-2 border-rose-500 py-1 whitespace-nowrap shrink-0" id="btn-home">Home</button>
         <button onclick="switchTab('resume')" class="tab-btn font-mono text-xs sm:text-sm tracking-widest font-black uppercase text-slate-500 border-b-2 border-transparent py-1 whitespace-nowrap shrink-0" id="btn-resume">Resume</button>
@@ -590,12 +590,12 @@
   <div id="tab-home-content" class="tab-pane relative flex-1 flex flex-col">
 
     <section id="hero-fold" class="studio-hero">
-      <div class="hero-topline"><span><i></i> DUC LE / ENGINEERING IN PROGRESS</span><span>RUTGERS UNIVERSITY · NEW JERSEY</span></div>
+      <div class="hero-topline"><span><i></i> DUC LE / MECHANICAL ENGINEERING STUDENT</span><span>RUTGERS UNIVERSITY · NEW JERSEY</span></div>
       <div class="hero-composition">
         <div class="hero-copy">
-          <h1>Curiosity,<br><em>in motion.</em></h1>
-          <p>From folding robots to experiments with light.<br>I turn “what if” into parts I can hold.</p>
-          <div class="hero-actions"><button class="studio-button" onclick="switchTab('project')">Explore my work <span>↗</span></button><button class="studio-text-button" onclick="switchTab('resume')">Meet the engineer <span>↗</span></button></div>
+          <h1>Mechanical design.<br><em>Built to learn.</em></h1>
+          <p>I’m Duc, a mechanical engineering student at Rutgers.<br>I design mechanisms, build prototypes, and use analysis and testing to improve them.</p>
+          <div class="hero-actions"><button class="studio-button" onclick="switchTab('project')">Explore my work <span>↗</span></button><button class="studio-text-button" onclick="switchTab('resume')">View my resume <span>↗</span></button></div>
         </div>
         <div class="machine-stage">
         <button class="hero-machine" data-project="box-12" onclick="showProjectDetail(this.dataset.project)" aria-label="Explore the folding quadruped robot">
@@ -610,7 +610,6 @@
       </div>
       <div class="hero-bottom"><span>CAD → PROTOTYPE → TEST → REPEAT</span><button onclick="document.getElementById('featured-projects-section').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})">SCROLL TO DISCOVER <span>↓</span></button><button id="motion-toggle" aria-pressed="false">Pause motion <span>Ⅱ</span></button></div>
     </section>
-    <div class="discipline-strip" aria-label="Mechanical design, robotics, prototyping, and analysis"><div aria-hidden="true"><span>MECHANICAL DESIGN</span><b>✳</b><span>ROBOTICS</span><b>✳</b><span>PROTOTYPING</span><b>✳</b><span>ANALYSIS</span><b>✳</b><span>MECHANICAL DESIGN</span><b>✳</b><span>ROBOTICS</span><b>✳</b><span>PROTOTYPING</span><b>✳</b><span>ANALYSIS</span><b>✳</b></div></div>
     <section id="featured-projects-section" class="studio-section">
       <div class="section-heading"><div><p class="studio-eyebrow">01 / SELECTED WORK</p><h2>Ideas, made <em>tangible.</em></h2></div><p>Real parts. Real constraints.<br>A closer look at how I work.</p></div>
       <div id="home-project-list"></div>
@@ -620,7 +619,7 @@
       <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>The best part?<br><em>Making it real.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><span><strong>01</strong>Model the idea</span><span><strong>02</strong>Build the part</span><span><strong>03</strong>Learn from the test</span></div></div>
       <figure class="workbench-film"><video id="hero-bg-video" muted loop playsinline preload="none" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
     </section>
-    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / WHAT’S NEXT?</p><h2>Let’s build<br>something <em>interesting.</em></h2><button onclick="switchTab('contact')" aria-label="Get in touch" class="contact-orbit">↗</button><p>Have a project, a question, or a challenge?<br>I’d love to hear about it.</p></section>
+    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Ready to learn.<br>Ready to <em>contribute.</em></h2><button onclick="switchTab('contact')" aria-label="Get in touch" class="contact-orbit">↗</button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
   </div>
 
   <!-- ======================== TAB: RESUME ======================== -->
@@ -694,7 +693,7 @@
   <div id="tab-contact-content" class="tab-pane hidden flex-1 max-w-[95vw] xl:max-w-[90rem] mx-auto px-6 py-12 space-y-12">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-[6.5rem] bg-white dark:bg-slate-900 border rounded-3xl p-6 sm:p-8 md:p-12 relative shadow-2xl">
       <div class="space-y-6 relative z-10">
-        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Good things start<br>with a conversation.</h2>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Let’s talk<br>engineering.</h2>
         <div id="contact-form-container">
           <form id="contact-form" onsubmit="handleStaticContactSubmit(event)" class="space-y-4">
             <div>
@@ -775,7 +774,7 @@
   </div>
 
   <footer class="no-print border-t border-slate-100 dark:border-slate-900 text-center py-8 text-[10px] font-mono text-slate-400">
-    <p>Duc Le © 2026 <span class="footer-note">Curiosity is a work in progress.</span></p>
+    <p>Duc Le © 2026 <span class="footer-note">Mechanical engineering · Rutgers University</span></p>
   </footer>
 
   <script src="src/scripts/engineering-projects.js?v=20261014-2"></script>

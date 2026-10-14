@@ -11,7 +11,10 @@
     display:{id:'box-7',image:'volumetric-display/radial-arm-assembly.webp',alt:'CAD of a volumetric display rotor with twenty radial arms',label:'02 / VOLUMETRIC DISPLAY',title:'A new dimension for light.',status:'20-arm rotor architecture · mechanical development'},
     fea:{id:'box-11',image:'fea/aligner-load-stress.png',alt:'Stress contour of the two-plate robot aligner',label:'03 / STRUCTURAL ANALYSIS',title:'See where the load goes.',status:'Two-plate aligner · preliminary FEA'}
   };
-  document.querySelectorAll('[data-feature]').forEach(button=>button.addEventListener('click',()=>{
+  const featureButtons = [...document.querySelectorAll('[data-feature]')];
+  const stage = document.querySelector('.machine-stage');
+  let lastFeatureChange = Date.now();
+  function selectFeature(button) {
     const f=features[button.dataset.feature];
     document.querySelectorAll('[data-feature]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
     machine.dataset.project=f.id;
@@ -22,7 +25,9 @@
     const caption=machine.querySelector('.machine-caption>span');
     caption.replaceChildren(document.createTextNode(f.title));
     const small=document.createElement('small');small.textContent=f.status;caption.appendChild(small);
-  }));
+    lastFeatureChange = Date.now();
+  }
+  featureButtons.forEach(button=>button.addEventListener('click',()=>selectFeature(button)));
   let paused = reduced.matches;
   function updateFilmButton() {
     filmButton.innerHTML = film.paused ? 'Play film <span>▶</span>' : 'Pause film <span>Ⅱ</span>';
@@ -43,6 +48,14 @@
   film.addEventListener('play',updateFilmButton);
   film.addEventListener('pause',updateFilmButton);
   applyMotion();
+  // Cycle only while the showcase is visible and the visitor is not interacting.
+  let stageVisible = false;
+  new IntersectionObserver(entries=>{stageVisible=entries[0].isIntersecting;},{threshold:.5}).observe(stage);
+  window.setInterval(()=>{
+    if(paused || document.hidden || !stageVisible || stage.matches(':hover') || stage.contains(document.activeElement) || Date.now()-lastFeatureChange<7000) return;
+    const current=featureButtons.findIndex(b=>b.getAttribute('aria-pressed')==='true');
+    selectFeature(featureButtons[(current+1)%featureButtons.length]);
+  },1000);
   const observer = new IntersectionObserver(entries=>entries.forEach(entry=>{
     if (entry.isIntersecting) {entry.target.classList.add('is-revealed');observer.unobserve(entry.target);}
   }),{threshold:.08});

@@ -60,7 +60,7 @@
     });
   }
   updatePlanets();
-  let lastFeatureChange = Date.now();
+  let featureElapsed = 0;
   function selectFeature(button, source) {
     if (button.dataset.feature===currentFeature) return;
     const origin=(source || planets.find(p=>p.dataset.projectKey===button.dataset.feature))?.getBoundingClientRect();
@@ -77,14 +77,15 @@
     const small=document.createElement('small');small.textContent=f.status;caption.appendChild(small);
     currentFeature=button.dataset.feature;
     updatePlanets();
+    sizeShowcase();
     if (!paused && !reduced.matches) {
       const img=machine.querySelector('img'),rect=img.getBoundingClientRect();
       const x=origin ? origin.x+origin.width/2-rect.x-rect.width/2 : 0;
       const y=origin ? origin.y+origin.height/2-rect.y-rect.height/2 : 0;
       entrance=img.animate([{transform:`translate(${x}px,${y}px) scale(.16) rotate(-150deg)`,opacity:.3},{transform:'translate(0,0) scale(1) rotate(0deg)',opacity:1}],{duration:850,easing:'cubic-bezier(.22,.75,.2,1)'});
-      orbitTurn={start:performance.now(),from:orbitAngle};
+      orbitTurn={elapsed:0,from:orbitAngle};
     }
-    lastFeatureChange = Date.now();
+    featureElapsed = 0;
   }
   featureButtons.forEach(button=>button.addEventListener('click',()=>selectFeature(button)));
   let paused = reduced.matches;
@@ -116,26 +117,53 @@
   applyMotion();
   // Cycle only while the showcase is visible and the visitor is not interacting.
   let stageVisible = false;
-  new IntersectionObserver(entries=>{stageVisible=entries[0].isIntersecting;},{threshold:.5}).observe(stage);
-  let previousFrame=performance.now();
-  function orbitFrame(now) {
-    const elapsed=Math.min(now-previousFrame,40);previousFrame=now;
-    if(!paused && !document.hidden && stageVisible && !planetLayer.matches(':hover') && !planetLayer.contains(document.activeElement)) {
-      if(orbitTurn){const t=Math.min((now-orbitTurn.start)/850,1);orbitAngle=orbitTurn.from+Math.PI*(1-Math.pow(1-t,3));if(t===1)orbitTurn=null;}
-      else orbitAngle+=elapsed*.00012;
-    } else if(orbitTurn && !paused) {
-      const t=Math.min((now-orbitTurn.start)/850,1);orbitAngle=orbitTurn.from+Math.PI*(1-Math.pow(1-t,3));if(t===1)orbitTurn=null;
+  let previousFrame=null;
+  function syncShowcase() {
+    previousFrame=null;
+    const suspended=paused || document.hidden || !stageVisible;
+    stage.classList.toggle('showcase-suspended',suspended);
+    if(entrance && entrance.playState!=='finished') {
+      if(suspended) entrance.pause(); else entrance.play();
     }
-    const w=machine.clientWidth,h=machine.clientHeight;
-    planets.forEach((p,i)=>{const a=orbitAngle+i*Math.PI;p.style.left=`${w/2+Math.cos(a)*(w/2-42)}px`;p.style.top=`${h*.47+Math.sin(a)*h*.36}px`;});
+  }
+  new IntersectionObserver(entries=>{stageVisible=entries[0].isIntersecting;syncShowcase();},{threshold:0}).observe(machine);
+  document.addEventListener('visibilitychange',syncShowcase);
+  let geometry={x:0,y:0,radius:0};
+  function sizeShowcase() {
+    const w=machine.clientWidth,planetSize=planets[0].offsetWidth;
+    if(!w) return;
+    const diameter=w-planetSize-24,centerY=36+w/2;
+    machine.style.height=`${w+96}px`;
+    machine.style.setProperty('--orbit-diameter',`${diameter}px`);
+    machine.style.setProperty('--orbit-center-y',`${centerY}px`);
+    // Fit the image's diagonal in the clear inner disk at every rotation angle.
+    const ratios={robot:1727/911,display:1282/1227,fea:1528/1029};
+    const ratio=ratios[currentFeature];
+    const imageWidth=(diameter-planetSize-24)/Math.sqrt(1+1/(ratio*ratio));
+    machine.style.setProperty('--project-width',`${imageWidth}px`);
+    machine.style.setProperty('--project-height',`${imageWidth/ratio}px`);
+    geometry={x:machine.offsetLeft+w/2,y:machine.offsetTop+centerY,radius:diameter/2};
+  }
+  new ResizeObserver(sizeShowcase).observe(machine);
+  sizeShowcase();
+  function orbitFrame(now) {
+    const elapsed=previousFrame===null?0:Math.min(now-previousFrame,40);previousFrame=now;
+    // Advance only visible time: returning from another tab never catches up.
+    if(!paused && !document.hidden && stageVisible && machine.getClientRects().length) {
+      if(orbitTurn){orbitTurn.elapsed+=elapsed;const t=Math.min(orbitTurn.elapsed/850,1);orbitAngle=orbitTurn.from+Math.PI*(1-Math.pow(1-t,3));if(t===1)orbitTurn=null;}
+      else if(!planetLayer.matches(':hover') && !planetLayer.contains(document.activeElement)) orbitAngle+=elapsed*.00012;
+      if(!stage.matches(':hover') && !stage.contains(document.activeElement)) {
+        featureElapsed+=elapsed;
+        if(featureElapsed>=7000) {
+          const current=featureButtons.findIndex(b=>b.getAttribute('aria-pressed')==='true');
+          selectFeature(featureButtons[(current+1)%featureButtons.length]);
+        }
+      }
+    }
+    planets.forEach((p,i)=>{const a=orbitAngle+i*Math.PI;p.style.left=`${geometry.x+Math.cos(a)*geometry.radius}px`;p.style.top=`${geometry.y+Math.sin(a)*geometry.radius}px`;});
     requestAnimationFrame(orbitFrame);
   }
   requestAnimationFrame(orbitFrame);
-  window.setInterval(()=>{
-    if(paused || document.hidden || !stageVisible || stage.matches(':hover') || stage.contains(document.activeElement) || Date.now()-lastFeatureChange<7000) return;
-    const current=featureButtons.findIndex(b=>b.getAttribute('aria-pressed')==='true');
-    selectFeature(featureButtons[(current+1)%featureButtons.length]);
-  },1000);
   const observer = new IntersectionObserver(entries=>entries.forEach(entry=>{
     if (entry.isIntersecting) {entry.target.classList.add('is-revealed');observer.unobserve(entry.target);}
   }),{threshold:.08});

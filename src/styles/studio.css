@@ -162,3 +162,17 @@ html.dark .portfolio-card .project-card-cover{background:#e8ecf2}html.dark .port
 .project-planets{inset:0;width:100%;height:100%;z-index:1}
 .showcase-suspended .hero-machine img{animation-play-state:paused!important}
 @media(max-width:760px){.hero-machine{width:100%}.project-planets{left:0;width:100%;height:100%}}
+/* Continuous project exchange and clearer contact invitation. */
+.project-planet{left:0;top:0;will-change:transform}
+.project-transfer{position:absolute;left:0;top:0;object-fit:contain;pointer-events:none;z-index:3;will-change:transform}
+.is-exchanging>img{visibility:hidden}
+.hero-machine:disabled{cursor:default}
+nav{padding-top:13px!important;padding-bottom:13px!important}
+#theme-toggle{padding:7px 10px}
+.studio-hero{padding-top:20px}.hero-composition{padding-top:24px}
+.hero-copy{translate:0 -44px}
+.contact-orbit{width:auto;height:auto;right:4%;top:43%;min-width:250px;padding:22px 26px;border-radius:9px;background:var(--project-ink);color:var(--studio-bg);display:grid;grid-template-columns:1fr auto;gap:7px 30px;text-align:left;font-size:25px;font-family:'DM Sans',sans-serif;font-weight:600;box-shadow:0 10px 30px #10182812;transition:background .25s,translate .25s}
+.contact-orbit small{grid-column:1 / -1;font-size:11px;font-weight:400;opacity:.8}.contact-orbit:hover{background:var(--project-accent);color:var(--studio-bg);transform:none;translate:0 -3px}
+.studio-contact-cta h2{max-width:70%}
+@media(max-width:1000px){.contact-orbit{position:static;display:inline-grid;margin-top:28px}.studio-contact-cta h2{max-width:100%}}
+@media(max-width:760px){nav{padding-top:9px!important;padding-bottom:9px!important}.hero-copy{translate:0 0}.studio-hero{padding-top:8px}.hero-composition{padding-top:14px}.contact-orbit{min-width:235px;font-size:22px}.studio-contact-cta>p:last-child{max-width:100%}}

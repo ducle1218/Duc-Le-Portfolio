@@ -31,6 +31,17 @@
     display:{id:'box-7',image:'volumetric-display/hero-cutout.png',alt:'CAD of a volumetric display rotor with twenty radial arms',label:'02 / VOLUMETRIC DISPLAY',title:'A new dimension for light.',status:'20-arm rotor architecture · mechanical development'},
     fea:{id:'box-11',image:'fea/hero-cutout.png',alt:'Stress contour of the two-plate robot aligner',label:'03 / STRUCTURAL ANALYSIS',title:'See where the load goes.',status:'Two-plate aligner · preliminary FEA'}
   };
+  Object.assign(features,{
+    capstone:{id:'box-6',image:'capstone/Sprocket_Robot_CAD.png',alt:'CAD assembly of the VEX Pushback capstone robot',label:'04 / VEX PUSHBACK',title:'From mechanism to competition.',status:'Drivetrain, intake design, and controls integration',short:'VEX'},
+    launch:{id:'box-4',image:'launch_vehicle_cross_section.png',alt:'Launch vehicle structural cross-section drawing',label:'05 / LAUNCH VEHICLE',title:'Designing around the mission.',status:'Vehicle sizing, structural modeling, and packaging',short:'Launch'},
+    cad:{id:'box-3',image:'cswa_solidworks_practice.jpg',alt:'SolidWorks practice part and dimensioned drawing',label:'06 / CAD & MANUFACTURING',title:'From model to drawing.',status:'Parametric modeling and manufacturing documentation',short:'CAD'}
+  });
+  const selector=document.querySelector('.machine-selector');
+  ['capstone','launch','cad'].forEach((key,i)=>{
+    const button=document.createElement('button');button.type='button';button.dataset.feature=key;
+    button.setAttribute('aria-pressed','false');button.innerHTML=`0${i+4} <span>${features[key].short}</span>`;
+    selector.appendChild(button);
+  });
   const featureButtons = [...document.querySelectorAll('[data-feature]')];
   const stage = document.querySelector('.machine-stage');
   const planetLayer = document.createElement('div');
@@ -38,10 +49,11 @@
   planetLayer.setAttribute('aria-label','Other featured projects');
   stage.appendChild(planetLayer);
   let currentFeature = 'robot';
-  let orbitAngle = 0;
+  const angles=[-.7,1.7,3.5,4.6,.45];
+  const orbitSpeeds=[.000105,.00009,.000078,.000067,.000057];
   let exchange = null;
   let queuedFeature = null;
-  const planets = [0,1].map(() => {
+  const planets = [0,1,2,3,4].map(() => {
     const planet = document.createElement('button');
     planet.type = 'button';
     planet.className = 'project-planet';
@@ -60,12 +72,13 @@
     });
   }
   updatePlanets();
+  const rings=planets.map(()=>{const ring=document.createElement('span');ring.className='solar-orbit';ring.setAttribute('aria-hidden','true');machine.prepend(ring);return ring;});
   let featureElapsed = 0;
   const projectImage = machine.querySelector('img');
-  const ratios={robot:1727/911,display:1282/1227,fea:1528/1029};
+  const ratios={robot:1727/911,display:1282/1227,fea:1528/1029,capstone:755/842,launch:637/493,cad:1280/720};
   function imageSize(key) {
-    const ratio=ratios[key],clear=geometry.radius*2-planets[0].offsetWidth-24;
-    const width=clear/Math.sqrt(1+1/(ratio*ratio));
+    const ratio=ratios[key];
+    const width=Math.min(geometry.width*.68,geometry.width*.57*ratio);
     return {width,height:width/ratio};
   }
   function commitFeature(key, slot) {
@@ -125,17 +138,18 @@
     const {key,slot,incoming,outgoing}=exchange;
     const t=Math.min(exchange.elapsed/1600,1);
     const ease=t*t*t*(t*(t*6-15)+10);
-    const angle=orbitAngle+slot*Math.PI;
+    const angle=angles[slot];
     const thumb=planets[slot].querySelector('img').clientWidth;
-    function place(img,project,radius,theta,growth) {
+    function place(img,project,radial,theta,growth) {
       const size=imageSize(project),small=thumb/Math.max(size.width,size.height);
       img.style.width=`${size.width}px`;img.style.height=`${size.height}px`;
-      img.style.transform=`translate3d(${geometry.x+Math.cos(theta)*radius}px,${geometry.y+Math.sin(theta)*radius}px,0) translate(-50%,-50%) scale(${small+(1-small)*growth})`;
+      const position=orbitPoint(slot,theta,radial);
+      img.style.transform=`translate3d(${position.x}px,${position.y}px,0) translate(-50%,-50%) scale(${small+(1-small)*growth})`;
     }
     // Two complementary curved paths, with zero radial velocity at both ends.
     // No spin, teleport, or half-orbit acceleration when projects trade places.
-    place(incoming,key,geometry.radius*(1-ease),angle+ease*1.25,ease);
-    place(outgoing,currentFeature,geometry.radius*ease,angle-(1-ease)*1.25,1-ease);
+    place(incoming,key,(1-ease),angle+ease*1.25,ease);
+    place(outgoing,currentFeature,ease,angle-(1-ease)*1.25,1-ease);
     if(t===1) finishExchange();
   }
   featureButtons.forEach(button=>button.addEventListener('click',()=>selectFeature(button)));
@@ -176,20 +190,28 @@
   }
   new IntersectionObserver(entries=>{stageVisible=entries[0].isIntersecting;syncShowcase();},{threshold:0}).observe(machine);
   document.addEventListener('visibilitychange',syncShowcase);
-  let geometry={x:0,y:0,radius:0};
+  let geometry={x:0,y:0,width:0};
+  const tilt=-18*Math.PI/180;
+  function orbitPoint(slot,angle,radial=1) {
+    const radius=geometry.width*(.32+slot*.035),x=Math.cos(angle)*radius*radial,y=Math.sin(angle)*radius*.58*radial;
+    return {x:geometry.x+x*Math.cos(tilt)-y*Math.sin(tilt),y:geometry.y+x*Math.sin(tilt)+y*Math.cos(tilt)};
+  }
   function sizeShowcase() {
-    const w=machine.clientWidth,planetSize=planets[0].offsetWidth;
+    const w=machine.clientWidth;
     if(!w) return;
-    const diameter=w-planetSize-24,centerY=36+w/2;
-    machine.style.height=`${w+96}px`;
-    machine.style.setProperty('--orbit-diameter',`${diameter}px`);
+    const centerY=40+w*.39;
+    machine.style.height=`${w*.82+100}px`;
     machine.style.setProperty('--orbit-center-y',`${centerY}px`);
-    // Fit the image's diagonal in the clear inner disk at every rotation angle.
-    const ratio=ratios[currentFeature];
-    const imageWidth=(diameter-planetSize-24)/Math.sqrt(1+1/(ratio*ratio));
-    machine.style.setProperty('--project-width',`${imageWidth}px`);
-    machine.style.setProperty('--project-height',`${imageWidth/ratio}px`);
-    geometry={x:machine.offsetLeft+w/2,y:machine.offsetTop+centerY,radius:diameter/2};
+    geometry={x:machine.offsetLeft+w/2,y:machine.offsetTop+centerY,width:w};
+    const size=imageSize(currentFeature);
+    machine.style.setProperty('--project-width',`${size.width}px`);
+    machine.style.setProperty('--project-height',`${size.height}px`);
+    machine.style.setProperty('--sun-size',`${w*.59}px`);
+    rings.forEach((ring,i)=>{
+      const diameter=w*(.32+i*.035)*2;
+      ring.style.width=`${diameter}px`;ring.style.height=`${diameter*.58}px`;
+      ring.style.top=`${centerY}px`;
+    });
   }
   new ResizeObserver(sizeShowcase).observe(machine);
   sizeShowcase();
@@ -197,7 +219,7 @@
     const elapsed=previousFrame===null?0:Math.min(now-previousFrame,40);previousFrame=now;
     // Advance only visible time: returning from another tab never catches up.
     if(!paused && !document.hidden && stageVisible && machine.getClientRects().length) {
-      orbitAngle+=elapsed*.00012;
+      angles.forEach((angle,i)=>{angles[i]=angle+elapsed*orbitSpeeds[i];});
       if(exchange) {exchange.elapsed+=elapsed;renderExchange();}
       if(!exchange && !stage.matches(':hover') && !stage.contains(document.activeElement)) {
         featureElapsed+=elapsed;
@@ -207,7 +229,10 @@
         }
       }
     }
-    planets.forEach((p,i)=>{const a=orbitAngle+i*Math.PI;p.style.transform=`translate3d(${geometry.x+Math.cos(a)*geometry.radius}px,${geometry.y+Math.sin(a)*geometry.radius}px,0) translate(-50%,-50%)`;});
+    planets.forEach((p,i)=>{
+      const point=orbitPoint(i,angles[i]);
+      p.style.transform=`translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%)`;
+    });
     requestAnimationFrame(orbitFrame);
   }
   requestAnimationFrame(orbitFrame);

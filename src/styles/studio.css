@@ -189,3 +189,40 @@ nav{padding-top:13px!important;padding-bottom:13px!important}
 @media(max-width:760px){.hero-composition{grid-template-columns:1fr;gap:12px}.project-planet{width:40px;height:40px;padding:4px}.machine-selector{gap:4px 15px}.machine-selector button span{font-size:10px}.machine-label{font-size:8px}}
 .hero-machine{z-index:3}.project-planets{z-index:2}
 .hero-machine::before{display:none}.solar-orbit{border-color:#aeb6c2;opacity:.65}.hero-copy h1{font-size:clamp(45px,5vw,80px)}@media(max-width:760px){.hero-copy h1{font-size:clamp(43px,9.5vw,70px)}}
+/* Use the available desktop space, including when browser zoom widens the viewport. */
+@media(min-width:1600px){
+  nav>div{max-width:none!important}
+  .studio-hero,.studio-section,.studio-contact-cta,#tab-project-content{max-width:none;width:100%;padding-inline:4vw}
+  .workbench-section{padding-inline:4vw}
+  nav{padding-block:clamp(13px,.8vw,24px)!important}
+  nav .tab-btn{font-size:clamp(13px,.8vw,23px)}
+  nav>div>div:last-child{gap:clamp(32px,2vw,58px)}
+  .studio-brand{font-size:clamp(20px,1.25vw,36px)}
+  .studio-brand small{font-size:clamp(10px,.65vw,18px)}
+  .brand-controls{gap:clamp(24px,1.5vw,44px)}
+  #theme-toggle{font-size:clamp(11px,.7vw,20px);padding:clamp(7px,.45vw,13px) clamp(10px,.65vw,18px)}
+  .hero-composition{gap:clamp(28px,2vw,58px);padding-top:clamp(24px,1.5vw,44px)}
+  .hero-copy h1{font-size:clamp(80px,4.8vw,138px);margin-bottom:clamp(30px,2vw,58px)}
+  .hero-copy>p{font-size:clamp(19px,1.15vw,32px);max-width:34em;margin-bottom:clamp(32px,2vw,58px)}
+  .hero-actions{gap:clamp(24px,1.5vw,44px)}
+  .studio-button,.studio-text-button{font-size:clamp(13px,.85vw,24px)}
+  .studio-button{padding:clamp(17px,1.1vw,32px) clamp(23px,1.5vw,44px);gap:clamp(30px,2vw,58px)}
+  .studio-button span,.studio-text-button span{font-size:clamp(20px,1.25vw,36px)}
+  .section-heading h2{font-size:clamp(46px,2.9vw,80px)}
+  .portfolio-card h3{font-size:clamp(23px,1.45vw,40px)}
+  .portfolio-card .project-card-description{font-size:clamp(13px,.85vw,24px)}
+  .portfolio-card .project-card-meta,.portfolio-card .project-card-skills span{font-size:clamp(10px,.65vw,18px)}
+  .portfolio-card .project-card-body{padding:clamp(25px,1.6vw,46px);gap:clamp(15px,1vw,28px)}
+  .portfolio-card .project-card-link{font-size:clamp(13px,.85vw,24px)}
+  .studio-eyebrow,.project-eyebrow,.workbench-film figcaption{font-size:clamp(10px,.65vw,18px)}
+  .workbench-copy h2{font-size:clamp(68px,4.3vw,120px)}
+  .workbench-copy>p:not(.studio-eyebrow),.studio-contact-cta>p:last-child{font-size:clamp(14px,.9vw,26px);max-width:38em}
+  .bench-facts strong{font-size:clamp(15px,.95vw,27px)}
+  .bench-facts p{font-size:clamp(12px,.8vw,23px);max-width:38em}
+  .studio-contact-cta h2{font-size:clamp(80px,5vw,144px)}
+  .contact-orbit{font-size:clamp(25px,1.6vw,46px);padding:clamp(22px,1.4vw,40px) clamp(26px,1.7vw,49px)}
+  .contact-orbit small{font-size:clamp(11px,.7vw,20px)}
+  .project-page-heading h1{font-size:clamp(74px,4.6vw,132px)}
+  .project-page-intro{font-size:clamp(14px,.9vw,26px);max-width:46em}
+  .project-filter-bar .proj-filter-btn{font-size:clamp(11px,.7vw,20px)}
+}

@@ -1,7 +1,8 @@
 .constellation-stage{--dock-width:92px;--dock-gap:16px;position:relative;min-width:0;padding-top:8px;display:grid;grid-template-columns:minmax(0,1fr) var(--dock-width);column-gap:var(--dock-gap)}
 .system-scene{position:relative;grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) var(--dock-width);column-gap:var(--dock-gap);align-items:center}
 .active-system{position:relative;min-width:0}
-.system-description{grid-column:1;text-align:center;width:100%;min-height:140px;margin:0;padding:8px 0 10px;position:relative;z-index:3}
+.system-description{grid-column:1;text-align:center;width:100%;min-height:190px;margin:0;padding:8px 0 10px;position:relative;z-index:3}
+.system-kicker{display:flex;justify-content:center;align-items:center;gap:14px;min-height:26px;flex-wrap:wrap}
 .system-category{font:9px ui-monospace,monospace;letter-spacing:.08em;color:var(--project-muted);text-transform:uppercase}
 .system-description h2{font-size:23px;line-height:1.15;font-weight:600;letter-spacing:-.035em;margin:9px 0 8px;color:var(--project-ink)}
 .system-description p{font-size:12px;line-height:1.5;color:var(--project-muted);margin:auto;max-width:350px}
@@ -14,16 +15,13 @@
 .system-sun{transform:translate(-50%,-50%);z-index:3;transition:box-shadow .2s,border-color .2s}
 .system-sun:hover{border-color:var(--project-accent);box-shadow:0 12px 38px #bd294618}
 .system-sun img,.system-transfer img{width:84%;height:84%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}
-.system-sun>span{position:absolute;bottom:8%;font-size:10px;color:#343b45;background:#ffffffe8;padding:4px 10px;border-radius:12px}
+.system-sun>span{position:absolute;bottom:8%;z-index:2;font-size:10px;color:#343b45;background:#ffffffe8;padding:4px 10px;border-radius:12px}
 .system-planet{z-index:2;padding:0;will-change:transform;overflow:visible;box-shadow:0 4px 18px #1018280d}
 .system-planet::after{content:'';position:absolute;width:max(100%,44px);height:max(100%,44px);left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%}
 .system-planet img{position:absolute;width:84%;height:84%;min-width:0;min-height:0;object-fit:contain;border-radius:50%;pointer-events:none}
 .system-planet>span{position:absolute;top:calc(100% + 5px);left:50%;translate:-50% 0;white-space:nowrap;font-size:9px;background:var(--studio-bg);color:var(--project-ink);padding:3px 6px;opacity:0;pointer-events:none}
 .system-planet:hover>span,.system-planet:focus-visible>span{opacity:1}
 .system-transfer{z-index:5;pointer-events:none;will-change:transform}
-.system-project-tabs{grid-column:1;display:flex;justify-content:center;gap:8px 15px;flex-wrap:wrap;margin:0 auto 2px;position:relative;z-index:3}
-.system-project-tabs button{font-size:10px;color:var(--project-muted);padding:7px 0;border-bottom:1px solid transparent}
-.system-project-tabs button[aria-pressed=true]{color:var(--project-ink);border-bottom-color:var(--studio-red)}
 .system-dock{display:flex;flex-direction:column;align-items:center;gap:22px;grid-column:2;min-width:0}
 .mini-system{position:relative;width:100%;z-index:6;color:var(--project-muted);text-align:center;border-radius:12px;padding:5px;transition:background .2s,color .2s}
 .mini-system:hover{background:var(--project-soft);color:var(--project-ink)}
@@ -38,10 +36,31 @@
 .mini-name{display:block;font-size:9px;line-height:1.4;min-height:2.8em;max-width:100px;margin:7px auto 0}
 .system-flight{position:absolute;left:0;top:0;pointer-events:none;z-index:8;will-change:transform;width:0;height:0}
 .flight-sun{transform:translate(-50%,-50%)}
-.flight-sun>span{position:absolute;bottom:8%;font-size:10px;color:#343b45;background:#ffffffe8;padding:4px 10px;border-radius:12px;white-space:nowrap}
-.constellation-stage #motion-toggle{grid-column:1;justify-self:center}
+.flight-sun>span{position:absolute;bottom:8%;z-index:2;font-size:10px;color:#343b45;background:#ffffffe8;padding:4px 10px;border-radius:12px;white-space:nowrap}
+.constellation-stage #motion-toggle{display:inline-flex;align-items:center;gap:4px;margin:0;padding:5px 7px;font-size:9px;line-height:1.2;border:1px solid var(--project-line);border-radius:4px}
+/* Extend the photograph's colors into the circle; keep its subject undistorted. */
+.has-photo-backdrop::before{content:'';position:absolute;inset:0;border-radius:50%;background-image:var(--project-photo);background-position:center;background-size:cover;filter:blur(var(--media-blur,9px));clip-path:circle(50%);opacity:.82;pointer-events:none}
+.has-photo-backdrop>img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;width:auto;height:auto;max-width:84%;max-height:84%;border-radius:0;object-fit:contain;mask-image:linear-gradient(to right,transparent,#000 4%,#000 96%,transparent),linear-gradient(to bottom,transparent,#000 4%,#000 96%,transparent);mask-composite:intersect}
+.system-planet,.mini-sun,.mini-planet,.flight-planet{--media-blur:2px}
 .system-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .constellation-stage button:disabled{cursor:default}
 @media(max-width:1100px){.constellation-stage{--dock-width:80px;--dock-gap:12px}.system-description h2{font-size:20px}.system-description p{font-size:11px}}
-@media(max-width:760px){.constellation-stage{--dock-width:70px;--dock-gap:8px;padding-top:12px}.system-description{grid-column:1/-1;min-height:0;padding-top:10px}.system-description h2{font-size:20px}.system-category{font-size:8px}.system-description p{font-size:12px;max-width:300px}.system-dock{gap:36px}.system-scene{padding-block:8px}.mini-system{padding:3px}.mini-name{font-size:8px}.system-sun>span,.flight-sun>span{font-size:8px;padding:2px 5px}.system-project-tabs{grid-column:1/-1;gap:4px 12px}.system-project-tabs button{font-size:9px}.system-planet>span{display:none}.constellation-stage #motion-toggle{grid-column:1/-1}}
+@media(max-width:760px){.constellation-stage{--dock-width:70px;--dock-gap:8px;padding-top:12px}.system-description{grid-column:1/-1;min-height:196px;padding-top:10px}.system-description h2{font-size:20px}.system-category{font-size:8px}.system-description p{font-size:12px;max-width:300px}.system-dock{gap:36px}.system-scene{padding-block:8px}.mini-system{padding:3px}.mini-name{font-size:8px}.system-sun>span,.flight-sun>span{font-size:8px;padding:2px 5px}.system-planet>span{display:none}}
 @media(prefers-reduced-motion:reduce){.system-flight,.system-planet,.mini-planet,.system-transfer{will-change:auto}}
+/* Keep the artwork, navigation, and captions in proportion on wide viewports. */
+@media(min-width:1600px){
+  .constellation-stage{--dock-width:clamp(92px,6.5vw,190px);--dock-gap:clamp(16px,1.2vw,32px)}
+  .system-description{min-height:clamp(190px,12vw,300px)}
+  .system-kicker{gap:clamp(14px,1vw,26px)}
+  .system-category,.constellation-stage #motion-toggle{font-size:clamp(9px,.6vw,16px)}
+  .system-description h2{font-size:clamp(23px,1.45vw,40px);margin-block:clamp(9px,.7vw,20px) clamp(8px,.5vw,14px)}
+  .system-description p{font-size:clamp(12px,.85vw,23px);max-width:32em}
+  .system-tech-stack{gap:clamp(6px,.4vw,12px);margin-top:clamp(13px,.85vw,24px)}
+  .system-tech-stack li{font-size:clamp(10px,.65vw,18px);padding:clamp(5px,.35vw,10px) clamp(8px,.55vw,16px);gap:clamp(5px,.35vw,10px)}
+  .system-tech-stack img{width:clamp(14px,.9vw,25px);height:clamp(14px,.9vw,25px)}
+  .system-dock{gap:clamp(22px,1.7vw,48px)}
+  .mini-planet{width:clamp(16px,1.05vw,32px);height:clamp(16px,1.05vw,32px)}
+  .mini-name{font-size:clamp(9px,.65vw,18px);max-width:12em}
+  .system-sun>span,.flight-sun>span{font-size:clamp(10px,.65vw,18px)}
+  .system-planet>span{font-size:clamp(9px,.6vw,16px)}
+}

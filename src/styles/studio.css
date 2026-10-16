@@ -176,3 +176,16 @@ nav{padding-top:13px!important;padding-bottom:13px!important}
 .studio-contact-cta h2{max-width:70%}
 @media(max-width:1000px){.contact-orbit{position:static;display:inline-grid;margin-top:28px}.studio-contact-cta h2{max-width:100%}}
 @media(max-width:760px){nav{padding-top:9px!important;padding-bottom:9px!important}.hero-copy{translate:0 0}.studio-hero{padding-top:8px}.hero-composition{padding-top:14px}.contact-orbit{min-width:235px;font-size:22px}.studio-contact-cta>p:last-child{max-width:100%}}
+/* A large central project with five independently orbiting project satellites. */
+.hero-composition{grid-template-columns:.95fr 1.05fr;gap:28px}
+.hero-machine{max-width:720px;isolation:isolate;pointer-events:none}
+.hero-machine>img,.machine-caption,.machine-label{pointer-events:auto}
+.hero-machine .machine-orbit{display:none}
+.solar-orbit{position:absolute;left:50%;border:1px solid var(--project-line);border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg);pointer-events:none;z-index:0;opacity:.7}
+.hero-machine::before{content:'';position:absolute;left:50%;top:var(--orbit-center-y);width:var(--sun-size);height:var(--sun-size);translate:-50% -50%;border-radius:50%;background:radial-gradient(ellipse,var(--studio-bg) 42%,transparent 72%);pointer-events:none;z-index:1}
+.hero-machine>img{z-index:4}.project-planets{z-index:auto}.project-planet{z-index:2;width:54px;height:54px;padding:6px;box-shadow:0 4px 16px #10182816;background:var(--project-paper)}
+.machine-label,.machine-caption{z-index:5}.project-transfer{z-index:6}.machine-selector{flex-wrap:wrap;gap:9px 20px;margin-top:12px}.machine-selector button{padding:7px 0}
+@media(max-width:1100px){.project-planet{width:46px;height:46px;padding:5px}.machine-selector{gap:6px 14px}}
+@media(max-width:760px){.hero-composition{grid-template-columns:1fr;gap:12px}.project-planet{width:40px;height:40px;padding:4px}.machine-selector{gap:4px 15px}.machine-selector button span{font-size:10px}.machine-label{font-size:8px}}
+.hero-machine{z-index:3}.project-planets{z-index:2}
+.hero-machine::before{display:none}.solar-orbit{border-color:#aeb6c2;opacity:.65}.hero-copy h1{font-size:clamp(45px,5vw,80px)}@media(max-width:760px){.hero-copy h1{font-size:clamp(43px,9.5vw,70px)}}

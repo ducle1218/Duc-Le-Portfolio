@@ -1,0 +1,34 @@
+.constellation-stage{position:relative;min-width:0;padding-top:16px}
+.active-system{position:relative;transform-origin:50% 50%;will-change:transform,opacity}
+.system-description{text-align:center;width:calc(100% - 210px);min-height:112px;margin:0 auto;padding-top:12px;position:relative;z-index:3}
+.system-category{font:9px ui-monospace,monospace;letter-spacing:.08em;color:var(--project-muted);text-transform:uppercase}
+.system-description h2{font-size:23px;line-height:1.15;font-weight:600;letter-spacing:-.035em;margin:9px 0 8px;color:var(--project-ink)}
+.system-description p{font-size:12px;line-height:1.5;color:var(--project-muted);margin:auto;max-width:290px}
+.system-field{position:relative;width:100%;isolation:isolate}
+.system-tracks i{position:absolute;display:block;border:1px solid var(--project-line);opacity:.38;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.system-sun,.system-planet,.system-transfer{position:absolute;left:0;top:0;border-radius:50%;overflow:hidden;background:#fff;border:1px solid var(--project-line);display:grid;place-items:center;box-shadow:0 10px 32px #1018280a}
+.system-sun{transform:translate(-50%,-50%);z-index:3;transition:box-shadow .2s,border-color .2s}
+.system-sun:hover{border-color:var(--project-accent);box-shadow:0 12px 38px #bd294618}
+.system-sun img,.system-transfer img{width:84%;height:84%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}
+.system-sun>span{position:absolute;bottom:8%;font-size:10px;color:#343b45;background:#ffffffe8;padding:4px 10px;border-radius:12px}
+.system-planet{z-index:2;padding:6px;will-change:transform;overflow:visible;box-shadow:0 4px 18px #1018280d}
+.system-planet img{position:absolute;width:calc(100% - 12px);height:calc(100% - 12px);min-width:0;min-height:0;object-fit:contain;border-radius:50%;pointer-events:none}
+.system-planet>span{position:absolute;top:calc(100% + 5px);left:50%;translate:-50% 0;white-space:nowrap;font-size:9px;background:var(--studio-bg);color:var(--project-ink);padding:3px 6px;opacity:0;pointer-events:none}
+.system-planet:hover>span,.system-planet:focus-visible>span{opacity:1}
+.system-transfer{z-index:5;pointer-events:none;will-change:transform}
+.system-project-tabs{display:flex;justify-content:center;gap:8px 15px;flex-wrap:wrap;margin:0 auto 2px;position:relative;z-index:3}
+.system-project-tabs button{font-size:10px;color:var(--project-muted);padding:7px 0;border-bottom:1px solid transparent}
+.system-project-tabs button[aria-pressed=true]{color:var(--project-ink);border-bottom-color:var(--studio-red)}
+.mini-system{position:absolute;top:0;width:100px;z-index:6;color:var(--project-muted);text-align:center;border-radius:12px;padding:4px;transition:background .2s,color .2s}
+.mini-system-0{left:0}.mini-system-1{right:0}.mini-system:hover{background:var(--project-soft);color:var(--project-ink)}
+.mini-map{height:82px;display:block;position:relative;pointer-events:none}
+.mini-track{position:absolute;left:50%;top:50%;width:66px;height:50px;transform:translate(-50%,-50%);border:1px solid var(--project-line);border-radius:50%;opacity:.6}
+.mini-map img{position:absolute;left:50%;top:50%;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--project-line)}
+.mini-sun{width:30px;height:30px;transform:translate(-50%,-50%);padding:3px}
+.mini-planet{width:16px;height:16px;padding:1px;will-change:transform}
+.mini-name{display:block;font-size:9px;line-height:1.4;max-width:100px;margin:auto}
+.system-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.constellation-stage button:disabled{cursor:default}
+@media(max-width:1100px){.system-description{width:calc(100% - 176px)}.system-description h2{font-size:20px}.mini-system{width:82px}.system-description p{font-size:11px}}
+@media(max-width:760px){.constellation-stage{padding-top:12px}.system-description{width:calc(100% - 164px);min-height:134px;padding-top:10px}.system-description h2{font-size:18px}.system-category{font-size:8px}.system-description p{font-size:11px}.mini-system{width:80px}.mini-map{height:76px}.mini-name{font-size:8px}.system-planet{padding:4px}.system-sun>span{font-size:8px;padding:2px 5px}.system-project-tabs{gap:4px 12px}.system-project-tabs button{font-size:9px}.system-planet>span{display:none}}
+@media(prefers-reduced-motion:reduce){.active-system,.system-planet,.mini-planet,.system-transfer{will-change:auto}}

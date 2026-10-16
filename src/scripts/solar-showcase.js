@@ -28,17 +28,21 @@
   const path=key=>'src/assets/images/'+projects[key][3];
   const ease=t=>{t=Math.min(1,Math.max(0,t));return t*t*t*(t*(t*6-15)+10);};
   stage.classList.add('constellation-stage');
+  const scene=document.createElement('div');scene.className='system-scene';
   const panel=document.createElement('div');panel.className='active-system';
-  panel.innerHTML='<div class="system-description"><span class="system-category"></span><h2></h2><p></p></div><div class="system-field"><div class="system-tracks" aria-hidden="true"></div><button type="button" class="system-sun"><img draggable="false" alt=""><span>View project ↗</span></button><div class="system-planets"></div></div><div class="system-project-tabs" aria-label="Projects in this system"></div>';
+  panel.innerHTML='<div class="system-field"><div class="system-tracks" aria-hidden="true"></div><button type="button" class="system-sun"><img draggable="false" alt=""><span>View project ↗</span></button><div class="system-planets"></div></div>';
   const sun=panel.querySelector('.system-sun'),field=panel.querySelector('.system-field');
-  const tabs=panel.querySelector('.system-project-tabs');
+  const description=document.createElement('div');description.className='system-description';
+  description.innerHTML='<span class="system-category"></span><h2></h2><p></p><ul class="system-tech-stack" aria-label="Project tech stack"></ul>';
+  const tabs=document.createElement('div');tabs.className='system-project-tabs';tabs.setAttribute('aria-label','Projects in this system');
+  const dock=document.createElement('div');dock.className='system-dock';dock.setAttribute('aria-label','Other project systems');
   const live=document.createElement('span');live.className='system-announcement';live.setAttribute('aria-live','polite');
   const edges=[0,1].map(i=>{
     const button=document.createElement('button');button.type='button';button.className=`mini-system mini-system-${i}`;
-    button.innerHTML='<span class="mini-map" aria-hidden="true"><i class="mini-track"></i><img class="mini-sun" alt=""><img class="mini-planet" alt=""><img class="mini-planet" alt=""><img class="mini-planet" alt=""></span><span class="mini-name"></span>';
+    button.innerHTML='<span class="mini-map" aria-hidden="true"><i class="mini-track"></i><i class="mini-track"></i><i class="mini-track"></i><span class="mini-sun"><img alt=""></span><span class="mini-planet"><img alt=""></span><span class="mini-planet"><img alt=""></span><span class="mini-planet"><img alt=""></span></span><span class="mini-name"></span>';
     button.addEventListener('click',()=>switchSystem(i));return button;
   });
-  stage.replaceChildren(panel,...edges,motion,live);
+  dock.append(...edges);scene.append(panel,dock);stage.replaceChildren(scene,description,tabs,motion,live);
   const planets=[0,1,2].map(i=>{
     const p=document.createElement('button');p.type='button';p.className='system-planet';p.innerHTML='<img alt="" draggable="false"><span></span>';
     p.addEventListener('click',()=>selectProject(systems[active].slots[i],true));panel.querySelector('.system-planets').appendChild(p);return p;
@@ -49,8 +53,15 @@
     const s=systems[active],p=projects[s.current];
     panel.dataset.system=String(active);sun.dataset.project=p[0];sun.setAttribute('aria-label',`Open ${p[1]} project`);
     sun.querySelector('img').src=path(s.current);sun.querySelector('img').alt=p[1];
-    panel.querySelector('.system-category').textContent=s.name;
-    panel.querySelector('h2').textContent=p[1];panel.querySelector('.system-description p').textContent=p[2];
+    description.querySelector('.system-category').textContent=s.name;
+    description.querySelector('h2').textContent=p[1];description.querySelector('p').textContent=p[2];
+    const stack=description.querySelector('.system-tech-stack');stack.replaceChildren();
+    const tags=TIMELINE_ITEMS.find(item=>item.id===p[0])?.tags||[];
+    tags.forEach(tag=>{
+      const chip=document.createElement('li');const logo=tag==='3D Printing'?'src/assets/images/logos/bambu-logo.png':TAG_ICONS[tag];
+      if(logo){const img=document.createElement('img');img.src=logo;img.alt='';chip.append(img);}
+      chip.append(document.createTextNode(tag));stack.append(chip);
+    });
     s.slots.forEach((key,i)=>{const b=planets[i];b.dataset.project=key;b.querySelector('img').src=path(key);b.querySelector('span').textContent=projects[key][1];b.setAttribute('aria-label',`Show ${projects[key][1]} in the center`);});
     // Preserve focused controls during a project exchange.
     if(tabs.dataset.system!==String(active)) {
@@ -58,11 +69,12 @@
       s.keys.forEach(key=>{const b=document.createElement('button');b.type='button';b.dataset.key=key;b.textContent=projects[key][1];b.addEventListener('click',()=>selectProject(key,true));tabs.appendChild(b);});
     }
     tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.key===s.current)));
-    edges.forEach((button,i)=>{const other=systems[background[i]];button.dataset.system=String(background[i]);button.setAttribute('aria-label',`Explore ${other.name}: ${other.keys.map(k=>projects[k][1]).join(', ')}`);button.querySelector('.mini-name').textContent=other.name;button.querySelector('.mini-sun').src=path(other.current);button.querySelectorAll('.mini-planet').forEach((img,j)=>img.src=path(other.slots[j]));});
+    edges.forEach((button,i)=>{const other=systems[background[i]];button.dataset.system=String(background[i]);button.setAttribute('aria-label',`Explore ${other.name}: ${other.keys.map(k=>projects[k][1]).join(', ')}`);button.querySelector('.mini-name').textContent=other.name;button.querySelector('.mini-sun img').src=path(other.current);button.querySelectorAll('.mini-planet img').forEach((img,j)=>img.src=path(other.slots[j]));});
   }
   function layout() {
     const w=field.clientWidth;if(!w)return;
-    const sunSize=w*.43,planetSize=w<430?40:54;
+    if(systemMove&&Math.abs(w-geometry.w)>1)completeSystem();
+    const sunSize=w*.43,planetSize=w<230?28:w<330?32:w<430?40:54;
     const verticalSpace=Math.max(8,planetSize/2-w*.04+8);
     geometry={w,cx:w/2,cy:w*.47+verticalSpace,sun:sunSize,planet:planetSize,radius:w*.34};
     field.style.height=`${w*.94+verticalSpace*2}px`;sun.style.width=sun.style.height=`${sunSize}px`;
@@ -103,32 +115,79 @@
   }
   function switchSystem(edge) {
     if(systemMove||projectMove)return;
-    const target=background[edge];
-    const panelRect=panel.getBoundingClientRect(),miniRect=edges[edge].getBoundingClientRect();
-    systemMove={edge,old:active,target,origin:document.activeElement,elapsed:0,swapped:false,dx:miniRect.x+miniRect.width/2-panelRect.x-panelRect.width/2,dy:miniRect.y+miniRect.height/2-panelRect.y-panelRect.height/2};
-    edges[edge].style.visibility='hidden';lock(true);
-    if(paused||reduced.matches)completeSystem();
+    const rect=scene.getBoundingClientRect(),main=field.getBoundingClientRect();
+    const mini=edges[edge].querySelector('.mini-map').getBoundingClientRect();
+    const other=edges[1-edge].querySelector('.mini-map').getBoundingClientRect();
+    const a={x:main.x-rect.x+geometry.cx,y:main.y-rect.y+geometry.cy};
+    const b={x:mini.x-rect.x+mini.width/2,y:mini.y-rect.y+mini.height/2};
+    const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
+    const m=systemMove={edge,old:active,target:background[edge],origin:document.activeElement,elapsed:0,a,b,dx,dy,nx:-dy/distance,ny:dx/distance,miniSize:mini.width,outgoing:createFlight(systems[active]),incoming:createFlight(systems[background[edge]])};
+    // Size the two curved lanes to keep the complete moving systems apart.
+    let bend=mini.width*.4;
+    for(let i=1;i<100;i++){
+      const t=i/100,u=travelProgress(t),sizes=flightSizes(m,t);
+      const required=flightRadius(sizes.outgoing)+flightRadius(sizes.incoming)+8;
+      const horizontal=distance*(1-2*u);
+      bend=Math.max(bend,Math.sqrt(Math.max(0,required*required-horizontal*horizontal))/(2*Math.sin(Math.PI*u)));
+    }
+    m.bend=bend+.5;
+    const obstacle={x:other.x-rect.x+other.width/2,y:other.y-rect.y+other.height/2,r:other.width*.43+8};
+    const clearance=sign=>{
+      let minimum=Infinity;
+      for(let i=0;i<=100;i++){
+        const t=i/100,positions=flightPositions(m,t,sign),sizes=flightSizes(m,t);
+        ['outgoing','incoming'].forEach(key=>{const p=positions[key];minimum=Math.min(minimum,Math.hypot(p.x-obstacle.x,p.y-obstacle.y)-flightRadius(sizes[key])-obstacle.r);});
+      }
+      return minimum;
+    };
+    m.direction=clearance(1)>clearance(-1)?1:-1;
+    field.style.visibility='hidden';edges[edge].querySelector('.mini-map').style.visibility='hidden';stage.setAttribute('aria-busy','true');lock(true);
+    if(paused||reduced.matches)completeSystem();else drawSystem();
   }
-  function commitSystem() {
-    const m=systemMove;if(m.swapped)return;
-    background[m.edge]=m.old;active=m.target;m.swapped=true;projectElapsed=0;renderContent();layout();lock(true);
+  function createFlight(system) {
+    const node=document.createElement('div');node.className='system-flight';node.setAttribute('aria-hidden','true');
+    node.innerHTML='<i></i><i></i><i></i><span class="flight-sun"><img alt=""><span>View project ↗</span></span><span class="flight-planet"><img alt=""></span><span class="flight-planet"><img alt=""></span><span class="flight-planet"><img alt=""></span>';
+    node.querySelector('.flight-sun img').src=path(system.current);node.querySelectorAll('.flight-planet img').forEach((img,i)=>img.src=path(system.slots[i]));scene.append(node);return node;
+  }
+  function flightSizes(m,t) {
+    const range=geometry.w-m.miniSize;
+    return {outgoing:m.miniSize+range*(1-ease(t/.5)),incoming:m.miniSize+range*ease((t-.5)/.5)};
+  }
+  function travelProgress(t) {return (1-Math.cos(Math.PI*t))/2;}
+  function flightPlanetSize(size) {
+    const m=systemMove;return 16+(geometry.planet-16)*(size-m.miniSize)/(geometry.w-m.miniSize);
+  }
+  function flightRadius(size) {return size*.43+flightPlanetSize(size)/2;}
+  function flightPositions(m,t,direction=m.direction) {
+    const u=travelProgress(t),bend=Math.sin(Math.PI*u)*m.bend*direction;
+    return {
+      outgoing:{x:m.a.x+m.dx*u+m.nx*bend,y:m.a.y+m.dy*u+m.ny*bend},
+      incoming:{x:m.b.x-m.dx*u-m.nx*bend,y:m.b.y-m.dy*u-m.ny*bend}
+    };
+  }
+  function drawFlight(node,system,position,size) {
+    node.style.width=node.style.height=`${size}px`;node.style.transform=`translate3d(${position.x}px,${position.y}px,0) translate(-50%,-50%)`;
+    node.querySelectorAll(':scope>i').forEach((ring,i)=>{ring.style.width=ring.style.height=`${size*(.68+i*.09)}px`;});
+    const center=node.querySelector('.flight-sun');center.style.width=center.style.height=`${size*.43}px`;
+    center.querySelector('span').style.opacity=String(Math.max(0,(size/geometry.w-.7)/.3));
+    node.querySelectorAll('.flight-planet').forEach((p,i)=>{
+      const angle=system.angle+i*Math.PI*2/3,radius=size*(.34+i*.045);
+      p.style.width=p.style.height=`${flightPlanetSize(size)}px`;
+      p.style.transform=`translate(${Math.cos(angle)*radius}px,${Math.sin(angle)*radius}px) translate(-50%,-50%)`;
+    });
   }
   function completeSystem() {
-    if(!systemMove)return;commitSystem();const {edge,origin}=systemMove;
-    panel.style.transform='';panel.style.opacity='';edges[edge].style.visibility='';
-    systemMove=null;lock(false);live.textContent=`${systems[active].name} selected. ${projects[systems[active].current][1]} is in the center.`;
-    restoreFocus(origin,sun);
+    if(!systemMove)return;const m=systemMove;
+    background[m.edge]=m.old;active=m.target;projectElapsed=0;
+    m.outgoing.remove();m.incoming.remove();field.style.visibility='';edges[m.edge].querySelector('.mini-map').style.visibility='';
+    systemMove=null;stage.removeAttribute('aria-busy');renderContent();lock(false);
+    live.textContent=`${systems[active].name} selected. ${projects[systems[active].current][1]} is in the center.`;restoreFocus(m.origin,sun);
   }
   function drawSystem() {
     const m=systemMove;if(!m)return;
-    // One panel, two consecutive phases. The two full systems never cross.
-    if(m.elapsed<650) {
-      const t=ease(m.elapsed/650);panel.style.transform=`translate(${m.dx*t}px,${m.dy*t}px) scale(${1-.88*t})`;panel.style.opacity=String(1-t);
-    } else {
-      commitSystem();const t=ease((m.elapsed-650)/850);
-      panel.style.transform=`translate(${m.dx*(1-t)}px,${m.dy*(1-t)}px) scale(${.12+.88*t})`;panel.style.opacity=String(t);
-      if(m.elapsed>=1500)completeSystem();
-    }
+    const t=Math.min(m.elapsed/1900,1),positions=flightPositions(m,t),sizes=flightSizes(m,t);
+    drawFlight(m.outgoing,systems[m.old],positions.outgoing,sizes.outgoing);drawFlight(m.incoming,systems[m.target],positions.incoming,sizes.incoming);
+    if(t===1)completeSystem();
   }
   document.addEventListener('portfolio-motion',event=>{paused=event.detail.paused;if(paused){completeProject();completeSystem();}});
   new ResizeObserver(layout).observe(field);
@@ -147,7 +206,7 @@
       }
     }
     planets.forEach((p,i)=>{const point=orbitPoint(i,systems[active].angle+i*Math.PI*2/3);p.style.transform=`translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%)`;});
-    edges.forEach((b,i)=>b.querySelectorAll('.mini-planet').forEach((img,j)=>{const a=systems[background[i]].angle+j*Math.PI*2/3;img.style.transform=`translate(${Math.cos(a)*31}px,${Math.sin(a)*24}px) translate(-50%,-50%)`;}));
+    edges.forEach((b,i)=>b.querySelectorAll('.mini-planet').forEach((planet,j)=>{const a=systems[background[i]].angle+j*Math.PI*2/3;planet.style.transform=`translate(${Math.cos(a)*(34+j*4.5)}cqw,${Math.sin(a)*(34+j*4.5)}cqw) translate(-50%,-50%)`;}));
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

@@ -10,7 +10,13 @@ const SPROCKET_PROJECT = `<article class="case-study sprocket-case">
     </div>
     <figure class="sp-model">
       <div class="sp-image-switch" role="group" aria-label="Robot view"><button type="button" data-sp-view="cad" aria-pressed="true">CAD assembly</button><button type="button" data-sp-view="built" aria-pressed="false">Built robot</button></div>
-      <img class="sp-model-image" data-no-lightbox data-view="cad" src="src/assets/images/capstone/Sprocket_Robot_CAD.png" alt="Full Sprocket CAD assembly with L-shaped intake and six-motor drivetrain" width="720" height="720">
+      <div class="sp-cad-stage" data-no-lightbox>
+        <img class="sp-model-image" src="src/assets/images/capstone/Sprocket_Robot_CAD.png" alt="Sprocket robot CAD assembly" width="720" height="720">
+        <button type="button" class="sp-load-3d" data-sp-load>Explore in 3D ↗</button>
+        <p class="sp-view-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="sp-camera-tools" hidden><span>Drag to rotate · scroll to zoom · right-drag to pan</span><button type="button" data-sp-reset>Reset view</button></div>
+      <img class="sp-built-image sp-model-image" data-no-lightbox data-view="built" src="src/assets/images/capstone/sprocket_final_robot_angle_2.jpg" alt="Finished Sprocket robot on the competition field" width="720" height="720" hidden>
       <figcaption id="sp-model-caption">Onshape assembly · drivetrain, intake, and mechanism packaging.</figcaption>
     </figure>
   </header>
@@ -62,10 +68,9 @@ document.addEventListener('click', event => {
   if (view) {
     const root = view.closest('.sprocket-case');
     const built = view.dataset.spView === 'built';
-    const image = root.querySelector('.sp-model-image');
-    image.src = built ? 'src/assets/images/capstone/sprocket_final_robot_angle_2.jpg' : 'src/assets/images/capstone/Sprocket_Robot_CAD.png';
-    image.alt = built ? 'Finished Sprocket robot on the competition field' : 'Full Sprocket CAD assembly with L-shaped intake and six-motor drivetrain';
-    image.dataset.view = built ? 'built' : 'cad';
+    root.querySelector('.sp-cad-stage').hidden = built;
+    root.querySelector('.sp-built-image').hidden = !built;
+    root.querySelector('.sp-camera-tools').hidden = built || !root.querySelector('model-viewer')?.loaded;
     root.querySelector('#sp-model-caption').textContent = built ? 'Physical build · the CAD package brought onto the competition field.' : 'Onshape assembly · drivetrain, intake, and mechanism packaging.';
     root.querySelectorAll('[data-sp-view]').forEach(button => button.setAttribute('aria-pressed', String(button === view)));
   }
@@ -75,4 +80,60 @@ document.addEventListener('click', event => {
     root.querySelectorAll('[data-sp-design]').forEach(button => button.setAttribute('aria-pressed', String(button === decision)));
     root.querySelectorAll('[data-sp-panel]').forEach(panel => { panel.hidden = panel.dataset.spPanel !== decision.dataset.spDesign; });
   }
+});
+
+// Load the renderer only after an explicit request to inspect the assembly.
+let sprocketViewerModule;
+document.addEventListener('click', async event => {
+  const reset = event.target.closest('[data-sp-reset]');
+  if (reset) {
+    const viewer = reset.closest('.sp-model').querySelector('model-viewer');
+    viewer.cameraOrbit = '35deg 65deg 105%';
+    viewer.cameraTarget = 'auto auto auto';
+    viewer.fieldOfView = '30deg';
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) viewer.jumpCameraToGoal();
+  }
+  const button = event.target.closest('[data-sp-load]');
+  if (!button || button.disabled) return;
+  const stage = button.closest('.sp-cad-stage');
+  const status = stage.querySelector('.sp-view-status');
+  button.disabled = true;
+  status.textContent = 'Loading interactive assembly…';
+  const fail = () => {
+    stage.querySelector('model-viewer')?.remove();
+    stage.closest('.sp-model').querySelector('.sp-camera-tools').hidden = true;
+    stage.querySelector('img').hidden = false;
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Retry 3D viewer';
+    status.textContent = 'The 3D view could not load. You can still view the CAD image or built robot.';
+  };
+  try {
+    sprocketViewerModule ||= import('../vendor/model-viewer/model-viewer.min.js').catch(error => { sprocketViewerModule = null; throw error; });
+    await sprocketViewerModule;
+    if (!stage.isConnected) return;
+    const Viewer = customElements.get('model-viewer');
+    Viewer.dracoDecoderLocation = new URL('src/vendor/model-viewer/draco/', document.baseURI).href;
+    const viewer = document.createElement('model-viewer');
+    viewer.setAttribute('alt', 'Interactive Sprocket robot assembly. Drag to rotate, scroll to zoom, and right-drag to pan.');
+    viewer.setAttribute('camera-controls', '');
+    viewer.setAttribute('touch-action', 'pan-y');
+    viewer.setAttribute('camera-orbit', '35deg 65deg 105%');
+    viewer.setAttribute('field-of-view', '30deg');
+    viewer.setAttribute('interaction-prompt', 'none');
+    viewer.setAttribute('exposure', '0.65');
+    viewer.setAttribute('environment-image', 'neutral');
+    viewer.setAttribute('loading', 'eager');
+    viewer.addEventListener('error', fail, { once: true });
+    viewer.addEventListener('load', () => {
+      stage.querySelector('img').hidden = true;
+      button.hidden = true;
+      status.textContent = '';
+      stage.closest('.sp-model').querySelector('.sp-camera-tools').hidden = stage.hidden;
+    }, { once: true });
+    const attempt = Number(stage.dataset.attempt || 0);
+    stage.dataset.attempt = String(attempt + 1);
+    viewer.src = 'src/assets/models/SprocketRobot.glb' + (attempt ? '?retry=' + Date.now() : '');
+    stage.append(viewer);
+  } catch (error) { fail(); }
 });

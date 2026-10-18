@@ -73,7 +73,7 @@
     edges.forEach((button,i)=>{const other=systems[background[i]];button.dataset.system=String(background[i]);button.setAttribute('aria-label',`Explore ${other.name}: ${other.keys.map(k=>projects[k][1]).join(', ')}`);button.querySelector('.mini-name').textContent=other.name;setProjectMedia(button.querySelector('.mini-sun'),other.current);button.querySelectorAll('.mini-planet').forEach((planet,j)=>setProjectMedia(planet,other.slots[j]));});
   }
   function layout() {
-    const w=field.clientWidth;if(!w)return;
+    const w=field.getBoundingClientRect().width;if(!w)return;
     if(systemMove&&Math.abs(w-geometry.w)>1)completeSystem();
     const sunSize=w*.43,planetSize=w<230?28:w<330?32:w<430?40:Math.min(96,Math.max(54,w*.085));
     const verticalSpace=Math.max(8,planetSize/2-w*.04+8);

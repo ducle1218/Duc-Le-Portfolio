@@ -23,10 +23,13 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
-      - name: Install Tailwind
-        run: npm install tailwindcss @tailwindcss/cli
+      - name: Install build dependencies
+        run: npm install --ignore-scripts tailwindcss @tailwindcss/cli pdfjs-dist@6.4.299
+
+      - name: Prepare self-hosted resume renderer
+        run: node scripts/vendor-pdfjs.mjs
 
       - name: Build CSS
         run: npx @tailwindcss/cli -i ./input.css -o ./output.css --minify

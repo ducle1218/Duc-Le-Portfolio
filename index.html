@@ -570,6 +570,7 @@
   <script src="src/scripts/studio.js?v=20261015-4" defer></script>
   <script src="src/scripts/solar-showcase.js?v=20261016-2" defer></script>
   <link rel="stylesheet" href="src/styles/solar-showcase.css?v=20261016-2">
+  <link rel="stylesheet" href="src/styles/resume-viewer.css?v=20261018-1">
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -630,17 +631,19 @@
         <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Professional Resume</h1>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <a href="src/assets/resume/Duc_Le_Resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
+        <a id="resume-download" href="src/assets/resume/Duc_Le_Resume.pdf" download="Duc_Le_Resume.pdf" class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase font-mono rounded-xl shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
           <span>Download Resume PDF</span>
         </a>
       </div>
     </div>
 
-    <div class="live-resume-paper">
-      <iframe id="resume-frame" src="src/assets/resume/resume.html" title="Duc Le — Professional Resume" loading="lazy"></iframe>
+    <div id="resume-preview" class="live-resume-paper" aria-busy="true" aria-label="Duc Le resume">
+      <p class="resume-status" role="status">Loading resume…</p>
+      <div class="resume-pages"></div>
     </div>
-    <script src="src/scripts/resume-presentation.js?v=20261014-4" defer></script>
+    <noscript><p><a href="src/assets/resume/Duc_Le_Resume.pdf">Open or download the resume PDF</a>.</p></noscript>
+    <script src="src/scripts/resume-presentation.js?v=20261018-1" defer></script>
   </div>
 
   <!-- ======================== TAB: PROJECT ======================== -->

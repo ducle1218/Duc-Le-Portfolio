@@ -568,9 +568,10 @@
   <script src="src/scripts/project-presentation.js?v=20261014-5" defer></script>
   <link rel="stylesheet" href="src/styles/studio.css?v=20261016-2">
   <script src="src/scripts/studio.js?v=20261015-4" defer></script>
-  <script src="src/scripts/solar-showcase.js?v=20261016-2" defer></script>
+  <script src="src/scripts/solar-showcase.js?v=20261018-1" defer></script>
   <link rel="stylesheet" href="src/styles/solar-showcase.css?v=20261016-2">
   <link rel="stylesheet" href="src/styles/resume-viewer.css?v=20261018-1">
+  <link rel="stylesheet" href="src/styles/sprocket.css?v=20261018-1">
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
 
@@ -654,17 +655,18 @@
       <p class="project-page-intro">Robotics, mechanisms, and ideas brought into the physical world.<br>Pick a project. Follow the process.</p>
     </div>
 
+    <div class="project-stage-filter"><label for="project-stage">Project stage</label><select id="project-stage" onchange="filterProjects()"><option value="ALL">All stages</option><option value="College">College</option><option value="High school">High school</option></select><span id="project-count" role="status">12 projects</span></div>
     <div class="project-filter-bar flex flex-wrap items-center gap-2">
-      <button onclick="filterProjects('ALL')" class="proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl">ALL</button>
-      <button onclick="filterProjects('INTERNSHIPS')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">INTERNSHIPS</button>
-      <button onclick="filterProjects('PERSONAL')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">PERSONAL</button>
-      <button onclick="filterProjects('STUDENT TEAMS')" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">STUDENT TEAMS</button>
+      <button onclick="filterProjects('ALL')" aria-pressed="true" class="proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl">ALL</button>
+      <button onclick="filterProjects('INTERNSHIPS')" aria-pressed="false" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">INTERNSHIPS</button>
+      <button onclick="filterProjects('PERSONAL')" aria-pressed="false" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">PERSONAL</button>
+      <button onclick="filterProjects('STUDENT TEAMS')" aria-pressed="false" class="proj-filter-btn px-4 py-2 bg-white dark:bg-slate-900 border font-mono text-xs uppercase rounded-xl text-slate-500">STUDENT TEAMS</button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start" id="projects-grid">
     </div>
     <div id="projects-empty-state" class="hidden text-center py-12 text-sm text-slate-400 dark:text-slate-500 font-mono">
-      No projects in this category yet — check back soon.
+      No projects match these filters. Try another stage or category.
     </div>
 
     <div class="no-print text-center pt-4">
@@ -782,6 +784,7 @@
   </footer>
 
   <script src="src/scripts/engineering-projects.js?v=20261014-2"></script>
+  <script src="src/scripts/sprocket-project.js?v=20261018-1"></script>
   <script>
     // Detailed projects documentation database
 
@@ -789,571 +792,7 @@
       "box-11": ENGINEERING_PROJECTS.fea,
       "box-12": ENGINEERING_PROJECTS.quadruped,
       "box-7": ENGINEERING_PROJECTS.volumetric,
-      "box-6": `
-<div class="space-y-12 text-left">
-  <!-- Top Branding Section -->
-  <div class="p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-      <div class="space-y-2">
-        <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest block">
-          Capstone II Project Portfolio
-        </span>
-        <h2 class="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans">
-          Sprocket — VEX Pushback Capstone
-        </h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-2xl font-medium">
-          A year-long robotics R&D project where I led design and CAD from a blank file to a Judge's Award-winning competition robot, built with a 4-person team of senior engineering students on our ACIT Capstone program.
-        </p>
-      </div>
-      <div class="flex flex-row md:flex-col items-start gap-2 self-start md:self-center">
-        <span class="font-mono text-[10px] font-black px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 uppercase tracking-wider flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>
-          Judge's Award Winner
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50 uppercase tracking-wider block text-center">
-          Top 25% Competitor
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50 uppercase tracking-wider block text-center">
-          3rd Place SkillsUSA
-        </span>
-      </div>
-    </div>
-
-    <!-- Project Context & Challenge Definition -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-      <div class="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all duration-300 space-y-3">
-        <div class="flex items-center gap-2.5">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>
-          </span>
-          <h4 class="font-mono text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-            Problem Statement
-          </h4>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          Score as many points as possible in a <strong>two-minute</strong> match window. Prior ACIT teams kept falling short because their robots were overweight, their navigation drifted since it wasn't reading any sensors, and nobody left behind documentation to build on — so we had to start from scratch and fix all three ourselves.
-        </p>
-      </div>
-      <div class="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all duration-300 space-y-3">
-        <div class="flex items-center gap-2.5">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          </span>
-          <h4 class="font-mono text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-            Requirements
-          </h4>
-        </div>
-        <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
-          <li class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-            <span>Score <strong>50+ points</strong> in skills trials</span>
-          </li>
-          <li class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-            <span>Complete <strong>3 balls autonomous</strong> routine</span>
-          </li>
-          <li class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-            <span>Strict size envelope limit: <strong>18" cube</strong></span>
-          </li>
-          <li class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-            <span>Max usage constraint: <strong>12 plastic pieces</strong></span>
-          </li>
-        </ul>
-      </div>
-      <div class="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-md transition-all duration-300 space-y-3">
-        <div class="flex items-center gap-2.5">
-          <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zm6 3a4 4 0 10-8 0" /></svg>
-          </span>
-          <h4 class="font-mono text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-            Team Members
-          </h4>
-        </div>
-        <div class="space-y-2.5">
-          <div class="flex items-center gap-2.5">
-            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-[10px] font-mono font-black shrink-0">DL</span>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Duc Le</p>
-              <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wide">Group Leader &amp; Lead Designer</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-mono font-black shrink-0">ET</span>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Ethan Tran</p>
-              <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wide">Lead Programmer</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-mono font-black shrink-0">TT</span>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Tayvon Tomasello</p>
-              <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wide">Documentator</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-mono font-black shrink-0">BM</span>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Bradley Moise</p>
-              <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase tracking-wide">Fabricator</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Skills Demonstrated Strip -->
-    <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-      <h4 class="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">
-        Skills Demonstrated
-      </h4>
-      <div class="flex flex-wrap gap-2">
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
-          <img src="src/assets/images/logos/onshape_logo.png" alt="Onshape logo" class="w-3 h-3" />
-          Onshape
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
-          <img src="src/assets/images/logos/autocad_logo.png" alt="AutoCAD logo" class="w-3 h-3" />
-          AutoCAD
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
-          <img src="src/assets/images/logos/cpp_logo.png" alt="C++ logo" class="w-3 h-3" />
-          C++
-        </span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Control Systems (PID)</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Sensor Fusion & Odometry</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Rapid Prototyping & Fabrication</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Laser Cutting</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">3D Printing</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Iterative Testing & Data Analysis</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Technical Documentation</span>
-        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Team Leadership</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Feature Photo: Finished Robot Detail -->
-  <div class="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
-    <img loading="lazy" decoding="async"
-      src="src/assets/images/capstone/sprocket_final_robot_angle_2.jpg"
-      alt="Close-up detail shot of the finished Sprocket robot's drive and pneumatic subsystems"
-      class="w-full h-auto"
-    />
-    <p class="text-[11px] text-center text-slate-400 dark:text-slate-500 py-2.5 bg-slate-50 dark:bg-slate-900/30 font-mono">
-      Sprocket — finished robot, close-up on the chain drive and pneumatic tongue mechanism I designed
-    </p>
-  </div>
-
-  <!-- Pre-Season Prototyping Chapter (condensed) -->
-  <div class="text-center space-y-2">
-    <span class="font-mono text-xs font-black text-amber-500 uppercase tracking-widest block">
-      Before The Capstone Began
-    </span>
-    <h3 class="font-sans text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-      Pre-Season Prototyping
-    </h3>
-    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">
-      Four months (Jul–Oct 2025) of independent build-and-fail cycles before the formal Capstone research began — the raw prototyping that set up everything that follows.
-    </p>
-  </div>
-
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-    <div class="lg:col-span-7 space-y-4">
-      <ul class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-        <li class="flex gap-3">
-          <span class="font-mono text-[10px] font-black text-amber-500 pt-0.5 shrink-0">JUL</span>
-          <span>I modeled and fabricated an early 6-motor drivetrain in Onshape, then debugged real hardware failures by hand — a slipping output shaft and a creeping motor, each fixed with shaft collars and a repositioned mount.</span>
-        </li>
-        <li class="flex gap-3">
-          <span class="font-mono text-[10px] font-black text-amber-500 pt-0.5 shrink-0">AUG</span>
-          <span>I iterated a rotating storage roof and color-sorting gate, then split my design effort into two competing intake concepts after match footage showed hoarding designs losing to faster-cycling ones — capacity mattered less than cycle speed.</span>
-        </li>
-        <li class="flex gap-3">
-          <span class="font-mono text-[10px] font-black text-amber-500 pt-0.5 shrink-0">OCT</span>
-          <span>A last-minute rules change on the plastic-piece limit forced an emergency redesign days before deadline — I stripped non-essential paneling, swapped gearing to shrink the build envelope, and rebuilt around a lighter S-shape intake.</span>
-        </li>
-      </ul>
-      <div class="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-300">
-        <strong>Notebook Note:</strong> "It lines up" — the hand-check against the scoring zone that greenlit the reworked gear train and closed out pre-season.
-      </div>
-    </div>
-    <div class="lg:col-span-5 grid grid-cols-3 gap-2">
-      <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-square bg-slate-100 dark:bg-slate-950">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_preseason_drivetrain_build.jpg" alt="Early physical drivetrain prototype build, July 2025" class="w-full h-full object-cover" />
-      </div>
-      <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-square bg-slate-100 dark:bg-slate-950">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_preseason_design_fork.jpg" alt="Hand sketches comparing intake concepts, August 2025" class="w-full h-full object-cover" />
-      </div>
-      <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-square bg-slate-100 dark:bg-slate-950">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_preseason_emergency_redesign.jpg" alt="CAD model of the emergency redesign, October 2025" class="w-full h-full object-cover" />
-      </div>
-      <p class="col-span-3 text-[10px] text-slate-400 font-mono uppercase tracking-wide text-center pt-1">Engineering Notebook — Jul / Aug / Oct 2025</p>
-    </div>
-  </div>
-
-  <!-- Notebook Entry: S-Intake Concept (First Built Design) -->
-  <details class="group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-    <summary class="cursor-pointer list-none flex items-center justify-between px-5 py-4 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
-      <div class="flex items-center gap-3">
-        <span class="font-mono text-xs font-black text-amber-500 uppercase tracking-widest">Oct 14, 2025</span>
-        <span class="text-xs text-slate-500 dark:text-slate-400 font-mono hidden sm:inline">Notebook Entry — S-Intake Concept (First Built Design)</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="text-[10px] font-mono font-bold text-slate-400">first build — later replaced by L-intake</span>
-        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-      </div>
-    </summary>
-    <div class="p-5 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-      <p>
-        The S-Intake was the first design we actually CADed and built, over the summer. It worked, but not at the efficiency we wanted — that gap is what pushed the later redesign into the L-Intake documented above.
-      </p>
-      <p>
-        We went back to a "snacky" style intake concept we'd been kicking around since around June, after watching
-        <a href="https://www.youtube.com/watch?v=k6NCyUaJXDM" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 font-bold hover:underline">this reference build</a>.
-        Between our two candidate layouts, we committed to Option 1 — Option 2 felt close to irredeemable for our build, and we judged the effort to fix it would be better spent redesigning around Option 1, since the build-speed advantage Option 2 offered no longer outweighed its ceiling. We'd also seen an S-shaped intake work effectively for Highlander, which reinforced the direction.
-      </p>
-      <p>
-        The plan was to innovate on the snacky intake rather than copy it directly: the reference build used flex wheels, which we didn't have, so we substituted sprockets. We also felt their capacity was a limiting factor and aimed to add room for 1–2 more balls in our version.
-      </p>
-      <div class="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 text-[11px] text-amber-800 dark:text-amber-300">
-        <strong>Status:</strong> Documentation in progress — a PDF and additional redesign-day notes are still to be added to this entry, and images will be extracted from them once uploaded.
-      </div>
-    </div>
-  </details>
-
-  <!-- Strategic Pivot Callout -->
-  <div class="p-5 rounded-2xl border border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-950/20 text-xs sm:text-sm text-slate-600 dark:text-slate-300 space-y-2">
-    <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400 block uppercase tracking-wider text-[10px]">
-      Key Decision — Post Mall of America Review
-    </span>
-    <p class="leading-relaxed">
-      Film study of the Mall of America tournament showed the winning team scoring faster with a lightweight <strong>L-shaped intake</strong> instead of the heavy hopper everyone assumed was the meta. I abandoned my hopper prototype entirely and redesigned the chassis around it — cutting <strong>3.2 lbs</strong> and eliminating tip-over failures. The single biggest design call of the project, and the one I'm proudest of.
-    </p>
-  </div>
-
-  <!-- Timeline Navigation Headers -->
-  <div class="text-center space-y-2">
-    <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest block">
-      The Capstone Begins
-    </span>
-    <h3 class="font-sans text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-      Engineering Development Timeline
-    </h3>
-  </div>
-
-  <!-- Interactive Visual Timeline Block -->
-  <div class="relative border-l-2 border-slate-200 dark:border-slate-800/60 ml-4 md:ml-12 pl-6 md:pl-12 space-y-14">
-
-    <!-- Timeline Node 1: September 2025 -->
-    <div class="relative">
-      <div class="absolute -left-[35px] md:-left-[59px] top-0 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-rose-500 shadow-sm">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-      </div>
-      <div class="space-y-2">
-        <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">September 2025</span>
-        <h4 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Research & Concept Selection
-        </h4>
-        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
-          I benchmarked four intake mechanism families (L-Shape, S-Shape, C-Shape, Hopper) against weight, capacity, and scoring speed in a decision matrix — the analysis that steered my design away from the high-capacity "meta" and toward the lighter, faster L-Shape used in the final robot.
-        </p>
-      </div>
-    </div>
-
-    <!-- Timeline Node 2: Nov - Dec 2025 -->
-    <div class="relative">
-      <div class="absolute -left-[35px] md:-left-[59px] top-0 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-rose-500 shadow-sm">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div class="lg:col-span-7 space-y-3">
-          <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">November – December 2025</span>
-          <h4 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Full CAD Assembly & Subsystem Design
-          </h4>
-          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            I modeled the complete 6-motor chassis, L-Intake, and a pneumatic-actuated "tongue" mechanism in Onshape — validating every gear clearance parametrically against the 18" legal envelope before cutting any material. The tongue subsystem I designed cuts loader-emptying time to <strong>under 5 seconds</strong>; a rear alignment wedge shaves seconds off goal approach.
-          </p>
-        </div>
-        <div class="lg:col-span-5">
-          <div class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition-all">
-            <div class="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-              <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest">ONSHAPE CAD MODEL</span>
-              <span class="font-mono text-[9px] text-slate-400">CHASSIS ASSEMBLY</span>
-            </div>
-            <div class="relative aspect-4/3 overflow-hidden bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
-              <img loading="lazy" decoding="async"
-                src="src/assets/images/capstone/Sprocket_Robot_CAD.png"
-                alt="Sprocket robot CAD rendering"
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <div class="p-3 text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-              Full system CAD: 6-motor drivetrain, L-Intake clearance limits, structural reinforcement.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Timeline Node 3: Jan 2026 -->
-    <div class="relative">
-      <div class="absolute -left-[35px] md:-left-[59px] top-0 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-rose-500 shadow-sm">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
-      </div>
-      <div class="space-y-2">
-        <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">January 2026</span>
-        <h4 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-          First Matches Expose the Real Bottleneck
-        </h4>
-        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
-          Opened at 6 driver-skills points and 0 autonomous points — root cause traced to Python interpreter lag and open-loop wheel-slippage error compounding over distance. That diagnosis drove the two biggest technical decisions of the season: switch to C++ and build a closed-loop odometry system.
-        </p>
-      </div>
-    </div>
-
-    <!-- Timeline Node 4: Mar 2026 -->
-    <div class="relative">
-      <div class="absolute -left-[35px] md:-left-[59px] top-0 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-rose-500 shadow-sm">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div class="lg:col-span-7 space-y-3">
-          <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">March 2026</span>
-          <h4 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Rebuilt in C++: Two-Axis Odometry & PID Control
-          </h4>
-          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            Lead programmer Ethan Tran migrated the codebase from Python to native C++ and built a closed-loop navigation system: two perpendicular tracking wheels plus a 3-axis inertial sensor feed a rotation-matrix transform that recalculates absolute field position <strong>100 times per second</strong>, with a PID loop correcting drift in real time. I redesigned the sensor mounts in CAD to fit the new hardware without breaking the 18" envelope.
-          </p>
-        </div>
-        <div class="lg:col-span-5">
-          <div class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-300 font-mono text-[10px] shadow-lg">
-            <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
-              <span class="font-sans font-bold text-slate-400">odometry_math (pseudocode)</span>
-              <span class="text-[9px] text-amber-500 font-black">PSEUDOCODE</span>
-            </div>
-            <div class="p-4 overflow-y-auto max-h-[220px] space-y-1">
-              <p><span class="text-slate-500">// Reconstructed from memory — placeholder until original source is found</span></p>
-              <p><span class="text-slate-500">// Tracking wheels: 2.75" diameter, mounted vertical + horizontal</span></p>
-              <p><span class="text-slate-500">// Origin (0,0) set at field center</span></p>
-              <p class="pl-4"></p>
-              <p><span class="text-blue-400">function</span> update_position():</p>
-              <p class="pl-4">wheel_circumference = 2.75 * PI</p>
-              <p class="pl-4"></p>
-              <p class="pl-4"><span class="text-slate-500">// convert wheel rotation to inches traveled</span></p>
-              <p class="pl-4">forward_distance = vertical_wheel.rotation_to_inches(wheel_circumference)</p>
-              <p class="pl-4">sideways_distance = horizontal_wheel.rotation_to_inches(wheel_circumference)</p>
-              <p class="pl-4">heading = inertial_sensor.get_heading_in_radians()</p>
-              <p class="pl-4"></p>
-              <p class="pl-4"><span class="text-slate-500">// rotate local movement into field-relative X/Y</span></p>
-              <p class="pl-4">delta_x = forward_distance * cos(heading) - sideways_distance * sin(heading)</p>
-              <p class="pl-4">delta_y = forward_distance * sin(heading) + sideways_distance * cos(heading)</p>
-              <p class="pl-4"></p>
-              <p class="pl-4">global_x += delta_x</p>
-              <p class="pl-4">global_y += delta_y</p>
-              <p class="pl-4"></p>
-              <p class="pl-4">reset both tracking wheel encoders</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Timeline Node 5: Apr 2026 -->
-    <div class="relative">
-      <div class="absolute -left-[35px] md:-left-[59px] top-0 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-rose-500 shadow-sm">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>
-      </div>
-      <div class="space-y-2">
-        <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest">April 2026</span>
-        <h4 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Results: Top 25%, Judge's Award
-        </h4>
-        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
-          Closed the season at <strong>45 driver-skills points</strong> and a <strong>15-point</strong> autonomous plateau (60 total, meeting the target), a consistent <strong>top-25%</strong> finish in match play, and the <strong>Judge's Award</strong> for engineering process, CAD quality, and documentation.
-        </p>
-        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
-          Before graduating, I trained two incoming underclassmen on CAD and design workflows, handing off documentation to carry the program forward into next season.
-        </p>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Final Robot Photo Gallery -->
-  <div class="space-y-4">
-    <div class="text-center space-y-1">
-      <span class="font-mono text-xs font-black text-rose-500 uppercase tracking-widest block">
-        The Finished Robot
-      </span>
-      <h3 class="font-sans text-xl font-bold text-slate-900 dark:text-white">
-        The Completed Build: Sprocket
-      </h3>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-      <div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-4/3">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_final_robot_angle_1.jpg" alt="Finished Sprocket robot, rear three-quarter view" class="w-full h-full object-cover" />
-      </div>
-      <div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-4/3">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_robot_closeup_mechanism.jpg" alt="Finished Sprocket robot, close-up drivetrain detail" class="w-full h-full object-cover" />
-      </div>
-      <div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-4/3">
-        <img loading="lazy" decoding="async" src="src/assets/images/capstone/sprocket_final_robot_angle_3.jpg" alt="Finished Sprocket robot, front view" class="w-full h-full object-cover" />
-      </div>
-    </div>
-  </div>
-
-  <!-- Performance & Testing Metrics Dashboard -->
-  <div class="pt-8 border-t border-slate-100 dark:border-slate-800/80 space-y-8">
-    <div class="text-center space-y-1.5">
-      <h3 class="font-sans text-xl font-bold text-slate-900 dark:text-white">
-        Sprocket Performance Metrics
-      </h3>
-      <p class="font-mono text-xs text-slate-400 uppercase">
-        Quantitative Data Collected across competitive skills runs & matches
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <!-- Table: Skills progression -->
-      <div class="lg:col-span-6 space-y-4">
-        <h4 class="font-mono text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-          <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          Skills Run Progression (Table 1)
-        </h4>
-        <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 font-mono text-[10px] text-slate-500 uppercase">
-                <th class="py-3 px-4">Trial</th>
-                <th class="py-3 px-4">Driver Skills (pts)</th>
-                <th class="py-3 px-4">Autonomous (pts)</th>
-                <th class="py-3 px-4">Total Score</th>
-              </tr>
-            </thead>
-            <tbody class="text-xs font-mono">
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 1</td>
-                <td class="py-2.5 px-4">6</td>
-                <td class="py-2.5 px-4">0</td>
-                <td class="py-2.5 px-4 font-bold">6</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 2</td>
-                <td class="py-2.5 px-4">10</td>
-                <td class="py-2.5 px-4">0</td>
-                <td class="py-2.5 px-4 font-bold">10</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 3</td>
-                <td class="py-2.5 px-4">15</td>
-                <td class="py-2.5 px-4">0</td>
-                <td class="py-2.5 px-4 font-bold">15</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 4</td>
-                <td class="py-2.5 px-4">10</td>
-                <td class="py-2.5 px-4">15</td>
-                <td class="py-2.5 px-4 font-bold">25</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 5</td>
-                <td class="py-2.5 px-4">25</td>
-                <td class="py-2.5 px-4">15</td>
-                <td class="py-2.5 px-4 font-bold">40</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50">
-                <td class="py-2.5 px-4 font-bold">Trial 6</td>
-                <td class="py-2.5 px-4">45</td>
-                <td class="py-2.5 px-4">0</td>
-                <td class="py-2.5 px-4 font-bold">45</td>
-              </tr>
-              <tr class="border-b border-slate-100 dark:border-slate-800 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-bold">
-                <td class="py-2.5 px-4 font-bold">Trial 7</td>
-                <td class="py-2.5 px-4">45</td>
-                <td class="py-2.5 px-4">15</td>
-                <td class="py-2.5 px-4 font-bold">60</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="text-[11px] text-slate-400 leading-normal">
-          Note: Driver skills display a strong positive trend, while autonomous scores plateaued at the 15-point theoretical limit once PID systems stabilized in Trial 4.
-        </p>
-      </div>
-
-      <!-- Chart/Bars: Match Play Scores -->
-      <div class="lg:col-span-6 space-y-4">
-        <h4 class="font-mono text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-          <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg>
-          Match Results (12 Recorded Matches)
-        </h4>
-        
-        <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4 font-sans">
-          <div class="grid grid-cols-6 gap-2 pt-2">
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 5%" class="w-full rounded-b-lg bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M1</span>
-              <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">3</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 12%" class="w-full rounded-b-lg bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M2</span>
-              <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">17</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 100%" class="w-full rounded-b-lg bg-rose-500 shadow-xs shadow-rose-500/20"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M3</span>
-              <span class="text-[10px] font-mono font-bold text-rose-500">136</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 25%" class="w-full rounded-b-lg bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M4</span>
-              <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">35</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 12%" class="w-full rounded-b-lg bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M5</span>
-              <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">17</span>
-            </div>
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-full h-24 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex flex-col justify-end">
-                <div style="height: 8%" class="w-full rounded-b-lg bg-slate-400 dark:bg-slate-600"></div>
-              </div>
-              <span class="text-[9px] font-mono font-black text-slate-400 block">M6</span>
-              <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">12</span>
-            </div>
-          </div>
-
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Our match scores demonstrated strong spikes, reaching <strong>136 points in Match 3</strong>. Lower scores in other matches are due to random pairings or heavy defense, but overall competitiveness remained high.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Conclusion & Legacy Framework -->
-  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 text-center max-w-3xl mx-auto space-y-3">
-    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-      Beyond the competition results, I'm proud that the CAD model I built in Onshape and the notebook we kept now give future ACIT Redhawk Robotics teams a documented foundation to build on — something my team never had.
-    </p>
-  </div>
-</div>
-`,
+      "box-6": SPROCKET_PROJECT,
       "box-5": `
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
   <!-- Left: narrative, tech summary, metrics -->
@@ -8487,6 +7926,13 @@ void loop() {
       const body = document.getElementById('project-detail-body');
       if (body && PROJECT_DETAILS[projectId]) {
         body.innerHTML = PROJECT_DETAILS[projectId];
+        const item = TIMELINE_ITEMS.find(item => item.id === projectId);
+        if (item && projectId !== 'box-6') {
+          const context = document.createElement('p');
+          context.className = 'project-stage-context';
+          context.textContent = item.stage + ' project';
+          body.firstElementChild?.prepend(context);
+        }
       }
       updateCswaLevelBadges();
       initCswaLevelChecks();
@@ -8530,84 +7976,84 @@ void loop() {
 
     const TIMELINE_ITEMS = [
       {
-        id: 'box-12', title: 'Quadruped Robot', subtitle: 'Prototype in progress', category: 'PERSONAL',
+        id: 'box-12', stage: 'College', title: 'Quadruped Robot', subtitle: 'Prototype in progress', category: 'PERSONAL',
         dateLabel: 'Oct 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: '',
         image: 'src/assets/images/quadruped-robot/folded-configuration.webp', imageFit: 'contain',
         tags: ['Onshape', '3D Printing', 'Mechanism Design'],
         desc: "A folding quadruped developed with Ethan.\n• <strong>Mechanism packaging:</strong> extended the chassis 160 → 225 mm and shortened upper legs 143 → 135 mm.\n• <strong>Design for assembly:</strong> iterated locating slots, servo-axis alignment, and mirrored printed supports.\n• <strong>Hardware progress:</strong> four legs assembled; one leg actuated. Walking control is next."
       },
       {
-        id: 'box-7', title: 'Volumetric Display', subtitle: 'Mechanical development', category: 'PERSONAL',
+        id: 'box-7', stage: 'College', title: 'Volumetric Display', subtitle: 'Mechanical development', category: 'PERSONAL',
         dateLabel: 'Aug 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
         image: 'src/assets/images/volumetric-display/radial-arm-assembly.webp', imageFit: 'contain',
         tags: ['Onshape', 'SolidWorks', 'FEA Simulation'],
         desc: "Mechanical architecture for a swept-volume LED display.\n• <strong>Rotor redesign:</strong> replaced a broad wall with 20 modular radial arms to reduce exposed area.\n• <strong>Integration:</strong> packaged the motor, slip ring, and split printable shaft.\n• <strong>Preliminary FEA:</strong> arm model reported ~23 psi at 0.28 lbf; dynamic validation remains ahead."
       },
       {
-        id: 'box-11', title: 'FEA & GD&T', subtitle: 'Structural analysis', category: 'PERSONAL',
+        id: 'box-11', stage: 'College', title: 'FEA & GD&T', subtitle: 'Structural analysis', category: 'PERSONAL',
         dateLabel: '2026', location: 'Independent Build', icon: 'ruler', iconImage: '',
         image: 'src/assets/images/fea/aligner-load-stress.png', imageFit: 'contain',
         tags: ['Onshape', 'FEA Simulation', 'GD&T'],
         desc: "Structural study of a two-plate VEX robot aligner.\n• <strong>Load definition:</strong> applied −200 lbf in Y to each plate in the assembly model.\n• <strong>Stress distribution:</strong> examined the load path around cutouts, holes, and spacers.\n• <strong>Next refinement:</strong> validate constraints and material inputs, then document critical fits."
       },
       {
-        id: 'box-3', title: 'SolidWorks CAD to Manufacturing Readiness', subtitle: 'Personal Project', category: 'PERSONAL',
+        id: 'box-3', stage: 'College', title: 'SolidWorks CAD to Manufacturing Readiness', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: '2025 — Present', location: 'Independent Build', icon: 'ruler', iconImage: 'src/assets/images/logos/solidworks-cad-icon.png',
         image: 'src/assets/images/cswa_solidworks_practice.jpg', imageFit: 'cover',
         tags: ['SolidWorks', 'GD&T', 'DFM/DFA'],
         desc: "Developing CAD models into manufacturing documentation.\n• <strong>Parametric modeling:</strong> built parts from official CSWA practice exercises.\n• <strong>Manufacturing readiness:</strong> extending selected models into toleranced drawings and DFM/DFA reviews."
       },
       {
-        id: 'box-6', title: 'Vex Pushback Capstone', subtitle: 'Lead Robotics Designer', category: 'STUDENT TEAMS',
+        id: 'box-6', stage: 'High school', title: 'Sprocket · VEX Pushback', subtitle: 'Lead Robotics Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2025 — Apr 2026', location: 'Atlantic County Institute of Technology', icon: 'gear', iconImage: 'src/assets/images/logos/vex-capstone-icon.png',
         image: 'src/assets/images/capstone/Sprocket_Robot_CAD.png', imageFit: 'contain',
-        tags: ['Onshape CAD', 'AutoCAD', 'C++', 'PID Control'],
-        desc: "Lead robotics designer on a four-person capstone team.\n• <strong>Mechanical design:</strong> iterated drivetrain and intake mechanisms in Onshape.\n• <strong>Controls integration:</strong> developed sensor-based autonomous behavior and PID control.\n• <strong>Recognition:</strong> team earned the Judge’s Award."
+        tags: ['Onshape', 'Mechanism Design', 'Sensor Integration'],
+        desc: "Mechanical design lead on a four-person competition team.\n• <strong>Design decisions:</strong> developed the L-shaped intake and drivetrain assembly in CAD.\n• <strong>Hardware integration:</strong> redesigned mounts for the tracking sensors.\n• <strong>Team result:</strong> 60 combined skills points against a 50-point target; Judge’s Award."
       },
       {
-        id: 'box-4', title: 'Launch Vehicle Project', subtitle: 'Lead Designer', category: 'STUDENT TEAMS',
+        id: 'box-4', stage: 'High school', title: 'Launch Vehicle Project', subtitle: 'Lead Designer', category: 'STUDENT TEAMS',
         dateLabel: 'Sept 2024 — May 2025', location: 'Atlantic County Institute of Technology', icon: 'pencil', iconImage: 'src/assets/images/logos/launch-vehicle-icon.png',
         image: 'src/assets/images/launch_vehicle_cross_section.png', imageFit: 'contain',
         tags: ['MATLAB', 'SolidWorks', 'Structural Modeling'],
         desc: "Student launch-vehicle design study for a 4,500 lb target payload.\n• <strong>System sizing:</strong> explored staging and propulsion using MATLAB.\n• <strong>Mechanical development:</strong> modeled vehicle structure and packaging in SolidWorks."
       },
       {
-        id: 'box-1', title: 'High Stakes Competition Robot Build', subtitle: 'Robotics Team', category: 'STUDENT TEAMS',
+        id: 'box-1', stage: 'High school', title: 'High Stakes Competition Robot Build', subtitle: 'Robotics Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2025', location: 'Atlantic County Institute of Technology', icon: 'wrench', iconImage: 'src/assets/images/logos/robot-build-icon.png',
         image: 'src/assets/images/High_Stake_Robot.png', imageFit: 'cover',
         tags: ['Onshape', 'AutoCAD', 'C++'],
         desc: "Competition robot chassis and mechanism development.\n• <strong>CAD & fabrication planning:</strong> designed the chassis in Onshape and AutoCAD.\n• <strong>Motion control:</strong> programmed dual-motor lifters and autonomous routines in C++."
       },
       {
-        id: 'box-5', title: 'Arduino Electronics', subtitle: 'Personal Project', category: 'PERSONAL',
+        id: 'box-5', stage: 'High school', title: 'Arduino Electronics', subtitle: 'Personal Project', category: 'PERSONAL',
         dateLabel: 'Feb 2024', location: 'Independent Build', icon: 'bolt', iconImage: 'src/assets/images/logos/arduino-icon.png',
         image: 'src/assets/images/arduino/Arduino_Physical_Breadboard.jpg', imageFit: 'cover',
         tags: ['Arduino', 'C++', 'Circuit Design'],
         desc: "An eight-key Arduino synthesizer built on a breadboard.\n• <strong>Circuit design:</strong> read a resistor-ladder keyboard through one analog input.\n• <strong>Embedded programming:</strong> translated physical button inputs into real-time sound."
       },
       {
-        id: 'box-8', title: 'Tower Design Project', subtitle: 'Student Team', category: 'STUDENT TEAMS',
+        id: 'box-8', stage: 'High school', title: 'Tower Design Project', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Jan 2024', location: 'Atlantic County Institute of Technology', icon: 'triangle', iconImage: 'src/assets/images/logos/tower-icon.png',
         image: 'src/assets/images/tower/Tower_Testing_Setup.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Structural Design', 'Load Testing'],
         desc: "An 11-inch balsa tower designed for load testing.\n• <strong>Structural design:</strong> incorporated torsional bracing into the tower geometry.\n• <strong>Physical testing:</strong> supported 45 lb before failure."
       },
       {
-        id: 'box-9', title: 'Sensor Challenge', subtitle: 'Team: Electrifying Tempest', category: 'STUDENT TEAMS',
+        id: 'box-9', stage: 'High school', title: 'Sensor Challenge', subtitle: 'Team: Electrifying Tempest', category: 'STUDENT TEAMS',
         dateLabel: 'June 2023', location: 'Atlantic County Institute of Technology', icon: 'radar', iconImage: 'src/assets/images/logos/sensor-challenge-icon.png',
         image: 'src/assets/images/sensor-challenge/Sensor_Warehouse_Course.jpg', imageFit: 'cover',
         tags: ['Autonomy', 'Sonar', 'Sensor Fusion'],
         desc: "Autonomous navigation through a warehouse-style course.\n• <strong>Sensor integration:</strong> combined line following and sonar-based distance sensing.\n• <strong>Iterative tuning:</strong> refined navigation and parking between boxes through repeated trials."
       },
       {
-        id: 'box-10', title: 'Putt-Putt Boat: Straight-Line Redesign', subtitle: 'Student Team', category: 'STUDENT TEAMS',
+        id: 'box-10', stage: 'High school', title: 'Putt-Putt Boat: Straight-Line Redesign', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'May 2023', location: 'Atlantic County Institute of Technology', icon: 'wave', iconImage: 'src/assets/images/logos/puttputt-icon.png',
         image: 'src/assets/images/putt-putt/PuttPutt_Boat_Photo.jpg', imageFit: 'cover',
         tags: ['Rapid Prototyping'],
         desc: "A candle-powered boat redesigned for straight-line travel.\n• <strong>Failure diagnosis:</strong> investigated drift and revised the twin-straw exhaust.\n• <strong>Measured improvement:</strong> the revised boat ran 58% faster than the baseline."
       },
       {
-        id: 'box-2', title: 'Wind Turbine Competition', subtitle: 'Student Team', category: 'STUDENT TEAMS',
+        id: 'box-2', stage: 'High school', title: 'Wind Turbine Competition', subtitle: 'Student Team', category: 'STUDENT TEAMS',
         dateLabel: 'Mar 2023', location: 'Atlantic County Institute of Technology', icon: 'wind', iconImage: 'src/assets/images/logos/wind-turbine-icon.png',
         image: 'src/assets/images/wind-turbine-notebook/wt-test-p8-3blade-12in.jpg', imageFit: 'cover',
         tags: ['AutoCAD', 'Aerodynamics', '3D Printing'],
@@ -8678,7 +8124,7 @@ void loop() {
       // by setting category: 'INTERNSHIPS' on its TIMELINE_ITEMS entry.
       const filterCategory = item.category || 'PERSONAL';
       const category = CATEGORY_BADGE_LABELS[filterCategory] || filterCategory;
-      const attrs = extraAttrs ? ` project-card" data-category="${filterCategory}` : '';
+      const attrs = extraAttrs ? ` project-card" data-category="${filterCategory}" data-stage="${item.stage}` : '';
       const tagsHtml = (item.tags || []).map(tag => {
         const icon = TAG_ICONS[tag];
         const iconHtml = icon
@@ -8704,6 +8150,7 @@ void loop() {
             <span class="text-[9px] font-mono font-bold text-rose-500 uppercase tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded whitespace-nowrap">${escapeHtml(item.subtitle)}</span>
           </div>
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-slate-400 dark:text-slate-500">
+            <span class="project-stage">${item.stage}</span>
             <span class="flex items-center gap-1">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 text-rose-500"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               ${escapeHtml(item.dateLabel)}
@@ -8745,6 +8192,7 @@ void loop() {
       const container = document.getElementById('projects-grid');
       if (!container) return;
       container.innerHTML = TIMELINE_ITEMS.map(item => buildHomeProjectCardHTML(item, true)).join('');
+      document.getElementById('project-count').textContent = `${TIMELINE_ITEMS.length} projects`;
     }
     renderProjectPageList();
 
@@ -8913,8 +8361,13 @@ void loop() {
     // Projects filtering engine — fades cards out, swaps which ones are in
     // the layout, then fades the matching set back in with a light stagger,
     // instead of an instant display:none/flex cut.
-    function filterProjects(cat) {
-      const FADE_MS = 200;
+    let activeProjectCategory = 'ALL';
+    let projectFilterTimer;
+    function filterProjects(cat = activeProjectCategory) {
+      activeProjectCategory = cat;
+      clearTimeout(projectFilterTimer);
+      const stage = document.getElementById('project-stage').value;
+      const FADE_MS = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
       const cards = document.querySelectorAll('.project-card');
 
       // Phase 1: fade everything currently on screen out together.
@@ -8926,10 +8379,10 @@ void loop() {
 
       // Phase 2: once the fade-out finishes, swap which cards are laid out
       // at all, then fade the matching ones back in with a subtle stagger.
-      setTimeout(() => {
+      projectFilterTimer = setTimeout(() => {
         let shownIndex = 0;
         cards.forEach(card => {
-          const match = (cat === 'ALL' || card.getAttribute('data-category') === cat);
+          const match = (cat === 'ALL' || card.getAttribute('data-category') === cat) && (stage === 'ALL' || card.dataset.stage === stage);
           card.style.display = match ? 'flex' : 'none';
           if (!match) return;
 
@@ -8948,6 +8401,7 @@ void loop() {
 
         // Show a friendly message instead of blank space when a category
         // (e.g. Internships, until one is added) has zero matching cards.
+        document.getElementById('project-count').textContent = `${shownIndex} ${shownIndex === 1 ? 'project' : 'projects'}`;
         const emptyState = document.getElementById('projects-empty-state');
         if (emptyState) {
           emptyState.classList.toggle('hidden', shownIndex !== 0);
@@ -8956,6 +8410,7 @@ void loop() {
 
       // Update active state of filter buttons (with a smooth color transition)
       document.querySelectorAll('.proj-filter-btn').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.innerText === cat));
         if (btn.innerText === cat) {
           btn.className = "proj-filter-btn px-4 py-2 bg-rose-500 text-white font-mono text-xs uppercase rounded-xl transition-colors duration-200";
         } else {

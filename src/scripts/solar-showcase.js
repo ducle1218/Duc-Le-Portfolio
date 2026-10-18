@@ -7,7 +7,7 @@
     robot:['box-12','Quadruped robot','A folding robot dog, developed through CAD and printed prototypes.','quadruped-robot/hero-cutout.png'],
     display:['box-7','Volumetric display','A twenty-arm rotor designed to turn moving light into a 3D display.','volumetric-display/hero-cutout.png'],
     fea:['box-11','FEA & GD&T','Studying load paths and stress in a two-plate robot aligner.','fea/hero-cutout.png'],
-    vex:['box-6','VEX Pushback','Competition robot drivetrain, intake mechanisms, and controls.','capstone/Sprocket_Robot_CAD.png'],
+    vex:['box-6','VEX Pushback','Mechanical design and sensor integration for a VEX competition robot.','capstone/Sprocket_Robot_CAD.png'],
     cad:['box-3','CAD & manufacturing','Parametric SolidWorks models and manufacturing drawings.','cswa_solidworks_practice.jpg'],
     launch:['box-4','Launch vehicle','Vehicle sizing, structural modeling, and payload packaging.','launch_vehicle_cross_section.png'],
     tower:['box-8','Tower design','A braced balsa structure developed through load testing.','tower/Tower_Testing_Setup.jpg'],

@@ -11,3 +11,5 @@ The viewer is loaded on demand from the CAD assembly panel. It provides camera c
 The export is optimized by merging same-material faces within each shared mesh, welding vertices, simplifying with a 0.001 error bound and 0.15 target ratio, and Draco compression. Instance transforms and material colors remain intact. Inspect the result visually before replacing the web asset.
 
 Camera controls: drag to rotate; wheel/pinch to zoom; right-drag or two-finger drag to pan. Reset view returns to the initial framing. Mobile vertical swipes still scroll the page.
+
+Color presentation: convert the Onshape display RGB factors to linear RGB for glTF rendering. Remove only instance 521 (mesh 75), the 0.4572 m construction envelope; retain the other blue components. Geometry buffers are unchanged by this presentation correction. Viewer exposure is 0.45 with a neutral environment.

@@ -98,6 +98,17 @@ export async function createSprocketViewer(stage, url) {
     const gltf=await new GLTFLoader().setDRACOLoader(draco).loadAsync(url);
     if(disposed)return {dispose,reset,invalidate,loaded:false};
     const model=gltf.scene;
+    // Correct the supplied export's right gray side plate, using the left side's
+    // 4.28488 mm clearance to the black panel. Keep this occurrence-only: its
+    // mesh is shared by both sides. Guard against applying it to a future export.
+    model.traverse(object => {
+      if(gltf.parser.associations.get(object)?.nodes === 931 &&
+         Math.abs(object.position.x - .0642462968826294) < 1e-8 &&
+         Math.abs(object.position.y - .2916525602340698) < 1e-8 &&
+         Math.abs(object.position.z + .061891477555036545) < 1e-8) {
+        object.position.x -= .0065427499741680;
+      }
+    });
     const meshes=[];model.traverse(object=>{if(object.isMesh)meshes.push(object);});
     const mapped=new Map();
     for(let i=0;i<meshes.length;i++){
@@ -124,3 +135,4 @@ export async function createSprocketViewer(stage, url) {
     return {dispose,reset,invalidate,get loaded(){return loaded;}};
   } catch(error){dispose();throw error;} finally {draco.dispose();}
 }
+

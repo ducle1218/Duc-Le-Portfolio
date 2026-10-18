@@ -107,7 +107,7 @@ document.addEventListener('click', async event => {
     status.textContent = 'The 3D view could not load. You can still view the CAD image or built robot.';
   };
   try {
-    sprocketViewerModule ||= import('./sprocket-cad.bundle.js?v=20261018-1').catch(error => { sprocketViewerModule = null; throw error; });
+    sprocketViewerModule ||= import('./sprocket-cad.bundle.js?v=20261018-2').catch(error => { sprocketViewerModule = null; throw error; });
     const {createSprocketViewer} = await sprocketViewerModule;
     if (!stage.isConnected) return;
     const attempt = Number(stage.dataset.attempt || 0);

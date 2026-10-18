@@ -1,0 +1,43 @@
+/* Exact PDF pages, integrated with the site instead of browser PDF chrome. */
+#resume-preview { overflow: visible; border: 0; background: transparent; box-shadow: none; }
+.resume-status { padding: 28px; text-align: center; color: var(--project-muted); }
+.resume-status a, .resume-status button { text-decoration: underline; text-underline-offset: 3px; }
+.resume-pages { width: 100%; display: grid; gap: 24px; }
+.resume-page { position: relative; width: 100%; overflow: clip; background: #fff; border-radius: 5px; box-shadow: 0 8px 40px #1018280a; color-scheme: only light; }
+.resume-page canvas { display: block; max-width: 100%; }
+.resume-links { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.resume-links a { position: absolute; pointer-events: auto; border-radius: 2px; }
+.resume-links a:hover { background: #b5274318; }
+.resume-links a:focus-visible { outline-offset: 1px; }
+/* Text layout rules adapted from Mozilla PDF.js (Apache-2.0). */
+.resume-page .textLayer {
+  position: absolute; inset: 0; overflow: clip; text-align: initial;
+  line-height: 1; letter-spacing: normal; word-spacing: normal;
+  text-size-adjust: none; -webkit-text-size-adjust: none; forced-color-adjust: none;
+  transform-origin: 0 0; caret-color: CanvasText;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.resume-page .textLayer :is(span, br) {
+  color: transparent !important; position: absolute; white-space: pre; cursor: text;
+  transform-origin: 0 0; user-select: text; -webkit-user-select: text;
+}
+.resume-page .textLayer > :not(.markedContent), .resume-page .markedContent span:not(.markedContent) {
+  z-index: 1; --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1; --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.resume-page .markedContent { display: contents; }
+.resume-page .textLayer ::selection { background: #b5274340; color: transparent; }
+@media (max-width: 760px) {
+  #tab-resume-content { padding-inline: 12px; padding-top: 30px; }
+  #tab-resume-content h1 { font-size: 28px; }
+  .resume-pages { gap: 16px; }
+}
+@media print {
+  .resume-page { break-after: page; box-shadow: none; border-radius: 0; }
+  .resume-page:last-child { break-after: auto; }
+  .resume-links, .resume-status { display: none; }
+}

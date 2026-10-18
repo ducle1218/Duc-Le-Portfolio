@@ -70,7 +70,8 @@ document.addEventListener('click', event => {
     const built = view.dataset.spView === 'built';
     root.querySelector('.sp-cad-stage').hidden = built;
     root.querySelector('.sp-built-image').hidden = !built;
-    root.querySelector('.sp-camera-tools').hidden = built || !root.querySelector('model-viewer')?.loaded;
+    if (!built) root.querySelector('.sp-cad-stage').cadViewer?.invalidate();
+    root.querySelector('.sp-camera-tools').hidden = built || !root.querySelector('.sp-cad-stage').cadViewer?.loaded;
     root.querySelector('#sp-model-caption').textContent = built ? 'Physical build · the CAD package brought onto the competition field.' : 'Onshape assembly · drivetrain, intake, and mechanism packaging.';
     root.querySelectorAll('[data-sp-view]').forEach(button => button.setAttribute('aria-pressed', String(button === view)));
   }
@@ -87,11 +88,7 @@ let sprocketViewerModule;
 document.addEventListener('click', async event => {
   const reset = event.target.closest('[data-sp-reset]');
   if (reset) {
-    const viewer = reset.closest('.sp-model').querySelector('model-viewer');
-    viewer.cameraOrbit = '35deg 65deg 105%';
-    viewer.cameraTarget = 'auto auto auto';
-    viewer.fieldOfView = '30deg';
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) viewer.jumpCameraToGoal();
+    reset.closest('.sp-model').querySelector('.sp-cad-stage').cadViewer?.reset();
   }
   const button = event.target.closest('[data-sp-load]');
   if (!button || button.disabled) return;
@@ -100,7 +97,8 @@ document.addEventListener('click', async event => {
   button.disabled = true;
   status.textContent = 'Loading interactive assembly…';
   const fail = () => {
-    stage.querySelector('model-viewer')?.remove();
+    stage.cadViewer?.dispose();
+    stage.cadViewer = null;
     stage.closest('.sp-model').querySelector('.sp-camera-tools').hidden = true;
     stage.querySelector('img').hidden = false;
     button.hidden = false;
@@ -109,31 +107,16 @@ document.addEventListener('click', async event => {
     status.textContent = 'The 3D view could not load. You can still view the CAD image or built robot.';
   };
   try {
-    sprocketViewerModule ||= import('../vendor/model-viewer/model-viewer.min.js').catch(error => { sprocketViewerModule = null; throw error; });
-    await sprocketViewerModule;
+    sprocketViewerModule ||= import('./sprocket-cad.bundle.js?v=20261018-1').catch(error => { sprocketViewerModule = null; throw error; });
+    const {createSprocketViewer} = await sprocketViewerModule;
     if (!stage.isConnected) return;
-    const Viewer = customElements.get('model-viewer');
-    Viewer.dracoDecoderLocation = new URL('src/vendor/model-viewer/draco/', document.baseURI).href;
-    const viewer = document.createElement('model-viewer');
-    viewer.setAttribute('alt', 'Interactive Sprocket robot assembly. Drag to rotate, scroll to zoom, and right-drag to pan.');
-    viewer.setAttribute('camera-controls', '');
-    viewer.setAttribute('touch-action', 'pan-y');
-    viewer.setAttribute('camera-orbit', '35deg 65deg 105%');
-    viewer.setAttribute('field-of-view', '30deg');
-    viewer.setAttribute('interaction-prompt', 'none');
-    viewer.setAttribute('exposure', '0.45');
-    viewer.setAttribute('environment-image', 'neutral');
-    viewer.setAttribute('loading', 'eager');
-    viewer.addEventListener('error', fail, { once: true });
-    viewer.addEventListener('load', () => {
-      stage.querySelector('img').hidden = true;
-      button.hidden = true;
-      status.textContent = '';
-      stage.closest('.sp-model').querySelector('.sp-camera-tools').hidden = stage.hidden;
-    }, { once: true });
     const attempt = Number(stage.dataset.attempt || 0);
     stage.dataset.attempt = String(attempt + 1);
-    viewer.src = 'src/assets/models/SprocketRobot.glb?v=20261018-colors' + (attempt ? '&retry=' + Date.now() : '');
-    stage.append(viewer);
+    stage.cadViewer = await createSprocketViewer(stage, 'src/assets/models/SprocketRobot.glb?v=20261018-colors' + (attempt ? '&retry=' + Date.now() : ''));
+    if (!stage.isConnected || !stage.cadViewer.loaded) return;
+    stage.querySelector('img').hidden = true;
+    button.hidden = true;
+    status.textContent = '';
+    stage.closest('.sp-model').querySelector('.sp-camera-tools').hidden = stage.hidden;
   } catch (error) { fail(); }
 });

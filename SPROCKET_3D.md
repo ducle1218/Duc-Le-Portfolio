@@ -24,3 +24,8 @@ Render only on camera/size/visibility changes. Reuse edge geometry for repeated 
 npm install --no-save --ignore-scripts three@0.172.0 esbuild@0.25.12
 node scripts/build-sprocket-cad.mjs
 ```
+
+## Export clearance correction
+
+The supplied export places gray side-plate occurrence 931 (child 932, shared mesh 83) through black panel 888. The renderer offsets only that occurrence by -6.542749974 mm along assembly X. Its new maximum X is 99.378013 mm, leaving 4.284880 mm clearance to the black panel at 103.662893 mm, matching the correct opposite side. Rotation, other instances, and source GLB remain unchanged. Node identity and original translation are guarded so the correction is skipped for a differently positioned export. Correct the mate in Onshape before the next export and remove this presentation correction when replacing the model.
+

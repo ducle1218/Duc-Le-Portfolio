@@ -121,7 +121,7 @@ document.addEventListener('click', async event => {
     viewer.setAttribute('camera-orbit', '35deg 65deg 105%');
     viewer.setAttribute('field-of-view', '30deg');
     viewer.setAttribute('interaction-prompt', 'none');
-    viewer.setAttribute('exposure', '0.65');
+    viewer.setAttribute('exposure', '0.45');
     viewer.setAttribute('environment-image', 'neutral');
     viewer.setAttribute('loading', 'eager');
     viewer.addEventListener('error', fail, { once: true });
@@ -133,7 +133,7 @@ document.addEventListener('click', async event => {
     }, { once: true });
     const attempt = Number(stage.dataset.attempt || 0);
     stage.dataset.attempt = String(attempt + 1);
-    viewer.src = 'src/assets/models/SprocketRobot.glb' + (attempt ? '?retry=' + Date.now() : '');
+    viewer.src = 'src/assets/models/SprocketRobot.glb?v=20261018-colors' + (attempt ? '&retry=' + Date.now() : '');
     stage.append(viewer);
   } catch (error) { fail(); }
 });

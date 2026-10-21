@@ -67,7 +67,7 @@
 
 /* First paint uses the same responsive geometry as layout(), before JS runs. */
 .active-system{container-type:inline-size}
-.system-field{--initial-planet:min(96px,max(54px,8.5cqw));--initial-pad:max(8px,calc(var(--initial-planet)/2 - 4cqw + 8px));--initial-cy:calc(47cqw + var(--initial-pad));height:calc(94cqw + var(--initial-pad)*2)}
+.system-field{--initial-planet:min(128px,max(72px,11.5cqw));--initial-pad:max(8px,calc(var(--initial-planet)/2 - 4cqw + 8px));--initial-cy:calc(47cqw + var(--initial-pad));height:calc(94cqw + var(--initial-pad)*2)}
 .system-sun{width:43cqw;height:43cqw;left:50%;top:var(--initial-cy)}
 .system-tracks i{width:68cqw;height:68cqw;left:50%;top:var(--initial-cy)}
 .system-tracks i:nth-child(2){width:77cqw;height:77cqw}
@@ -78,7 +78,7 @@
 .mini-planet{--initial-angle:0deg;--initial-radius:34cqw;transform:translate(calc(cos(var(--initial-angle))*var(--initial-radius)),calc(sin(var(--initial-angle))*var(--initial-radius))) translate(-50%,-50%)}
 .mini-planet:nth-child(6){--initial-angle:120deg;--initial-radius:38.5cqw}
 .mini-planet:nth-child(7){--initial-angle:240deg;--initial-radius:43cqw}
-@container(max-width:429.99px){.system-field{--initial-planet:40px}}
-@container(max-width:329.99px){.system-field{--initial-planet:32px}}
-@container(max-width:229.99px){.system-field{--initial-planet:28px}}
+@container(max-width:429.99px){.system-field{--initial-planet:52px}}
+@container(max-width:329.99px){.system-field{--initial-planet:42px}}
+@container(max-width:229.99px){.system-field{--initial-planet:34px}}
 .hero-copy{animation:none}

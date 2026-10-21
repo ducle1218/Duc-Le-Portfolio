@@ -75,7 +75,7 @@
   function layout() {
     const w=field.getBoundingClientRect().width;if(!w)return;
     if(systemMove&&Math.abs(w-geometry.w)>1)completeSystem();
-    const sunSize=w*.43,planetSize=w<230?28:w<330?32:w<430?40:Math.min(96,Math.max(54,w*.085));
+    const sunSize=w*.43,planetSize=w<230?34:w<330?42:w<430?52:Math.min(128,Math.max(72,w*.115));
     const verticalSpace=Math.max(8,planetSize/2-w*.04+8);
     geometry={w,cx:w/2,cy:w*.47+verticalSpace,sun:sunSize,planet:planetSize,radius:w*.34};
     field.style.height=`${w*.94+verticalSpace*2}px`;sun.style.width=sun.style.height=`${sunSize}px`;

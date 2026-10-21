@@ -1,0 +1,14 @@
+/* Static grain provides atmosphere without motion or competing with the work. */
+body{isolation:isolate}
+.portfolio-atmosphere{position:fixed;inset:0;z-index:-1;pointer-events:none;background:url('../assets/images/orbital-haze.webp') center center / cover no-repeat;opacity:.22;mix-blend-mode:multiply;contain:strict}
+html.dark .portfolio-atmosphere{filter:invert(1);mix-blend-mode:screen;opacity:.15}
+/* Keep the interface crisp against the soft orbital texture. */
+.system-sun{box-shadow:0 18px 55px #2021260c;border-color:var(--project-line)}
+.system-planet{box-shadow:0 6px 22px #20212612;transition:box-shadow .2s,border-color .2s}
+.system-planet:hover,.system-planet:focus-visible{box-shadow:0 8px 26px #b5274326;border-color:var(--project-accent)}
+.system-description p{color:var(--project-muted)}
+.system-tech-stack li{background:var(--project-paper)}
+.portfolio-card{box-shadow:0 8px 28px #20212605}
+@media(max-width:760px){.portfolio-atmosphere{background-size:auto 110vh;opacity:.16}html.dark .portfolio-atmosphere{opacity:.11}}
+@media print{.portfolio-atmosphere{display:none}}
+

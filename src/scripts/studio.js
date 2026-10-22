@@ -12,7 +12,7 @@
   }
   theme.addEventListener('click',()=>{
     root.classList.toggle('dark');
-    try { localStorage.setItem('portfolio-theme',root.classList.contains('dark')?'dark':'light'); } catch(e) {}
+    try { localStorage.setItem('portfolio-theme-v2',root.classList.contains('dark')?'dark':'light'); } catch(e) {}
     applyTheme();
   });
   applyTheme();

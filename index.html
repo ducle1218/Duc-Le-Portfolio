@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <script>try{document.documentElement.classList.toggle("dark",localStorage.getItem("portfolio-theme")==="dark")}catch(e){}</script>
+  <script>try{document.documentElement.classList.toggle("dark",localStorage.getItem("portfolio-theme-v2")!=="light")}catch(e){document.documentElement.classList.add("dark")}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Duc Le | Mechanical Engineer</title>
   <meta name="description" content="Portfolio of Duc Le, a mechanical engineering student specializing in CAD design and mechanical prototyping. Projects spanning VEX Robotics, launch vehicles, wind turbine systems, and embedded electronics.">
@@ -567,12 +567,12 @@
   <link rel="stylesheet" href="src/styles/projects.css?v=20261014-2">
   <script src="src/scripts/project-presentation.js?v=20261014-5" defer></script>
   <link rel="stylesheet" href="src/styles/studio.css?v=20261016-2">
-  <script src="src/scripts/studio.js?v=20261015-4" defer></script>
-  <script src="src/scripts/solar-showcase.js?v=20261021-1" defer></script>
-  <link rel="stylesheet" href="src/styles/solar-showcase.css?v=20261021-1">
+  <script src="src/scripts/studio.js?v=20261022-1" defer></script>
+  <script src="src/scripts/sculptural.js?v=20261022-1" defer></script>
+
   <link rel="stylesheet" href="src/styles/resume-viewer.css?v=20261018-1">
   <link rel="stylesheet" href="src/styles/sprocket.css?v=20261018-4">
-  <link rel="stylesheet" href="src/styles/orbital-theme.css?v=20261021-2">
+  <link rel="stylesheet" href="src/styles/sculptural.css?v=20261022-1">
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
   <div class="portfolio-atmosphere" aria-hidden="true"></div>
@@ -596,30 +596,27 @@
   <!-- ======================== TAB: HOME ======================== -->
   <div id="tab-home-content" class="tab-pane relative flex-1 flex flex-col">
 
-    <section id="hero-fold" class="studio-hero">
-      <div class="hero-composition">
-        <div class="hero-copy">
-          <h1>Mechanical design.<br><em>Built to learn.</em></h1>
-          <p>I’m Duc, a mechanical engineering student at Rutgers.<br>I design mechanisms, build prototypes, and use analysis and testing to improve them.</p>
-          <div class="hero-actions"><button class="studio-button" onclick="switchTab('project')">Explore my work <span>↗</span></button><button class="studio-text-button" onclick="switchTab('resume')">View my resume <span>↗</span></button></div>
-        </div>
-        <div class="machine-stage constellation-stage">
-          <!-- Render the real first frame before deferred scripts start. -->
-          <div class="system-description"><div class="system-kicker"><span class="system-category">Featured work</span><button id="motion-toggle" class="showcase-motion" aria-pressed="false">Pause animation Ⅱ</button></div><h2>Quadruped robot</h2><p>A folding robot dog, developed through CAD and printed prototypes.</p><ul class="system-tech-stack" aria-label="Project tech stack"><li><img src="src/assets/images/logos/onshape_logo.png" alt="">Onshape</li><li><img src="src/assets/images/logos/bambu-logo.png" alt="">3D Printing</li><li>Mechanism Design</li></ul></div>
-          <div class="system-scene"><div class="active-system"><div class="system-field"><div class="system-tracks" aria-hidden="true"><i></i><i></i><i></i></div><button type="button" class="system-sun" onclick="showProjectDetail('box-12')" aria-label="Open Quadruped robot project"><img draggable="false" src="src/assets/images/quadruped-robot/hero-cutout.png" alt="Quadruped robot" fetchpriority="high"><span>View project ↗</span></button><div class="system-planets"><button type="button" class="system-planet" onclick="showProjectDetail('box-7')" aria-label="Open Volumetric display project"><img draggable="false" src="src/assets/images/volumetric-display/hero-cutout.png" alt="Volumetric display"><span>Volumetric display</span></button><button type="button" class="system-planet" onclick="showProjectDetail('box-11')" aria-label="Open FEA &amp; GD&amp;T project"><img draggable="false" src="src/assets/images/fea/hero-cutout.png" alt="FEA &amp; GD&amp;T"><span>FEA &amp; GD&amp;T</span></button><button type="button" class="system-planet" onclick="showProjectDetail('box-6')" aria-label="Open VEX Pushback project"><img draggable="false" src="src/assets/images/capstone/Sprocket_Robot_CAD.png" alt="VEX Pushback"><span>VEX Pushback</span></button></div></div></div><div class="system-dock" aria-label="Other project systems"><button type="button" class="mini-system" aria-label="Explore Design &amp; structures"><span class="mini-map" aria-hidden="true"><i class="mini-track"></i><i class="mini-track"></i><i class="mini-track"></i><span class="mini-sun"><img draggable="false" src="src/assets/images/cswa_solidworks_practice.jpg" alt="CAD &amp; manufacturing"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/launch_vehicle_cross_section.png" alt="Launch vehicle"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/tower/Tower_Testing_Setup.jpg" alt="Tower design"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/wind-turbine-notebook/wt-test-p8-3blade-12in.jpg" alt="Wind turbine"></span></span><span class="mini-name">Design &amp; structures</span></button><button type="button" class="mini-system" aria-label="Explore Controls &amp; prototypes"><span class="mini-map" aria-hidden="true"><i class="mini-track"></i><i class="mini-track"></i><i class="mini-track"></i><span class="mini-sun"><img draggable="false" src="src/assets/images/High_Stake_Robot.png" alt="High Stakes robot"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/arduino/Arduino_Physical_Breadboard.jpg" alt="Arduino synthesizer"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/sensor-challenge/Sensor_Warehouse_Course.jpg" alt="Sensor challenge"></span><span class="mini-planet"><img draggable="false" src="src/assets/images/putt-putt/PuttPutt_Boat_Photo.jpg" alt="Putt-putt boat"></span></span><span class="mini-name">Controls &amp; prototypes</span></button></div></div>
-        </div>
+    <section id="hero-fold" class="sculpture-hero">
+      <div class="hero-intro"><p class="sculpture-label">DUC LE / MECHANICAL ENGINEERING</p><h1>Ideas into<br><span>motion.</span></h1><div class="intro-bottom"><p>I design mechanisms, build prototypes, and test what comes next.<br><span>Mechanical engineering student at Rutgers.</span></p><button class="sculpture-link" onclick="switchTab('project')">Explore the work <span>↘</span></button></div></div>
+      <div class="project-console">
+        <div class="console-top"><span>PROJECT SPOTLIGHT</span><span id="spotlight-count">01 / 04</span></div>
+        <button class="spotlight-image" id="spotlight-open" onclick="showProjectDetail('box-12')" aria-label="View Quadruped robot project"><img id="spotlight-image" src="src/assets/images/quadruped-robot/hero-cutout.png" alt="Quadruped robot" fetchpriority="high"><span class="image-open">Explore project ↗</span></button>
+        <div class="spotlight-caption" aria-live="polite"><span class="sculpture-label" id="spotlight-tag">ROBOTICS / PROTOTYPE IN PROGRESS</span><h2 id="spotlight-title">Quadruped robot</h2><p id="spotlight-summary">A folding robot dog. From servo packaging to printed, working legs.</p></div>
+        <div class="spotlight-select" aria-label="Choose spotlight project"><button aria-pressed="true" data-spotlight="0"><span>01</span>Quadruped</button><button aria-pressed="false" data-spotlight="1"><span>02</span>Volumetric display</button><button aria-pressed="false" data-spotlight="2"><span>03</span>FEA &amp; GD&amp;T</button><button aria-pressed="false" data-spotlight="3"><span>04</span>VEX robot</button></div>
       </div>
+      <button id="motion-toggle" hidden aria-pressed="false">Pause animation</button>
     </section>
+    <div class="discipline-strip"><span>01 / DESIGN</span><p>Mechanisms &amp; CAD</p><span>02 / BUILD</span><p>Physical prototypes</p><span>03 / VALIDATE</span><p>Analysis &amp; testing</p></div>
     <section id="featured-projects-section" class="studio-section">
-      <div class="section-heading"><h2>Featured Project</h2></div>
+      <div class="section-heading"><div><p class="sculpture-label">SELECTED WORK / 2026</p><h2>Engineering in practice.</h2></div><p>Decisions, iterations, and the evidence behind them.</p></div>
       <div id="home-project-list"></div>
       <div class="section-end"><button class="studio-button" onclick="switchTab('project')">View all 12 projects <span>↗</span></button></div>
     </section>
     <section class="workbench-section">
-      <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>The best part?<br><em>Making it real.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><div><strong>CAD & mechanisms</strong><p>Onshape and SolidWorks · servo packaging, folding linkages, and assembly fit.</p></div><div><strong>Prototyping & fabrication</strong><p>FDM printing · fit checks, locating features, and iterative hardware builds.</p></div><div><strong>Analysis & testing</strong><p>Preliminary FEA · defined load cases, stress interpretation, and physical testing.</p></div></div></div>
+      <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>Beyond the model.<br><em>Into the workshop.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><div><strong>CAD & mechanisms</strong><p>Onshape and SolidWorks · servo packaging, folding linkages, and assembly fit.</p></div><div><strong>Prototyping & fabrication</strong><p>FDM printing · fit checks, locating features, and iterative hardware builds.</p></div><div><strong>Analysis & testing</strong><p>Preliminary FEA · defined load cases, stress interpretation, and physical testing.</p></div></div></div>
       <figure class="workbench-film"><video id="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><div class="film-controls"><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><button id="film-sound" aria-pressed="false">Unmute sound</button></div><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
     </section>
-    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Ready to learn.<br>Ready to <em>contribute.</em></h2><button onclick="switchTab('contact')" class="contact-orbit"><span>Let&#8217;s talk</span><span aria-hidden="true">&#8599;</span><small>Discuss an engineering opportunity</small></button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
+    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Let’s build<br><em>what comes next.</em></h2><button onclick="switchTab('contact')" class="contact-orbit"><span>Let&#8217;s talk</span><span aria-hidden="true">&#8599;</span><small>Discuss an engineering opportunity</small></button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
   </div>
 
   <!-- ======================== TAB: RESUME ======================== -->
@@ -648,7 +645,7 @@
   <div id="tab-project-content" class="tab-pane hidden flex-1 max-w-[95vw] xl:max-w-7xl mx-auto px-6 py-12 space-y-10">
     <div class="project-page-heading">
       <p class="project-eyebrow">THE BUILDS. THE EXPERIMENTS. THE PROCESS.</p>
-      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">A collection of <em>curiosity.</em></h1>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">The project <em>archive.</em></h1>
       <p class="project-page-intro">Robotics, mechanisms, and ideas brought into the physical world.<br>Pick a project. Follow the process.</p>
     </div>
 

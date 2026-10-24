@@ -11,6 +11,22 @@ const ENGINEERING_PROJECTS = (() => {
   const quadruped = `<article class="case-study">
     <div class="case-hero"><div><p class="case-kicker">Mechanical design / October 2026</p><h2>Quadruped Robot</h2><span class="case-status">Prototype in progress</span><p class="case-lede">From servo packaging to a folding chassis: building a four-legged robot through CAD, printed parts, and hands-on fit checks.</p><p>My work focuses on Onshape modeling, assembly clearances, and print-efficient revisions. I recreated the initial body and head from teammate Ethan’s SolidWorks dimensions, then developed the changes shown here.</p><div class="case-tools"><span>Onshape</span><span>FDM printing</span><span>Mechanism design</span></div></div>${robot('standing-prototype','First standing prototype','Early physical assembly with three legs installed. The notebook later records all four legs attached and one leg actuated. October 4–5, 2026.', true)}</div>
     ${facts([['Body length','160 → 225 mm'],['Upper leg','143 → 135 mm'],['Build constraint','256 mm print bed'],['Demonstrated','One leg actuated']])}
+    <section class="cad-evolution" aria-labelledby="cad-evolution-heading" data-cad-evolution>
+      <header class="cad-evolution-heading"><p class="case-kicker">Inside the iteration</p><h3 id="cad-evolution-heading">The design, between iterations.</h3><p>Small changes become easier to see in motion. These sequences compare the actual STEP exports of three quadruped parts, with a consistent camera and scale within each sequence.</p></header>
+      <div class="cad-evolution-layout">
+        <div class="cad-evolution-parts" role="group" aria-label="Choose a part evolution sequence">
+          <button type="button" data-evolution-clip="upper-leg-support" aria-pressed="true" aria-controls="cad-evolution-video"><span class="cad-evolution-number">01</span><span><strong>Upper leg support</strong><small>6 exported states</small></span><span class="cad-evolution-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-evolution-clip="front-head" aria-pressed="false" aria-controls="cad-evolution-video"><span class="cad-evolution-number">02</span><span><strong>Front head</strong><small>4 exported states</small></span><span class="cad-evolution-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-evolution-clip="body-connector" aria-pressed="false" aria-controls="cad-evolution-video"><span class="cad-evolution-number">03</span><span><strong>Body connector</strong><small>3 exported states</small></span><span class="cad-evolution-arrow" aria-hidden="true">↗</span></button>
+        </div>
+        <figure class="cad-evolution-film" data-no-lightbox>
+          <video id="cad-evolution-video" controls playsinline preload="none" poster="src/assets/video/cad-evolution/upper-leg-support.webp" src="src/assets/video/cad-evolution/upper-leg-support.mp4" aria-label="Upper leg support: evolution of the supplied STEP exports" aria-describedby="cad-evolution-context">Your browser does not support embedded video. Use the download link below to view the sequence.</video>
+          <figcaption><span data-evolution-title aria-live="polite">Upper leg support</span><a data-evolution-download href="src/assets/video/cad-evolution/upper-leg-support.mp4" download="quadruped-upper-leg-support.mp4">Download clip <span aria-hidden="true">↓</span></a></figcaption>
+          <p class="cad-evolution-error" role="status" hidden>The preview could not load. You can try the download link to view the clip.</p>
+        </figure>
+      </div>
+      <p class="cad-evolution-context" id="cad-evolution-context">Selected keyframes, from earlier to later exports. Dates are STEP export timestamps, not guaranteed design dates; minor variants are omitted. Select a part, then press play to compare the part versions.</p>
+    </section>
     ${section('01','October 2–4','Make the CAD work on the bench.','Assembly exposed alignment and handedness issues. Each fit check fed directly into the next part revision.',[
       robot('servo-axis-alignment','Inspect the joint axes','Revolute mates exposed mounting holes offset from the servo axis, prompting a geometry correction.'),
       robot('split-body','Split the body for printing','Simpler geometry reduced printing complexity; the tradeoff was four additional assembly screws.'),

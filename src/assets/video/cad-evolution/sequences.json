@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "source_note": "User-supplied STEP exports. Original CAD files were read without modification and are not redistributed in the b-roll archive.",
+  "chronology_note": "STEP FILE_NAME timestamps record export time, not original model creation, feature-edit time, or a verified engineering decision timeline. Raw timezone suffixes are preserved; unspecified zones are not guessed.",
+  "geometry_note": "Each keyframe renders a tessellated copy of an actual STEP solid. No topology morphing, inferred intermediate geometry, simulation, or physical performance claim is included.",
+  "render": {
+    "width": 1280,
+    "height": 800,
+    "fps": 24,
+    "encoding": "H.264 MP4, yuv420p, no audio",
+    "hold_seconds_per_state": 3,
+    "transition_seconds": 1,
+    "transition": "Image cross-dissolve with smoothstep easing between real rendered states.",
+    "projection": "Orthographic / parallel projection",
+    "camera_and_scale": "Camera and physical scale are constant within each clip. Combined translated mesh bounds provide one shared center. Max state mesh bounding-box diagonal sets extent; camera distance = 3 * extent; parallel scale = 0.56 * extent. Different clips are framed separately.",
+    "material": "Neutral gray-blue display material, RGB (0.69, 0.73, 0.78), with dark geometric feature edges and studio lighting; not asserted to be the original CAD appearance.",
+    "background_rgb": [
+      0.055,
+      0.063,
+      0.075
+    ],
+    "alignment_note": "Only the first UpperLeg_Support_R - Part 2 export is translated (-63.2, 0, 0) mm to align a common mounting reference. No scale, shape, or rotation correction is applied to a source model."
+  },
+  "sequences": [
+    {
+      "id": "upper-leg-support",
+      "title": "Right upper-leg support",
+      "project": "Quadruped Robot",
+      "selection": "Curated export keyframes; not an exhaustive feature history. Subtle variants may be omitted.",
+      "camera_direction": [
+        -1,
+        1,
+        0.85
+      ],
+      "camera_up": [
+        0,
+        0,
+        1
+      ],
+      "states": [
+        {
+          "filename": "UpperLeg_Support_R - Part 2.step",
+          "sha256": "103742112bc6adc9b036255a4890a2594e01d8b52c1d40c967a46bd8c62bf077",
+          "bytes": 45654,
+          "step_export_timestamp_raw": "2026-10-04T12:58:25Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 1,
+          "caption": "04 Oct 2026 / 12:58 UTC",
+          "alignment_translation_mm": [
+            -63.2,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "UpperLeg_Support_R.step",
+          "sha256": "80a7f2afd83b1fcbec2112e9d7aaa59fb15f6acafa9dd612e93d314dcb31e12f",
+          "bytes": 47216,
+          "step_export_timestamp_raw": "2026-10-08T13:33:50Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 2,
+          "caption": "08 Oct 2026 / 13:33 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "UpperLeg_Support_R (1).step",
+          "sha256": "85d69aaade1a8b996dffe951fecea3fdb4be1dd7f60c661fa177538710dac577",
+          "bytes": 65579,
+          "step_export_timestamp_raw": "2026-10-08T23:40:35Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 3,
+          "caption": "08 Oct 2026 / 23:40 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "UpperLeg_Support_R (2).step",
+          "sha256": "61b91dc251b0e7290e91156ec36d5104a632bbc63e49b9ae751619bf0fabb0af",
+          "bytes": 106136,
+          "step_export_timestamp_raw": "2026-10-10T13:41:28Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 4,
+          "caption": "10 Oct 2026 / 13:41 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "UpperLeg_Support_R (3).step",
+          "sha256": "cfa7ec4c6e14d2335942ba34b0265c2dfe254fefe2e57226d9c5e5d176625159",
+          "bytes": 115117,
+          "step_export_timestamp_raw": "2026-10-10T13:46:11Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 5,
+          "caption": "10 Oct 2026 / 13:46 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "UpperLeg_Support_R (4).step",
+          "sha256": "ab362d5a00eb0b361a25b7d88c033621e8e71df62f58c324896497dea02ec952",
+          "bytes": 149459,
+          "step_export_timestamp_raw": "2026-10-10T21:07:15Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 6,
+          "caption": "10 Oct 2026 / 21:07 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "omitted_exports": [],
+      "website_video": "upper-leg-support.mp4",
+      "clean_video": {
+        "filename": "upper-leg-support-clean.mp4",
+        "bytes": 153888,
+        "sha256": "3b47a8774f6c478f7152c312b14e4e392e645795c3ffade00adb46a784fc2311",
+        "duration_seconds": 23
+      }
+    },
+    {
+      "id": "front-head",
+      "title": "Front head / servo mount",
+      "project": "Quadruped Robot",
+      "selection": "Curated export keyframes; not an exhaustive feature history. Subtle variants may be omitted.",
+      "camera_direction": [
+        1,
+        -1,
+        0.85
+      ],
+      "camera_up": [
+        0,
+        0,
+        1
+      ],
+      "states": [
+        {
+          "filename": "Robot Front Head.step",
+          "sha256": "57cbddc9ba7cee052768a2fdf4a850eddb3d1e3fcd5a0532fdc15999c84b50f5",
+          "bytes": 30562,
+          "step_export_timestamp_raw": "2026-10-03T22:02:37Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 1,
+          "caption": "03 Oct 2026 / 22:02 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "Robot Front Head (1).step",
+          "sha256": "bccc6b7ce42bb91030b80454a0eb8aface2166c73ff9d579a1c158c1de3a68a4",
+          "bytes": 33660,
+          "step_export_timestamp_raw": "2026-10-08T13:32:37Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 2,
+          "caption": "08 Oct 2026 / 13:32 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "Robot Front Head (2).step",
+          "sha256": "f649473ebdbfab5c3d6305dec92925a2a2f64f0e56f29ee1f8d7968b794a9e18",
+          "bytes": 33932,
+          "step_export_timestamp_raw": "2026-10-09T00:34:51Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 3,
+          "caption": "09 Oct 2026 / 00:34 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "Robot Front Head (4).step",
+          "sha256": "8bb0bfb411e18299ecaa40ccbdc7e9d3e9cc75db5e87a11409ccc914d89a1edb",
+          "bytes": 50156,
+          "step_export_timestamp_raw": "2026-10-10T23:55:36Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 4,
+          "caption": "10 Oct 2026 / 23:55 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "omitted_exports": [
+        {
+          "filename": "Robot Front Head - Part 1.step",
+          "sha256": "9d82886789311b4d83a47c7e4f7cc9334bacc9079c7ee3bd42e5d462f74817de",
+          "bytes": 30571,
+          "step_export_timestamp_raw": "2026-10-04T20:14:06Z",
+          "timestamp_timezone_explicit": true,
+          "reason": "Duplicate initial solid: identical STEP DATA records and zero two-way Boolean difference."
+        },
+        {
+          "filename": "Robot Front Head (3).step",
+          "sha256": "6fe4a1cea249c18e04ec390dcf0c5e6f7afe57e54e477584496f5b302a97f7df",
+          "bytes": 33747,
+          "step_export_timestamp_raw": "2026-10-10T13:52:04Z",
+          "timestamp_timezone_explicit": true,
+          "reason": "Real but subtle revision omitted from the short clip: two counterbored-hole axes shift from Z=0.125 mm to Z=0 mm. Not a duplicate."
+        }
+      ],
+      "website_video": "front-head.mp4",
+      "clean_video": {
+        "filename": "front-head-clean.mp4",
+        "bytes": 95574,
+        "sha256": "24f303922288b3eda0180f5cb82a7b0a35a1835f3dbe50955148325005811af3",
+        "duration_seconds": 15
+      }
+    },
+    {
+      "id": "body-connector",
+      "title": "Main body / connector P2",
+      "project": "Quadruped Robot",
+      "selection": "Curated export keyframes; not an exhaustive feature history. Subtle variants may be omitted.",
+      "camera_direction": [
+        1,
+        -1,
+        0.85
+      ],
+      "camera_up": [
+        0,
+        0,
+        1
+      ],
+      "states": [
+        {
+          "filename": "Main Body P2.step",
+          "sha256": "a3029f77da0a0c96e72e32adf6d16e025c61de9be043d9411ae0928174f8494a",
+          "bytes": 49047,
+          "step_export_timestamp_raw": "2026-10-03T15:06:03Z",
+          "timestamp_timezone_explicit": true,
+          "keyframe": 1,
+          "caption": "03 Oct 2026 / 15:06 UTC",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "Main Body P2 (1).step",
+          "sha256": "f3078391a5ab8fbe5c1ddadd1cd677348405957b743deb4c1d8bfe4e61b2fdaa",
+          "bytes": 152168,
+          "step_export_timestamp_raw": "2026-10-09T00:35:49",
+          "timestamp_timezone_explicit": false,
+          "keyframe": 2,
+          "caption": "09 Oct 2026 / 00:35 (zone unspecified)",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "filename": "Main Body P2 (3).step",
+          "sha256": "d2884eb7848d581cb336d4a81c5ad659cb727f413bad9a55685ce8dbb3db45c9",
+          "bytes": 179957,
+          "step_export_timestamp_raw": "2026-10-12T01:16:31",
+          "timestamp_timezone_explicit": false,
+          "keyframe": 3,
+          "caption": "12 Oct 2026 / 01:16 (zone unspecified)",
+          "alignment_translation_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "omitted_exports": [
+        {
+          "filename": "Main Body P2 - Part 1.step",
+          "sha256": "15716f998259171eab89ceb3c35bce8a564fcf87e6e3aab90748d65533d901b9",
+          "bytes": 77203,
+          "step_export_timestamp_raw": "2026-10-09T11:56:56",
+          "timestamp_timezone_explicit": false,
+          "reason": "Real hole-spacing variant omitted from the short clip: 15 mm central-hole spacing versus 25 mm in (1). Not a duplicate."
+        },
+        {
+          "filename": "Main Body P2 (2).step",
+          "sha256": "3d6675cdce0d42deeebfa644a18ee1374573d7cc8390fecb03907fed4a1ca80e",
+          "bytes": 179019,
+          "step_export_timestamp_raw": "2026-10-10T20:50:14",
+          "timestamp_timezone_explicit": false,
+          "reason": "Real hole-spacing variant omitted from the short clip: 15 mm central-hole spacing versus 30 mm in (3), with the same open silhouette. Not a duplicate."
+        }
+      ],
+      "website_video": "body-connector.mp4",
+      "clean_video": {
+        "filename": "body-connector-clean.mp4",
+        "bytes": 69825,
+        "sha256": "ec4c27a4b373990fafd68a3c91e102da97cfa15f26a2e47f736d0fedce8899c5",
+        "duration_seconds": 11
+      }
+    }
+  ]
+}

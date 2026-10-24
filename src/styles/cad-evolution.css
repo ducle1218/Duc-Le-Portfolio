@@ -1,0 +1,26 @@
+/* A quiet, optional motion study inside the quadruped case study. */
+.cad-evolution{margin:48px 0 58px;padding-top:34px;border-top:1px solid var(--project-line);color:var(--project-ink)}
+.cad-evolution-heading{max-width:730px;margin-bottom:26px}
+.cad-evolution-heading h3{font-size:clamp(27px,3vw,40px);font-weight:400;line-height:1.15;letter-spacing:-.04em;margin:10px 0 16px}
+.cad-evolution-heading>p:last-child{font-size:14px;line-height:1.8;color:var(--project-muted)}
+.cad-evolution-layout{display:grid;grid-template-columns:minmax(200px,.7fr) minmax(0,2fr);gap:24px;align-items:start}
+.cad-evolution-parts{display:grid;border-top:1px solid var(--project-line)}
+.cad-evolution-parts button{display:grid;grid-template-columns:20px 1fr 15px;gap:10px;align-items:start;width:100%;padding:21px 12px;border-bottom:1px solid var(--project-line);text-align:left;color:var(--project-muted);background:transparent;cursor:pointer;transition:background .2s,color .2s}
+.cad-evolution-parts button[aria-pressed=true]{color:var(--project-ink);background:var(--project-soft);box-shadow:inset 2px 0 var(--project-ink)}
+.cad-evolution-parts button:hover{color:var(--project-ink);background:var(--project-soft)}
+.cad-evolution-parts button:focus-visible,.cad-evolution-film a:focus-visible{outline:2px solid var(--project-accent);outline-offset:4px}
+.cad-evolution-number{font:10px/1.8 ui-monospace,monospace}
+.cad-evolution-parts strong{display:block;font-size:13px;font-weight:500;line-height:1.4}
+.cad-evolution-parts small{display:block;font-size:11px;line-height:1.6;margin-top:7px;color:var(--project-muted)}
+.cad-evolution-arrow{font-size:15px;line-height:1.4}
+.cad-evolution-film{min-width:0;margin:0;overflow:hidden;border:1px solid var(--project-line);border-radius:2px;background:var(--project-paper)}
+.cad-evolution-film video{display:block;width:100%;height:auto;aspect-ratio:8/5;object-fit:contain;background:#111419;color-scheme:dark}
+.cad-evolution-film figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:15px 18px;font-size:12px;color:var(--project-muted)}
+.cad-evolution-film [data-evolution-title]{color:var(--project-ink);font-weight:500}
+.cad-evolution-film a{display:inline-flex;align-items:center;gap:16px;border-bottom:1px solid var(--project-line);padding:3px 0;color:var(--project-ink);text-decoration:none}
+.cad-evolution-error{font-size:12px;line-height:1.6;color:var(--project-muted);padding:0 18px 16px}
+.cad-evolution-context{max-width:850px;margin-top:17px;font-size:11px;line-height:1.8;color:var(--project-muted)}
+@media(max-width:800px){.cad-evolution-layout{grid-template-columns:1fr;gap:18px}.cad-evolution-parts{grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--project-line)}.cad-evolution-parts button{grid-template-columns:1fr;padding:14px 12px;border-bottom:0;border-right:1px solid var(--project-line);gap:7px}.cad-evolution-parts button:last-child{border-right:0}.cad-evolution-parts button[aria-pressed=true]{box-shadow:inset 0 2px var(--project-ink)}.cad-evolution-arrow{display:none}.cad-evolution-parts small{font-size:10px}.cad-evolution-parts strong{font-size:12px}}
+@media(max-width:450px){.cad-evolution{margin:36px 0 42px;padding-top:26px}.cad-evolution-parts button{padding:13px 9px}.cad-evolution-parts small{display:none}.cad-evolution-film figcaption{padding:12px;font-size:11px}.cad-evolution-heading>p:last-child{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.cad-evolution-parts button{transition:none}}
+@media print{.cad-evolution-parts,.cad-evolution-film a{display:none}.cad-evolution-layout{display:block}}

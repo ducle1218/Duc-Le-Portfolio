@@ -23,30 +23,9 @@
     html::-webkit-scrollbar {
       display: none; /* Chrome, Safari, new Edge */
     }
-    /* Site-wide background texture behind the white/light sections. Swap
-       the image out any time by replacing the file at this exact path —
-       src/assets/images/site-background.png — with a
-       same-named file. No code changes needed. Light mode only; dark mode
-       keeps its solid slate-950 background. Width is 130% (wider than
-       the page) and horizontally centered, so the outer hex clusters get
-       pushed toward/off the left and right edges, leaving a wider blank
-       gap in the middle — raise this past 130% to push them further out,
-       lower it toward 100% to bring them back in (100% = clusters land
-       exactly on the edges, no cropping). It repeats vertically only, to
-       cover the full scrollable page height. Attachment is "scroll" (the
-       default) so the background moves with the page instead of staying
-       pinned to the viewport. */
+    /* The document-sized vector atmosphere is drawn separately from content. */
     body {
-      background-image: url('src/assets/images/site-background.png');
-      background-size: 130% auto;
-      background-position: top center;
-      background-attachment: scroll;
-      background-repeat: repeat-y;
-    }
-    .dark body {
       background-image: none;
-    }
-    body {
       transition: background-color 0.3s ease, color 0.3s ease;
     }
     .tab-pane {
@@ -569,10 +548,11 @@
   <link rel="stylesheet" href="src/styles/studio.css?v=20261016-2">
   <script src="src/scripts/studio.js?v=20261022-1" defer></script>
   <script src="src/scripts/sculptural.js?v=20261022-1" defer></script>
+  <script src="src/scripts/sculptural-background.js?v=20261024-1" defer></script>
 
   <link rel="stylesheet" href="src/styles/resume-viewer.css?v=20261018-1">
   <link rel="stylesheet" href="src/styles/sprocket.css?v=20261018-4">
-  <link rel="stylesheet" href="src/styles/sculptural.css?v=20261022-1">
+  <link rel="stylesheet" href="src/styles/sculptural.css?v=20261024-2">
   <link rel="stylesheet" href="src/styles/cad-evolution.css?v=20261024-1">
   <script src="src/scripts/cad-evolution.js?v=20261024-1" defer></script>
 </head>
@@ -7919,6 +7899,7 @@ void loop() {
     }
 
     function showProjectDetail(projectId) {
+      document.body.dataset.atmospherePage = 'detail-' + projectId;
       const body = document.getElementById('project-detail-body');
       if (body && PROJECT_DETAILS[projectId]) {
         body.innerHTML = PROJECT_DETAILS[projectId];
@@ -8325,6 +8306,7 @@ void loop() {
 
     // Tab switching engine
     function switchTab(tabId) {
+      document.body.dataset.atmospherePage = tabId;
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabId + '-content').classList.remove('hidden');
 

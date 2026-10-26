@@ -3,7 +3,8 @@
 html.dark{--studio-bg:#0c0d0f;--project-paper:#15171a;--project-soft:#202328;--project-ink:#f2f1ed;--project-muted:#b5b8be;--project-line:#33363b;--project-accent:#c8d2de;--project-accent-soft:#252a31;--studio-red:#d0d6de}
 body{position:relative;isolation:isolate}
 .portfolio-atmosphere{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict;background:none;color:#343b43;opacity:.4}
-.portfolio-atmosphere>svg{display:block;width:100%;height:100%}
+.portfolio-atmosphere>canvas{position:absolute;display:block;pointer-events:none;filter:brightness(0)}
+html.dark .portfolio-atmosphere>canvas{filter:none}
 html.dark .portfolio-atmosphere{color:#d5dbe1;opacity:.64}
 .portfolio-atmosphere[data-page^="detail-"]{opacity:.28}
 html.dark .portfolio-atmosphere[data-page^="detail-"]{opacity:.46}

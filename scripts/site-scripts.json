@@ -1,0 +1,10 @@
+[
+  "src/scripts/portfolio.js",
+  "src/scripts/project-presentation.js",
+  "src/scripts/studio.js",
+  "src/scripts/sculptural.js",
+  "src/scripts/sculptural-background.js",
+  "src/scripts/sprocket-controls.js",
+  "src/scripts/cad-evolution.js",
+  "src/scripts/resume-presentation.js"
+]

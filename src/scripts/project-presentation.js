@@ -23,7 +23,10 @@
         /^onshape(?: fea)?$/.test(label) ? 'onshape_logo.png' : label === 'solidworks' ? 'solidworks_icon.png' : null;
       if (!file) return;
       const logo = document.createElement('img');
-      logo.src = 'src/assets/images/logos/' + file;
+      const optimized = {'bambu-logo.png':'bambu-logo-icon-32.webp','onshape_logo.png':'onshape-logo-icon-32.webp','solidworks_icon.png':'solidworks-icon-icon-32.webp'};
+      logo.src = 'src/assets/images/optimized/' + optimized[file];
+      logo.loading = 'lazy';
+      logo.decoding = 'async';
       logo.alt = '';
       logo.className = 'skill-logo';
       tag.classList.add('skill-with-logo');

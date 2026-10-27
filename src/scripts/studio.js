@@ -28,9 +28,15 @@
   let paused = reduced.matches;
   let filmVisible = false;
   let filmManuallyPaused = false;
+  function ensureFilmSource() {
+    const source = film.querySelector('source[data-src]');
+    if (!source || source.hasAttribute('src')) return;
+    source.src = source.dataset.src;
+    film.load();
+  }
   function syncFilm() {
     if (paused || filmManuallyPaused || !filmVisible || document.hidden) film.pause();
-    else film.play().catch(updateFilmButton);
+    else { ensureFilmSource(); film.play().catch(updateFilmButton); }
   }
   function updateFilmButton() {
     filmButton.innerHTML = film.paused ? 'Play film <span>▶</span>' : 'Pause film <span>Ⅱ</span>';
@@ -46,7 +52,7 @@
   motion.addEventListener('click',()=>{paused=!paused;applyMotion();});
   reduced.addEventListener('change',()=>{paused=reduced.matches;applyMotion();});
   filmButton.addEventListener('click',()=>{
-    if (film.paused) {filmManuallyPaused=false;film.play().catch(updateFilmButton);}
+    if (film.paused) {filmManuallyPaused=false;ensureFilmSource();film.play().catch(updateFilmButton);}
     else {filmManuallyPaused=true;film.pause();}
   });
   film.addEventListener('play',updateFilmButton);

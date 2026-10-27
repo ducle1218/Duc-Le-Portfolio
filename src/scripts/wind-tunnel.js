@@ -3,7 +3,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Decorative airflow visualization. The analytic field approximates deflection
 // and wake motion; it is not a CFD solution or aerodynamic performance result.
+// The entry module only defines this function. The lightweight loader calls it
+// after the visible scene approaches the viewport and the page has painted.
+export function startWindTunnel() {
 const layer = document.querySelector('.portfolio-atmosphere');
+if (!layer) return null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-10, 10, 4, -4, .1, 100);
@@ -15,6 +19,7 @@ renderer.domElement.dataset.airflow = 'true';
 layer.replaceChildren(renderer.domElement);
 const ink = new THREE.Color();
 const models = new Map();
+const flows = new Map();
 let activePage = '', activeGroup = null, flowGroup = null, flowMaterials = [];
 let frame = 0, elapsed = 0, lastTime = 0, onscreen = true, disposed = false;
 let userPaused = reducedMotion.matches;
@@ -152,26 +157,29 @@ function obstacles(kind, shift) {
   return list.map(([c,r])=>({c:[c[0]+shift,c[1],c[2]],r}));
 }
 
-function streamlines(kind, shift, mobile) {
+async function streamlines(kind, mobile) {
+  // Build once in local coordinates; resizing only translates the cached group.
+  const shift = 0;
   const blockers = obstacles(kind,shift);
   const group = new THREE.Group();
   const positions=[], travel=[], phases=[], speeds=[], fades=[];
-  function velocity(p) {
-    const result = [1,0,0];
+  function velocity(p, result) {
+    result[0]=1;result[1]=0;result[2]=0;
     for (const {c,r} of blockers) {
-      const q = p.map((v,i)=>(v-c[i])/r[i]);
-      const rr = Math.max(1.04,q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
-      const dipole = Math.min(.8,1/Math.pow(rr,1.5));
-      result[0] += .48*dipole*(1-3*q[0]*q[0]/rr);
-      result[1] -= 1.44*dipole*q[0]*q[1]/rr*r[1]/r[0];
-      result[2] -= 1.44*dipole*q[0]*q[2]/rr*r[2]/r[0];
+      const qx=(p[0]-c[0])/r[0],qy=(p[1]-c[1])/r[1],qz=(p[2]-c[2])/r[2];
+      const rr = Math.max(1.04,qx*qx+qy*qy+qz*qz);
+      const dipole = Math.min(.8,1/(rr*Math.sqrt(rr)));
+      result[0] += .48*dipole*(1-3*qx*qx/rr);
+      result[1] -= 1.44*dipole*qx*qy/rr*r[1]/r[0];
+      result[2] -= 1.44*dipole*qx*qz/rr*r[2]/r[0];
     }
     const wake = p[0]-shift-(kind==='home'?1.4:1.2);
     if (wake>0) {
       const span=kind==='home'?2.12:.65;
-      for (const side of [-1,1]) {
+      const attenuation=.18*Math.exp(-wake/6);
+      for (let side=-1;side<=1;side+=2) {
         const dy=p[1]+.1, dz=p[2]-side*span;
-        const strength=side*.18*Math.exp(-(dy*dy+dz*dz)/.65)*Math.exp(-wake/6);
+        const strength=side*attenuation*Math.exp(-(dy*dy+dz*dz)/.65);
         result[1]-=dz*strength; result[2]+=dy*strength;
       }
     }
@@ -192,20 +200,30 @@ function streamlines(kind, shift, mobile) {
     }
   }
   const rows=3, depths=mobile?7:13;
+  let batchStarted=performance.now();
   for(let row=0;row<rows;row++) for(let depth=0;depth<depths;depth++) {
     const id=row*depths+depth;
-    const p=[-10+shift,-.65+row/(rows-1)*1.8,-3.0+depth/(depths-1)*6.0];
-    const points=[], times=[];let time=0;
-    for(let step=0;step<420&&p[0]<10+shift;step++) {
-      points.push(new THREE.Vector3(...p));times.push(time);
-      const first=velocity(p),mid=p.map((v,i)=>v+first[i]*.045),v=velocity(mid);
-      for(let axis=0;axis<3;axis++)p[axis]+=v[axis]*.09;
-      keepOutside(p,id%2?1:-1);time+=.09;
+    // Keep input and painting responsive while integrating the decorative field.
+    if(performance.now()-batchStarted>6) {
+      if(globalThis.scheduler?.yield)await scheduler.yield();
+      else await new Promise(resolve=>setTimeout(resolve,0));
+      batchStarted=performance.now();
     }
+    const p=[-10+shift,-.65+row/(rows-1)*1.8,-3.0+depth/(depths-1)*6.0];
+    const points=[],first=[0,0,0],mid=[0,0,0],v=[0,0,0];
+    for(let step=0;step<420&&p[0]<10+shift;step++) {
+      points.push(p[0],p[1],p[2]);
+      velocity(p,first);
+      for(let axis=0;axis<3;axis++)mid[axis]=p[axis]+first[axis]*.045;
+      velocity(mid,v);
+      for(let axis=0;axis<3;axis++)p[axis]+=v[axis]*.09;
+      keepOutside(p,id%2?1:-1);
+    }
+    const pointCount=points.length/3;
     const phase=(id*.61803398875)%1,speed=.045+((id*.41421356)%1)*.027;
-    for(let i=0;i<points.length-1;i++)for(const j of [i,i+1]) {
-      positions.push(...points[j].toArray());travel.push(times[j]/time);phases.push(phase);speeds.push(speed);
-      const end=Math.min(j/25,(points.length-1-j)/30,1);fades.push(Math.max(0,end));
+    for(let i=0;i<pointCount-1;i++)for(let j=i;j<=i+1;j++) {
+      positions.push(points[j*3],points[j*3+1],points[j*3+2]);travel.push(j/pointCount);phases.push(phase);speeds.push(speed);
+      const end=Math.min(j/25,(pointCount-1-j)/30,1);fades.push(Math.max(0,end));
     }
   }
   const geometry=new THREE.BufferGeometry();
@@ -224,7 +242,7 @@ function streamlines(kind, shift, mobile) {
         float pulse=pow(max(0.0,1.0-abs(phase-.5)*2.0),6.0);
         gl_FragColor=vec4(ink,(.035+.27*pulse)*vFade);}`});
   const lines=new THREE.LineSegments(geometry,material);lines.renderOrder=3;group.add(lines);
-  flowMaterials=[material];return group;
+  return group;
 }
 
 function updateTheme() {
@@ -260,7 +278,7 @@ new IntersectionObserver(entries=>{onscreen=entries[0].isIntersecting;syncMotion
 function clearFlow() {
   if(!flowGroup)return;
   scene.remove(flowGroup);
-  flowGroup.traverse(item=>{item.geometry?.dispose();item.material?.dispose();});
+  // There are only four small page/viewport variants; reuse them on navigation.
   flowGroup=null;flowMaterials=[];
 }
 async function layout() {
@@ -269,10 +287,16 @@ async function layout() {
   const width=document.body.clientWidth,mobile=width<650;
   const enabled=page==='home'||page==='project';
   renderer.domElement.hidden=!enabled;toggle.hidden=!enabled;
-  if(!enabled){layoutVersion++;if(activeGroup)scene.remove(activeGroup);activeGroup=null;activePage=page;syncMotion();return;}
+  if(!enabled){layoutVersion++;if(activeGroup)scene.remove(activeGroup);activeGroup=null;clearFlow();activePage=page;syncMotion();return;}
   const stage=page==='home'?document.querySelector('.discipline-strip'):document.querySelector('.project-page-heading');
   if(!stage)return;
   const bounds=stage.getBoundingClientRect();
+  // A scene that has never been seen should not load its model or build flows.
+  if(activePage!==page&&(bounds.top>innerHeight+180||bounds.bottom<-180)) {
+    layoutVersion++;
+    if(activeGroup)scene.remove(activeGroup);
+    activeGroup=null;clearFlow();renderer.domElement.hidden=true;toggle.hidden=true;syncMotion();return;
+  }
   const top=page==='home'?bounds.top+scrollY:(mobile?bounds.bottom+scrollY-5:bounds.top+scrollY-35);
   const height=page==='home'?bounds.height:(mobile?280:440);
   const signature=[page,width,Math.round(top),Math.round(height)].join(':');
@@ -301,15 +325,27 @@ async function layout() {
   const shift=page==='project'&&!mobile?viewHeight*aspect*.22:0;
   model.position.set(shift,0,0);
   model.scale.setScalar(1);
-  scene.add(model);flowGroup=streamlines(page,shift,mobile);scene.add(flowGroup);
+  scene.add(model);
   layer.dataset.page=page;renderer.domElement.dataset.subject=page==='home'?'f35':'cow';
   updateTheme();syncMotion();
+  const flowKey=page+':'+mobile;
+  if(!flows.has(flowKey))flows.set(flowKey,streamlines(page,mobile));
+  const nextFlow=await flows.get(flowKey);
+  if(version!==layoutVersion||(document.body.dataset.atmospherePage||'home')!==page)return;
+  flowGroup=nextFlow;flowGroup.position.x=shift;
+  flowMaterials=[];
+  flowGroup.traverse(item=>{if(item.material?.uniforms?.time){item.material.uniforms.time.value=elapsed;flowMaterials.push(item.material);}});
+  scene.add(flowGroup);draw();
 }
 function schedule(){if(!layoutFrame)layoutFrame=requestAnimationFrame(layout);}
 new ResizeObserver(schedule).observe(document.body);
 new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['data-atmosphere-page']});
 new MutationObserver(updateTheme).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+const stageObserver=new IntersectionObserver(schedule,{rootMargin:'180px'});
+for(const stage of document.querySelectorAll('.discipline-strip,.project-page-heading'))stageObserver.observe(stage);
 window.addEventListener('resize',schedule,{passive:true});
 window.addEventListener('pagehide',()=>{disposed=true;if(frame)cancelAnimationFrame(frame);});
 window.addEventListener('pageshow',()=>{disposed=false;syncMotion();});
 layout();
+return {refresh:schedule};
+}

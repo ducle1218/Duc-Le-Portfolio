@@ -26,13 +26,17 @@ jobs:
           node-version: 24
 
       - name: Install build dependencies
-        run: npm install --ignore-scripts tailwindcss @tailwindcss/cli pdfjs-dist@6.4.299
+        run: npm install --ignore-scripts tailwindcss @tailwindcss/cli pdfjs-dist@6.4.299 esbuild@0.25.12
 
       - name: Prepare self-hosted resume renderer
         run: node scripts/vendor-pdfjs.mjs
 
       - name: Build CSS
-        run: npx @tailwindcss/cli -i ./input.css -o ./output.css --minify
+        run: |
+          npx @tailwindcss/cli -i ./input.css -o ./output.css --minify
+          node scripts/build-site-css.mjs
+          node scripts/build-site-js.mjs
+          node scripts/check-loading.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

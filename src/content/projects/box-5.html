@@ -1,0 +1,1354 @@
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
+  <!-- Left: narrative, tech summary, metrics -->
+  <div class="lg:col-span-7 space-y-8">
+    <div class="space-y-2">
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-sans">
+        Arduino Electronics
+      </h2>
+      <p class="font-mono text-xs text-rose-500 font-bold uppercase tracking-wider">
+        Interactive 1-Wire Resistor Ladder Synthesizer
+      </p>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-xs">
+      <div>
+        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">ROLE</span>
+        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Team Leader</span>
+      </div>
+      <div>
+        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TEAM SIZE</span>
+        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">2 Members</span>
+      </div>
+      <div>
+        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">TIMELINE</span>
+        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">May 2025</span>
+      </div>
+      <div>
+        <span class="block text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">PLATFORM</span>
+        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">Arduino Uno</span>
+      </div>
+    </div>
+
+    <!-- Skills Demonstrated -->
+    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+      <h4 class="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        Skills Demonstrated
+      </h4>
+      <div class="flex flex-wrap gap-2">
+        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
+          <img src="src/assets/images/logos/arduino-icon.png" alt="Arduino logo" class="w-3 h-3" />
+          Arduino
+        </span>
+        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50 inline-flex items-center gap-1.5">
+          <img src="src/assets/images/logos/cpp_logo.png" alt="C++ logo" class="w-3 h-3" />
+          C++
+        </span>
+        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Analog Circuit Design</span>
+        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Breadboard Prototyping & Schematics</span>
+        <span class="font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/50">Team Leadership</span>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="space-y-4">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" /></svg>
+        Project Overview
+      </h3>
+      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+        I built an 8-key musical keyboard on an Arduino Uno — designed the circuit, worked out the math behind it, and prototyped the electronics myself. The Uno doesn't have enough digital pins to give each button its own, so to get around that I designed and built an <strong>analog resistor ladder (voltage divider)</strong>.
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+        Instead of burning eight digital pins polling each button separately, the resistor ladder feeds a different voltage into a <strong>single analog pin (A0)</strong> depending on which key's pressed. The Arduino reads that voltage in real time and maps each range to its own frequency on a piezo buzzer.
+      </p>
+    </div>
+
+<!-- Foundations / Engineering Notebook Progression -->
+    <div class="space-y-4">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s4.332.477 5.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+        Foundations: The Notebook Behind the Build
+      </h3>
+      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+        Before the keyboard, four Arduino tutorials &mdash; 31 logged notebook pages &mdash; built up the exact skills the resistor ladder needed. Tap a tutorial to expand it, then tap any page for its circuit photo, video, and copyable code.
+      </p>
+      <div class="space-y-2.5">
+        <details data-group="tutorial-group" class="group/tut rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+    <div class="min-w-0">
+      <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Tutorial 1 — Digital Output</span>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Timed digitalWrite() delays to blink and pattern multiple LEDs.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-[10px] font-mono font-bold text-slate-400">5 pages</span>
+      <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 group-open/tut:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="px-4 sm:px-5 pb-5 pt-1 space-y-2">
+    <details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#02</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 1.1</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/14/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3"><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t1-c1-1-before.jpg" alt="Before modification"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Before modification</p>
+  </div><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t1-c1-1-after.jpg" alt="After modification"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">After modification</p>
+  </div></div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Modified the Tutorial 1 circuit wiring and documented the before/after state.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#03</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 1.1 &amp; 1.2</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/14/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1-1-multimeter.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1-1-blink.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 1.1 — single LED blink</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code — Challenge 1.1 (LED blink)</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  /* Pin 3 output 5 voltages */
+}
+
+void loop() {
+  digitalWrite(3,HIGH);
+  delay(1000);
+  digitalWrite(3,LOW);
+  delay(1000);
+  /* Pin 3 outputs 5V for 1 second, then LOW for 1 second, repeating infinitely */
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1-2.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 1.2 — alternating LEDs</p>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Uploaded the single-LED blink code and measured the voltage drop across the LED and the resistor with a multimeter. Then wrote Challenge 1.2, alternating two LEDs so only one is ever on.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#04</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 1.3</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/15/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1-3.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 1.3 — two LEDs at different rhythms</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3, OUTPUT);
+  pinMode(5, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3, HIGH);
+  digitalWrite(5, HIGH);
+  delay(250);
+  digitalWrite(3, LOW);
+  delay(250);
+  digitalWrite(3, HIGH);
+  digitalWrite(5, LOW);
+  delay(250);
+  digitalWrite(3, LOW);
+  delay(250);
+  /* repeats infinitely, LEDs appear to blink at different rhythms */
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Used 250ms delays and staggered HIGH/LOW states so two LEDs appear to blink at different rhythms.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#05</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 1a</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/15/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1a.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 1a — double blink, then pause</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3,HIGH);
+  delay(50);
+  digitalWrite(3,LOW);
+  delay(500);
+  digitalWrite(3,HIGH);
+  delay(50);
+  digitalWrite(3,LOW);
+  delay(5000);
+  /* LED blinks twice, then waits 5 seconds, repeating infinitely */
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Coded the red LED to blink twice quickly, then pause for 5 seconds before repeating.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#06</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 1b</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/15/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t1-c1b.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 1b — traffic-light pattern</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3,LOW);
+  digitalWrite(5,LOW);
+  digitalWrite(6,HIGH);
+  delay(1000);
+
+  digitalWrite(3,LOW);
+  digitalWrite(5,HIGH);
+  digitalWrite(6,LOW);
+  delay(1000);
+
+  digitalWrite(3,HIGH);
+  digitalWrite(5,LOW);
+  digitalWrite(6,LOW);
+  delay(1000);
+  /* repeats infinitely — traffic-light pattern */
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Coded 3 LEDs to cycle in a traffic-light pattern, one second per light.</p>
+  </div>
+</details>
+  </div>
+</details>
+<details data-group="tutorial-group" class="group/tut rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+    <div class="min-w-0">
+      <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Tutorial 2 — Digital Input</span>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Reading a pushbutton, fixing a floating pin with a resistor, then the built-in INPUT_PULLUP.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-[10px] font-mono font-bold text-slate-400">7 pages</span>
+      <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 group-open/tut:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="px-4 sm:px-5 pb-5 pt-1 space-y-2">
+    <details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#07</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 2.1</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/16/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t2-c2-1.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 2.1 — reading the button on the Serial Monitor</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  Serial.begin(9600);
+  pinMode(7,INPUT);
+  Serial.println("Hello!");
+}
+
+void loop() {
+  Serial.println(digitalRead(7));
+  delay(50);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Read Digital Pin 7 in the Serial Monitor — outputs 1 while the button is held (5V), 0 when released (GND).</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#08</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">D.2.1 &amp; D.2.2 &amp; C2.2</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/16/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT);
+}
+
+void loop() {
+  // Is our button pressed?
+  if(digitalRead(7)==1){
+    // Turn one LED on and the other off
+    digitalWrite(3,HIGH);
+    digitalWrite(5,LOW);
+  }else{
+    // switch the states of the LEDs
+    if(digitalRead(7)==0){
+      digitalWrite(3,LOW);
+      digitalWrite(5,HIGH);
+    }
+  }
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-xs text-rose-800 dark:text-rose-300 font-medium leading-relaxed my-2">
+  <strong>Note:</strong> Hardware fix: added 10kΩ pull-down resistor.
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> The button's floating pin kept sticking at 1 after release. Fixed it with a 10kΩ pull-down resistor and added the digitalRead(7)==1 condition so each state reliably toggles the LEDs.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#09</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 2a</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/20/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t2-c2a.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 2a — button-controlled blink logic</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT);
+}
+
+void loop() {
+  if(digitalRead(7)==1){
+    digitalWrite(3,HIGH);
+    digitalWrite(5,LOW);
+    delay(50);
+    digitalWrite(3,LOW);
+    delay(50);
+  }else{
+    if(digitalRead(7)==0){
+      digitalWrite(3,LOW);
+      digitalWrite(5,HIGH);
+      delay(50);
+      digitalWrite(5,LOW);
+      delay(50);
+    }
+  }
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Combined the Tutorial 1 blink code with the button logic — holding the button blinks one LED, releasing it blinks the other.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#10</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Diagram 2.3 &amp; Diagram 2.4</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/21/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t2-d2-3-circuit.jpg" alt="Rewired circuit — button to GND, resistor to 5V"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Rewired circuit — button to GND, resistor to 5V</p>
+</div><div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t2-d2-3.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Diagram 2.3 — rewired circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code — switching to INPUT_PULLUP</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT_PULLUP);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Moved the button's jumper wire to GND and the 10kΩ resistor to 5V — behavior reversed as a result. Then removed the external resistor entirely and switched to the Arduino's built-in pull-up via pinMode(7, INPUT_PULLUP).</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#11</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 2.3</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/21/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT_PULLUP);
+}
+
+void loop() {
+  if(digitalRead(7)==0){
+    digitalWrite(3,HIGH);
+    digitalWrite(5,LOW);
+  }else{
+    digitalWrite(3,LOW);
+    digitalWrite(5,HIGH);
+  }
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> With the pull-up active, the button now reads LOW when pressed — flipped the condition to digitalRead(7)==0 to restore Challenge 2a's behavior.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#12</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 2b</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/21/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t2-c2b.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 2b — two independent buttons</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT_PULLUP);
+  pinMode(6,INPUT_PULLUP);
+}
+
+void loop() {
+  if(digitalRead(7)==0){
+    digitalWrite(3,HIGH);
+  }
+  if(digitalRead(6)==0){
+    digitalWrite(5, HIGH);
+  }else{
+    digitalWrite(3,LOW);
+    digitalWrite(5, LOW);
+  }
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Added a second button on Pin 6 (INPUT_PULLUP). Each button now controls its own LED independently.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#13</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 2c</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/22/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t2-c2c.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 2c — variable blink frequency</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(7,INPUT_PULLUP);
+  pinMode(6,INPUT_PULLUP);
+}
+
+void loop() {
+  if(digitalRead(7)==0){
+    digitalWrite(3,HIGH);
+    digitalWrite(5,HIGH);
+    delay(50);
+    digitalWrite(3,LOW);
+    digitalWrite(5, LOW);
+    delay(50);
+  }
+  if(digitalRead(6)==0){
+    digitalWrite(3,HIGH);
+    digitalWrite(5,HIGH);
+    delay(2500);
+    digitalWrite(3,LOW);
+    digitalWrite(5, LOW);
+    delay(2500);
+  }else{
+    digitalWrite(3,LOW);
+    digitalWrite(5,LOW);
+  }
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> One button now blinks both LEDs rapidly (0.05s), the other blinks them slowly (2.5s).</p>
+  </div>
+</details>
+  </div>
+</details>
+<details data-group="tutorial-group" class="group/tut rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+    <div class="min-w-0">
+      <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Tutorial 3 — Real PWM</span>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Replacing manual microsecond delays with analogWrite() to drive LED and RGB brightness from button input.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-[10px] font-mono font-bold text-slate-400">11 pages</span>
+      <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 group-open/tut:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="px-4 sm:px-5 pb-5 pt-1 space-y-2">
+    <details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#14</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3.1</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/23/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-c3-1-circuit.jpg" alt="One LED at full brightness, the other pulsing rapidly"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">One LED at full brightness, the other pulsing rapidly</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3,HIGH);
+  delayMicroseconds(200);
+  digitalWrite(3,LOW);
+  delayMicroseconds(800);
+  // Makes the LED connected to pin 3 blink quickly
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Compared a continuously-powered LED to one oscillating on Pin 3 — the fast-toggling LED reads visibly dimmer, an early look at PWM.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#15</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3a</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/23/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-c3a-circuit.jpg" alt="LED dimmed to a 2% duty cycle"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">LED dimmed to a 2% duty cycle</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3,HIGH);
+  delayMicroseconds(20);
+  digitalWrite(3,LOW);
+  delayMicroseconds(980);
+  // 2% duty cycle
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Hand-built a 2% duty-cycle PWM signal: 20µs HIGH, 980µs LOW, out of a 1000µs period.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#16</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3b</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/23/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-c3b-circuit.jpg" alt="Same 2% brightness, twice the period"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Same 2% brightness, twice the period</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3,HIGH);
+  delayMicroseconds(40);
+  digitalWrite(3,LOW);
+  delayMicroseconds(1960);
+  // still 2% duty cycle, period doubled to 2ms
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Doubled the period to 2000µs while keeping the 2% duty cycle — no visible brightness change, confirming duty cycle (not period) controls perceived brightness.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#17</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3.2</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/23/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3-2.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 3.2 — analogWrite brightness steps</p>
+</div>
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  pinMode(3,OUTPUT);
+}
+
+void loop() {
+  analogWrite(3,0);
+  delay(500);
+  // 0% duty cycle
+  analogWrite(3,127);
+  delay(500);
+  // ~50% duty cycle
+  analogWrite(3,255);
+  delay(500);
+  // 100% duty cycle
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Swapped the manual delay-based PWM for the built-in analogWrite(pin, value) — same effect, far less code. Stepped an LED from 0% to ~50% to 100% brightness.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#18</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Diagram 3.2</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/23/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-d3-2-circuit.jpg" alt="Dual-pushbutton layout for manual brightness control"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Dual-pushbutton layout for manual brightness control</p>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Wired up two pushbuttons on the breadboard to prep for Challenge 3.3's brightness-control code.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#19</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3.3</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/26/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3-3.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>int duc = 3;
+int ethan = 5;
+int six = 6;
+int brightness = 0;
+
+void setup() {
+  pinMode(duc,OUTPUT);
+  pinMode(ethan,INPUT_PULLUP);
+  pinMode(six,INPUT_PULLUP);
+}
+
+void loop() {
+  analogWrite(duc, brightness);
+  // button1 increases brightness
+  if(digitalRead(ethan) == LOW &amp;&amp; brightness &lt; 255){
+    brightness += 1;
+  }
+  // button2 decreases brightness
+  if(digitalRead(six) == LOW &amp;&amp; brightness &gt; 0){
+    brightness -= 1;
+  }
+  delay(10);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> One button raises LED brightness, the other lowers it, using a brightness variable and PWM. Fixed a stray parenthesis and renamed variables to get it running.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#20</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3.4 &amp; Diagram 3.3</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/27/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t3-c3-4-circuit.jpg" alt="4-pin RGB LED wired to 3 pushbuttons"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">4-pin RGB LED wired to 3 pushbuttons</p>
+</div><div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3-4.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>int redPin = 11, greenPin = 10, bluePin = 9;
+int button1 = 5, button2 = 4, button3 = 3;
+int redValue = 0, greenValue = 0, blueValue = 0;
+
+void setup(){
+  pinMode(redPin,OUTPUT); pinMode(greenPin,OUTPUT); pinMode(bluePin,OUTPUT);
+  pinMode(button1,INPUT_PULLUP); pinMode(button2,INPUT_PULLUP); pinMode(button3,INPUT_PULLUP);
+}
+
+void loop(){
+  analogWrite(redPin,redValue);
+  analogWrite(greenPin,greenValue);
+  analogWrite(bluePin,blueValue);
+
+  if(digitalRead(button1) == LOW){ redValue=255; greenValue=255; blueValue=0; }   // yellow
+  if(digitalRead(button2) == LOW){ redValue=0;   greenValue=255; blueValue=255; } // cyan
+  if(digitalRead(button3) == LOW){ redValue=255; greenValue=0;   blueValue=255; } // magenta
+  delay(10);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Wired an RGB LED with one leg to voltage and the other three to red/green/blue pins. Three buttons each mix a different color: yellow, cyan, magenta.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#21</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3c</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/27/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3c.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code — updated color values (transcribed from notebook photo)</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>// same wiring/structure as 3.4, new color targets:
+if(digitalRead(button1) == LOW){ redValue=255; greenValue=125; blueValue=0;   } // raspberry
+if(digitalRead(button2) == LOW){ redValue=0;   greenValue=255; blueValue=125; } // ocean
+if(digitalRead(button3) == LOW){ redValue=0;   greenValue=125; blueValue=255; } // turquoise</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Used the color wheel to pick new RGB values for each button — raspberry, ocean, and turquoise.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#22</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3.5</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/27/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3-5.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void loop(){
+  analogWrite(redPin,redValue);
+  analogWrite(greenPin,greenValue);
+  analogWrite(bluePin,blueValue);
+
+  if(digitalRead(button1) == LOW &amp;&amp; redValue   &lt; 255){ redValue   += 1; }
+  if(digitalRead(button2) == LOW &amp;&amp; greenValue &lt; 255){ greenValue += 1; }
+  if(digitalRead(button3) == LOW &amp;&amp; blueValue  &lt; 255){ blueValue  += 1; }
+  delay(10);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Each button now nudges its own color value up by 1 per loop, letting you blend custom colors by holding combinations of buttons.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#23</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3d</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/29/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3d.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Circuit in action</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code — added button4 subtractive logic</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>int button4 = 6; // new subtractive button
+
+if(digitalRead(button1) == LOW &amp;&amp; redValue &lt; 255) {
+  redValue += 1;
+  if(digitalRead(button4) == LOW &amp;&amp; redValue &lt; 255 &amp;&amp; redValue &gt; 1){
+    redValue -= 2;
+  }
+}
+// same pattern repeated for greenValue / button2 and blueValue / button3</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Added a 4th button. Holding it together with buttons 1-3 subtracts 2 from that color instead of adding, counteracting the normal increase.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#24</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 3e</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">2/29/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3 max-w-md mx-auto">
+  <video controls playsinline preload="metadata" class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-black"
+    onerror="this.closest('div').style.display='none'">
+    <source src="src/assets/video/arduino/t3-c3e.mp4" type="video/mp4">
+  </video>
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Challenge 3e — random RGB button</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code — random() color generator</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>if(digitalRead(button1) == LOW){
+  redValue   = random(0,255);
+  greenValue = random(0,255);
+  blueValue  = random(0,255);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Simplified back to one button, which now assigns a random 0-255 value to each color channel on every press, producing a random RGB light.</p>
+  </div>
+</details>
+  </div>
+</details>
+<details data-group="tutorial-group" class="group/tut rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+    <div class="min-w-0">
+      <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest">Tutorial 4 — Voltage Dividers</span>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Pairing resistors, calculating the expected split, and checking it against analogRead(). The direct precursor to the resistor-ladder keyboard.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-[10px] font-mono font-bold text-slate-400">7 pages</span>
+      <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 group-open/tut:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="px-4 sm:px-5 pb-5 pt-1 space-y-2">
+    <details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#25</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Diagram 4.1</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-d4-1-circuit.jpg" alt="Resistor ladder wired for voltage-drop testing"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Resistor ladder wired for voltage-drop testing</p>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Measured voltage drop across a 1kΩ resistor (4.9V, 0.1V drop) and across a 2.2kΩ + 1kΩ pair in series (3.44V + 1.56V = 5.32-5.35V total) — first hands-on look at voltage division.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#26</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 4.1 &amp; Try It!</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>void setup() {
+  Serial.begin(9600);
+}
+
+// reads the voltage in the circuit
+void loop() {
+  Serial.println(analogRead(0));
+  delay(50);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Read the voltage after the 2.2kΩ resistor on Analog Pin 0 — Serial Monitor showed 700 steps (3.43V). Jumping the pin straight to GND read 0; straight to 5V read 1024.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#27</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 4a</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>// same analogRead(0) code as Challenge 4.1</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Swapped in two equal resistors to split 5V exactly in half. Monitor read ~508 steps (2.49V), matching the predicted 2.5V.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#28</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 4b</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]"></span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>// same analogRead(0) code as Challenge 4.1</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Targeted a 4.5V output (ratio 0.9). Found 4.7kΩ + 330Ω gives ratio 0.934 — Monitor read 954 steps (4.67V), confirmed with a multimeter.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#29</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Diagram 4.2</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3"><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-d4-2-circuit.jpg" alt="Photoresistor wired to the analog input"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Photoresistor wired to the analog input</p>
+  </div><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-d4-2-multimeter.jpg" alt="Multimeter reading — 1.38kΩ ambient resistance"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Multimeter reading — 1.38kΩ ambient resistance</p>
+  </div></div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Measured the photoresistor at 1.38kΩ under ambient light. Resistance rises in the dark (~600 steps) and falls in bright light (~100 steps).</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#30</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Diagram 4.3 &amp; Challenge 4.4</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="my-3">
+  <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-d4-3-circuit.jpg" alt="LED + photoresistor combined on one breadboard"
+    class="w-full max-w-md mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+    onerror="this.closest('div').style.display='none'" />
+  <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">LED + photoresistor combined on one breadboard</p>
+</div><h5 class="font-mono text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider mt-4 mb-1.5">Code</h5>
+<div class="relative group/code my-2">
+  <pre class="notebook-code overflow-x-auto rounded-xl bg-slate-950 text-slate-100 text-[11px] leading-relaxed p-3.5 pr-16 border border-slate-800"><code>int sensorValue = 0, sensorPin = 0, ledPin = 9, brightness = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ledPin,OUTPUT);
+}
+
+void loop() {
+  sensorValue = analogRead(sensorPin);
+  brightness = map(sensorValue, 0, 1023, 0, 255);
+  analogWrite(ledPin, brightness);
+  Serial.println(sensorValue);
+  delay(10);
+}</code></pre>
+  <button type="button" onclick="copyNotebookCode(this)" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-500 text-slate-200 text-[9px] font-mono font-bold uppercase tracking-wide transition-colors">Copy</button>
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Added an LED whose brightness now tracks the photoresistor via map() — brighter in the dark, dimmer in the light.</p>
+  </div>
+</details>
+<details data-group="tutorial-challenge" class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+  <summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="font-mono text-[9px] font-black text-rose-500 uppercase tracking-widest shrink-0">#31</span>
+      <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">Challenge 4c</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-rose-400 text-[8px]">&#9679;</span>
+      <span class="text-[10px] font-mono font-bold text-slate-400">3/4/24</span>
+      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </summary>
+  <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3"><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-c4c-circuit-code.jpg" alt="Method 1 — reversed in code"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Method 1 — reversed in code</p>
+  </div><div>
+    <img loading="lazy" decoding="async" src="src/assets/images/arduino/t4-c4c-circuit-hw.jpg" alt="Method 2 — rewired in hardware"
+      class="w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+      onerror="this.closest('div').style.display='none'" />
+    <p class="text-center text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">Method 2 — rewired in hardware</p>
+  </div></div><div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-xs text-rose-800 dark:text-rose-300 font-medium leading-relaxed my-2">
+  <strong>Note:</strong> The code for this page exists only as a photo in the notebook, and the exact map() numbers aren't reliably legible in the scan — so no code snippet is shown here rather than guessing at the values.
+</div><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2"><strong>Summary:</strong> Reversed the relationship two ways: (1) flipping the direction of the map() output range in software, and (2) rewiring the LED to the 5V rail so the photoresistor drains voltage away from it in the dark — no code change needed for the second method. Direct precursor to the resistor-ladder keyboard below.</p>
+  </div>
+</details>
+  </div>
+</details>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed italic">
+        Tutorial 4's voltage-divider math &mdash; splitting 5V across paired resistors and checking the result against <code class="text-xs">analogRead()</code> &mdash; is exactly the technique scaled up below into an 8-key resistor ladder on a single analog pin.
+      </p>
+    </div>
+
+    <!-- Technical Details -->
+    <div class="space-y-4">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg>
+        Core Prototyping Achievements
+      </h3>
+      <ul class="space-y-3 text-slate-600 dark:text-slate-300 text-sm">
+        <li class="flex items-start gap-2.5">
+          <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+          <span><strong>Mathematical Voltage Scaling:</strong> Calculated optimal resistor values to split the 5V reference into eight distinct, highly spaced voltage brackets. This guarantees noise immunity and eliminates incorrect note triggering due to resistor tolerance margins.</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+          <span><strong>1-Pin Analog Keypad Decoder:</strong> Programmed a high-performance Arduino loop utilizing customized logic brackets to map analog values (0 to 1023 resolution) to specific musical note frequencies.</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+          <span><strong>Piezo Buzzer Integration:</strong> Designed a debounce-free hardware trigger circuit which immediately cuts off tones ('noTone(8)') when no buttons are closed, providing crisp, clean acoustic output.</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Code Box -->
+    <div class="space-y-4">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+        Source Code (Arduino C++)
+      </h3>
+      <div class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-200 font-mono text-xs shadow-lg">
+        <div class="bg-slate-900/80 px-4 py-2 border-b border-slate-800 flex justify-between items-center font-sans">
+          <span class="text-slate-400 font-bold">synthesizer.ino</span>
+          <span class="text-[10px] text-rose-500 uppercase font-black font-mono">Arduino IDE</span>
+        </div>
+        <div class="p-5 overflow-x-auto max-h-[350px] space-y-1">
+          <p><span class="text-rose-400">int</span> note[] = &#123;<span class="text-emerald-400">100, 200, 300, 400, 500, 600, 700, 800</span>&#125;;</p>
+          <br />
+          <p><span class="text-rose-400">void</span> <span class="text-blue-400">setup</span>() &#123;</p>
+          <p class="pl-4">Serial.<span class="text-emerald-400">begin</span>(<span class="text-amber-400">9600</span>);</p>
+          <p>&#125;</p>
+          <br />
+          <p><span class="text-rose-400">void</span> <span class="text-blue-400">loop</span>() &#123;</p>
+          <p class="pl-4"><span class="text-slate-500">// Variable to hold the value read on pin A0</span></p>
+          <p class="pl-4"><span class="text-rose-400">int</span> keyVal = <span class="text-emerald-400">analogRead</span>(A0);</p>
+          <p class="pl-4">Serial.<span class="text-emerald-400">println</span>(keyVal);</p>
+          <br />
+          <p class="pl-4"><span class="text-slate-500">// Play the note matching with the analog value</span></p>
+          <p class="pl-4"><span class="text-rose-400">if</span> (keyVal &gt;= <span class="text-amber-400">1023</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">0</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">1</span> && keyVal &lt;= <span class="text-amber-400">127</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">1</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">128</span> && keyVal &lt;= <span class="text-amber-400">256</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">2</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">257</span> && keyVal &lt;= <span class="text-amber-400">385</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">3</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">386</span> && keyVal &lt;= <span class="text-amber-400">514</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">4</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">515</span> && keyVal &lt;= <span class="text-amber-400">643</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">5</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">644</span> && keyVal &lt;= <span class="text-amber-400">772</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">6</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else if</span> (keyVal &gt;= <span class="text-amber-400">773</span> && keyVal &lt;= <span class="text-amber-400">1022</span>) &#123;</p>
+          <p class="pl-8"><span class="text-emerald-400">tone</span>(<span class="text-amber-400">8</span>, note[<span class="text-amber-400">7</span>]);</p>
+          <p class="pl-4">&#125; <span class="text-rose-400">else &#123;</span></p>
+          <p class="pl-8"><span class="text-slate-500">// Stop playing when no buttons are pressed</span></p>
+          <p class="pl-8"><span class="text-emerald-400">noTone</span>(<span class="text-amber-400">8</span>);</p>
+          <p class="pl-4">&#125;</p>
+          <p>&#125;</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Schematics & Physical photos -->
+  <div class="lg:col-span-5 space-y-6">
+    <!-- Physical Proto -->
+    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
+        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">PROTOTYPE STAGE 1</span>
+        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Physical Breadboard Prototype</h4>
+      </div>
+      <div class="relative overflow-hidden aspect-4/3 bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
+        <img loading="lazy" decoding="async"
+          src="src/assets/images/arduino/Arduino_Physical_Breadboard.jpg"
+          alt="Physical Breadboard Prototype"
+          class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+        />
+      </div>
+      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400">
+        A physical, dynamic breadboard wiring setup featuring mechanical switches cascading along a load-sharing resistor ladder.
+      </div>
+    </div>
+
+    <!-- Schematic Circuit -->
+    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
+        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">CIRCUIT DESIGN</span>
+        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Fritzing Circuit Schematic</h4>
+      </div>
+      <div class="relative overflow-hidden aspect-4/3 bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
+        <img loading="lazy" decoding="async"
+          src="src/assets/images/arduino/Arduino_Breadboard_Schematic.jpg"
+          alt="Arduino Breadboard Schematic"
+          class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+        />
+      </div>
+      <div class="p-4 bg-slate-50/30 dark:bg-slate-900/30 text-xs text-slate-500 dark:text-slate-400">
+        Fritzing schematic modeling the parallel voltage-divider circuit loops connecting standard tactical feedback push triggers.
+      </div>
+    </div>
+
+    <!-- Additional Photo 1 -->
+    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
+        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">PROTOTYPE STAGE 2</span>
+        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Build Progress</h4>
+      </div>
+      <div class="relative overflow-hidden aspect-4/3 bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
+        <img loading="lazy" decoding="async"
+          src="src/assets/images/arduino/arduino_synth_photo_2.jpg"
+          alt="Arduino Synthesizer Build Progress"
+          class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+        />
+      </div>
+    </div>
+
+    <!-- Additional Photo 2 -->
+    <div class="group overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
+        <span class="font-mono text-[10px] font-black text-rose-500 uppercase tracking-widest block">PROTOTYPE STAGE 3</span>
+        <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase font-mono">Build Progress</h4>
+      </div>
+      <div class="relative overflow-hidden aspect-4/3 bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
+        <img loading="lazy" decoding="async"
+          src="src/assets/images/arduino/arduino_synth_photo_3.jpg"
+          alt="Arduino Synthesizer Build Progress"
+          class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+        />
+      </div>
+    </div>
+  </div>
+</div>

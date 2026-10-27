@@ -1,0 +1,565 @@
+{
+  "description": "Responsive WebP variants for listing/spotlight use only. Original project/detail sources are unchanged.",
+  "heroSizes": "(max-width: 650px) 90vw, 43vw",
+  "cardSizes": "(max-width: 650px) 90vw, (max-width: 900px) 44vw, 29vw",
+  "assets": [
+    {
+      "kind": "card",
+      "name": "quadruped",
+      "source": "src/assets/images/quadruped-robot/folded-configuration.webp",
+      "sourceBytes": 50070,
+      "sourceWidth": 1447,
+      "sourceHeight": 763,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/quadruped-card-640.webp",
+          "bytes": 19232,
+          "width": 640,
+          "height": 337
+        },
+        {
+          "path": "src/assets/images/optimized/quadruped-card-960.webp",
+          "bytes": 30652,
+          "width": 960,
+          "height": 506
+        }
+      ],
+      "src": "src/assets/images/optimized/quadruped-card-640.webp",
+      "srcset": "src/assets/images/optimized/quadruped-card-640.webp 640w, src/assets/images/optimized/quadruped-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "volumetric-display",
+      "source": "src/assets/images/volumetric-display/radial-arm-assembly.webp",
+      "sourceBytes": 100934,
+      "sourceWidth": 970,
+      "sourceHeight": 929,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/volumetric-display-card-501.webp",
+          "bytes": 35358,
+          "width": 501,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/volumetric-display-card-752.webp",
+          "bytes": 67264,
+          "width": 752,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/volumetric-display-card-501.webp",
+      "srcset": "src/assets/images/optimized/volumetric-display-card-501.webp 501w, src/assets/images/optimized/volumetric-display-card-752.webp 752w"
+    },
+    {
+      "kind": "card",
+      "name": "fea",
+      "source": "src/assets/images/fea/aligner-load-stress.png",
+      "sourceBytes": 366471,
+      "sourceWidth": 1166,
+      "sourceHeight": 785,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/fea-card-640.webp",
+          "bytes": 20744,
+          "width": 640,
+          "height": 431
+        },
+        {
+          "path": "src/assets/images/optimized/fea-card-960.webp",
+          "bytes": 33384,
+          "width": 960,
+          "height": 646
+        }
+      ],
+      "src": "src/assets/images/optimized/fea-card-640.webp",
+      "srcset": "src/assets/images/optimized/fea-card-640.webp 640w, src/assets/images/optimized/fea-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "solidworks",
+      "source": "src/assets/images/cswa_solidworks_practice.jpg",
+      "sourceBytes": 150832,
+      "sourceWidth": 1280,
+      "sourceHeight": 720,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/solidworks-card-640.webp",
+          "bytes": 32604,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/solidworks-card-960.webp",
+          "bytes": 57034,
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/solidworks-card-640.webp",
+      "srcset": "src/assets/images/optimized/solidworks-card-640.webp 640w, src/assets/images/optimized/solidworks-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "sprocket",
+      "source": "src/assets/images/capstone/Sprocket_Robot_CAD.png",
+      "sourceBytes": 521776,
+      "sourceWidth": 755,
+      "sourceHeight": 842,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/sprocket-card-430.webp",
+          "bytes": 45866,
+          "width": 430,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/sprocket-card-646.webp",
+          "bytes": 80314,
+          "width": 646,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/sprocket-card-430.webp",
+      "srcset": "src/assets/images/optimized/sprocket-card-430.webp 430w, src/assets/images/optimized/sprocket-card-646.webp 646w"
+    },
+    {
+      "kind": "card",
+      "name": "launch-vehicle",
+      "source": "src/assets/images/launch_vehicle_cross_section.png",
+      "sourceBytes": 38847,
+      "sourceWidth": 637,
+      "sourceHeight": 493,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/launch-vehicle-card-620.webp",
+          "bytes": 11046,
+          "width": 620,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/launch-vehicle-card-637.webp",
+          "bytes": 11202,
+          "width": 637,
+          "height": 493
+        }
+      ],
+      "src": "src/assets/images/optimized/launch-vehicle-card-620.webp",
+      "srcset": "src/assets/images/optimized/launch-vehicle-card-620.webp 620w, src/assets/images/optimized/launch-vehicle-card-637.webp 637w"
+    },
+    {
+      "kind": "card",
+      "name": "high-stakes",
+      "source": "src/assets/images/High_Stake_Robot.png",
+      "sourceBytes": 3428191,
+      "sourceWidth": 1536,
+      "sourceHeight": 2048,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/high-stakes-card-640.webp",
+          "bytes": 58916,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/high-stakes-card-960.webp",
+          "bytes": 101466,
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/high-stakes-card-640.webp",
+      "srcset": "src/assets/images/optimized/high-stakes-card-640.webp 640w, src/assets/images/optimized/high-stakes-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "arduino",
+      "source": "src/assets/images/arduino/Arduino_Physical_Breadboard.jpg",
+      "sourceBytes": 862253,
+      "sourceWidth": 1200,
+      "sourceHeight": 896,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/arduino-card-640.webp",
+          "bytes": 75702,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/arduino-card-960.webp",
+          "bytes": 128898,
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/arduino-card-640.webp",
+      "srcset": "src/assets/images/optimized/arduino-card-640.webp 640w, src/assets/images/optimized/arduino-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "tower",
+      "source": "src/assets/images/tower/Tower_Testing_Setup.jpg",
+      "sourceBytes": 41777,
+      "sourceWidth": 308,
+      "sourceHeight": 566,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/tower-card-308.webp",
+          "bytes": 14946,
+          "width": 308,
+          "height": 231
+        }
+      ],
+      "src": "src/assets/images/optimized/tower-card-308.webp",
+      "srcset": "src/assets/images/optimized/tower-card-308.webp 308w"
+    },
+    {
+      "kind": "card",
+      "name": "sensor-challenge",
+      "source": "src/assets/images/sensor-challenge/Sensor_Warehouse_Course.jpg",
+      "sourceBytes": 66061,
+      "sourceWidth": 463,
+      "sourceHeight": 617,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/sensor-challenge-card-463.webp",
+          "bytes": 27452,
+          "width": 463,
+          "height": 347
+        }
+      ],
+      "src": "src/assets/images/optimized/sensor-challenge-card-463.webp",
+      "srcset": "src/assets/images/optimized/sensor-challenge-card-463.webp 463w"
+    },
+    {
+      "kind": "card",
+      "name": "putt-putt",
+      "source": "src/assets/images/putt-putt/PuttPutt_Boat_Photo.jpg",
+      "sourceBytes": 170852,
+      "sourceWidth": 1600,
+      "sourceHeight": 1200,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/putt-putt-card-640.webp",
+          "bytes": 22316,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/putt-putt-card-960.webp",
+          "bytes": 38846,
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/putt-putt-card-640.webp",
+      "srcset": "src/assets/images/optimized/putt-putt-card-640.webp 640w, src/assets/images/optimized/putt-putt-card-960.webp 960w"
+    },
+    {
+      "kind": "card",
+      "name": "wind-turbine",
+      "source": "src/assets/images/wind-turbine-notebook/wt-test-p8-3blade-12in.jpg",
+      "sourceBytes": 122185,
+      "sourceWidth": 1200,
+      "sourceHeight": 900,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/wind-turbine-card-640.webp",
+          "bytes": 30860,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "path": "src/assets/images/optimized/wind-turbine-card-960.webp",
+          "bytes": 54578,
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "src": "src/assets/images/optimized/wind-turbine-card-640.webp",
+      "srcset": "src/assets/images/optimized/wind-turbine-card-640.webp 640w, src/assets/images/optimized/wind-turbine-card-960.webp 960w"
+    },
+    {
+      "kind": "hero",
+      "name": "quadruped",
+      "source": "src/assets/images/quadruped-robot/hero-cutout.png",
+      "sourceBytes": 1173573,
+      "sourceWidth": 1727,
+      "sourceHeight": 911,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/quadruped-hero-640.webp",
+          "bytes": 54166,
+          "width": 640,
+          "height": 338
+        },
+        {
+          "path": "src/assets/images/optimized/quadruped-hero-960.webp",
+          "bytes": 99624,
+          "width": 960,
+          "height": 506
+        },
+        {
+          "path": "src/assets/images/optimized/quadruped-hero-1280.webp",
+          "bytes": 155692,
+          "width": 1280,
+          "height": 675
+        }
+      ],
+      "src": "src/assets/images/optimized/quadruped-hero-640.webp",
+      "srcset": "src/assets/images/optimized/quadruped-hero-640.webp 640w, src/assets/images/optimized/quadruped-hero-960.webp 960w, src/assets/images/optimized/quadruped-hero-1280.webp 1280w"
+    },
+    {
+      "kind": "hero",
+      "name": "volumetric-display",
+      "source": "src/assets/images/volumetric-display/hero-cutout.png",
+      "sourceBytes": 1276418,
+      "sourceWidth": 1282,
+      "sourceHeight": 1227,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/volumetric-display-hero-640.webp",
+          "bytes": 84530,
+          "width": 640,
+          "height": 613
+        },
+        {
+          "path": "src/assets/images/optimized/volumetric-display-hero-960.webp",
+          "bytes": 161192,
+          "width": 960,
+          "height": 919
+        },
+        {
+          "path": "src/assets/images/optimized/volumetric-display-hero-1280.webp",
+          "bytes": 243218,
+          "width": 1280,
+          "height": 1225
+        }
+      ],
+      "src": "src/assets/images/optimized/volumetric-display-hero-640.webp",
+      "srcset": "src/assets/images/optimized/volumetric-display-hero-640.webp 640w, src/assets/images/optimized/volumetric-display-hero-960.webp 960w, src/assets/images/optimized/volumetric-display-hero-1280.webp 1280w"
+    },
+    {
+      "kind": "hero",
+      "name": "fea",
+      "source": "src/assets/images/fea/hero-cutout.png",
+      "sourceBytes": 1096326,
+      "sourceWidth": 1528,
+      "sourceHeight": 1029,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/fea-hero-640.webp",
+          "bytes": 47372,
+          "width": 640,
+          "height": 431
+        },
+        {
+          "path": "src/assets/images/optimized/fea-hero-960.webp",
+          "bytes": 86922,
+          "width": 960,
+          "height": 646
+        },
+        {
+          "path": "src/assets/images/optimized/fea-hero-1280.webp",
+          "bytes": 131750,
+          "width": 1280,
+          "height": 862
+        }
+      ],
+      "src": "src/assets/images/optimized/fea-hero-640.webp",
+      "srcset": "src/assets/images/optimized/fea-hero-640.webp 640w, src/assets/images/optimized/fea-hero-960.webp 960w, src/assets/images/optimized/fea-hero-1280.webp 1280w"
+    },
+    {
+      "kind": "hero",
+      "name": "sprocket",
+      "source": "src/assets/images/capstone/Sprocket_Robot_CAD.png",
+      "sourceBytes": 521776,
+      "sourceWidth": 755,
+      "sourceHeight": 842,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/sprocket-hero-640.webp",
+          "bytes": 86932,
+          "width": 640,
+          "height": 714
+        },
+        {
+          "path": "src/assets/images/optimized/sprocket-hero-755.webp",
+          "bytes": 108850,
+          "width": 755,
+          "height": 842
+        }
+      ],
+      "src": "src/assets/images/optimized/sprocket-hero-640.webp",
+      "srcset": "src/assets/images/optimized/sprocket-hero-640.webp 640w, src/assets/images/optimized/sprocket-hero-755.webp 755w"
+    },
+    {
+      "kind": "icon",
+      "name": "cpp-logo",
+      "source": "src/assets/images/logos/cpp_logo.png",
+      "sourceBytes": 36928,
+      "sourceWidth": 500,
+      "sourceHeight": 563,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/cpp-logo-icon-32.webp",
+          "bytes": 1340,
+          "width": 32,
+          "height": 36
+        },
+        {
+          "path": "src/assets/images/optimized/cpp-logo-icon-64.webp",
+          "bytes": 2768,
+          "width": 64,
+          "height": 72
+        }
+      ],
+      "src": "src/assets/images/optimized/cpp-logo-icon-32.webp",
+      "srcset": "src/assets/images/optimized/cpp-logo-icon-32.webp 32w, src/assets/images/optimized/cpp-logo-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "solidworks-icon",
+      "source": "src/assets/images/logos/solidworks_icon.png",
+      "sourceBytes": 6703,
+      "sourceWidth": 230,
+      "sourceHeight": 225,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/solidworks-icon-icon-32.webp",
+          "bytes": 1618,
+          "width": 32,
+          "height": 31
+        },
+        {
+          "path": "src/assets/images/optimized/solidworks-icon-icon-64.webp",
+          "bytes": 4150,
+          "width": 64,
+          "height": 63
+        }
+      ],
+      "src": "src/assets/images/optimized/solidworks-icon-icon-32.webp",
+      "srcset": "src/assets/images/optimized/solidworks-icon-icon-32.webp 32w, src/assets/images/optimized/solidworks-icon-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "matlab-logo",
+      "source": "src/assets/images/logos/matlab_logo.png",
+      "sourceBytes": 31052,
+      "sourceWidth": 256,
+      "sourceHeight": 229,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/matlab-logo-icon-32.webp",
+          "bytes": 1210,
+          "width": 32,
+          "height": 29
+        },
+        {
+          "path": "src/assets/images/optimized/matlab-logo-icon-64.webp",
+          "bytes": 2510,
+          "width": 64,
+          "height": 57
+        }
+      ],
+      "src": "src/assets/images/optimized/matlab-logo-icon-32.webp",
+      "srcset": "src/assets/images/optimized/matlab-logo-icon-32.webp 32w, src/assets/images/optimized/matlab-logo-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "onshape-logo",
+      "source": "src/assets/images/logos/onshape_logo.png",
+      "sourceBytes": 47328,
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/onshape-logo-icon-32.webp",
+          "bytes": 1268,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "path": "src/assets/images/optimized/onshape-logo-icon-64.webp",
+          "bytes": 2622,
+          "width": 64,
+          "height": 64
+        }
+      ],
+      "src": "src/assets/images/optimized/onshape-logo-icon-32.webp",
+      "srcset": "src/assets/images/optimized/onshape-logo-icon-32.webp 32w, src/assets/images/optimized/onshape-logo-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "autocad-logo",
+      "source": "src/assets/images/logos/autocad_logo.png",
+      "sourceBytes": 14870,
+      "sourceWidth": 320,
+      "sourceHeight": 320,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/autocad-logo-icon-32.webp",
+          "bytes": 930,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "path": "src/assets/images/optimized/autocad-logo-icon-64.webp",
+          "bytes": 1852,
+          "width": 64,
+          "height": 64
+        }
+      ],
+      "src": "src/assets/images/optimized/autocad-logo-icon-32.webp",
+      "srcset": "src/assets/images/optimized/autocad-logo-icon-32.webp 32w, src/assets/images/optimized/autocad-logo-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "arduino-icon",
+      "source": "src/assets/images/logos/arduino-icon.png",
+      "sourceBytes": 16611,
+      "sourceWidth": 533,
+      "sourceHeight": 533,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/arduino-icon-icon-32.webp",
+          "bytes": 1264,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "path": "src/assets/images/optimized/arduino-icon-icon-64.webp",
+          "bytes": 2844,
+          "width": 64,
+          "height": 64
+        }
+      ],
+      "src": "src/assets/images/optimized/arduino-icon-icon-32.webp",
+      "srcset": "src/assets/images/optimized/arduino-icon-icon-32.webp 32w, src/assets/images/optimized/arduino-icon-icon-64.webp 64w"
+    },
+    {
+      "kind": "icon",
+      "name": "bambu-logo",
+      "source": "src/assets/images/logos/bambu-logo.png",
+      "sourceBytes": 121204,
+      "sourceWidth": 1024,
+      "sourceHeight": 1024,
+      "variants": [
+        {
+          "path": "src/assets/images/optimized/bambu-logo-icon-32.webp",
+          "bytes": 1172,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "path": "src/assets/images/optimized/bambu-logo-icon-64.webp",
+          "bytes": 1970,
+          "width": 64,
+          "height": 64
+        }
+      ],
+      "src": "src/assets/images/optimized/bambu-logo-icon-32.webp",
+      "srcset": "src/assets/images/optimized/bambu-logo-icon-32.webp 32w, src/assets/images/optimized/bambu-logo-icon-64.webp 64w"
+    }
+  ]
+}

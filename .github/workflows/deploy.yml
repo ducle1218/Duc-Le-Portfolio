@@ -37,6 +37,7 @@ jobs:
           node scripts/build-site-css.mjs
           node scripts/build-site-js.mjs
           node scripts/check-loading.mjs
+          node scripts/check-spotlight.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

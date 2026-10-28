@@ -4,7 +4,7 @@
   <script>if(new URLSearchParams(location.search).get("performance")==="1"){const s=document.createElement("script");s.src="src/scripts/performance-probe.js";document.head.append(s)}</script>
   <meta charset="UTF-8">
   <script>try{document.documentElement.classList.toggle("dark",localStorage.getItem("portfolio-theme-v2")!=="light")}catch(e){document.documentElement.classList.add("dark")}</script>
-  <link rel="stylesheet" href="src/styles/site.min.css?v=20261027-1">
+  <link rel="stylesheet" href="src/styles/site.min.css?v=20261027-2">
   <link rel="preload" href="src/assets/fonts/space-grotesk-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="src/assets/fonts/dm-sans-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,7 +35,7 @@
 
 
 
-  <script src="src/scripts/site.bundle.js?v=20261027-1" defer></script>
+  <script src="src/scripts/site.bundle.js?v=20261027-2" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
   <div class="portfolio-atmosphere" aria-hidden="true"></div>
@@ -61,11 +61,11 @@
 
     <section id="hero-fold" class="sculpture-hero">
       <div class="hero-intro"><p class="sculpture-label">DUC LE / MECHANICAL ENGINEERING</p><h1>Ideas into<br><span>motion.</span></h1><div class="intro-bottom"><p>I design mechanisms, build prototypes, and test what comes next.<br><span>Mechanical engineering student at Rutgers.</span></p><button class="sculpture-link" onclick="switchTab('project')">Explore the work <span>↘</span></button></div></div>
-      <div class="project-console">
-        <div class="console-top"><span>PROJECT SPOTLIGHT</span><span id="spotlight-count">01 / 04</span></div>
-        <button class="spotlight-image" id="spotlight-open" onclick="showProjectDetail('box-12')" aria-label="View Quadruped robot project"><img id="spotlight-image" src="src/assets/images/optimized/quadruped-hero-640.webp" srcset="src/assets/images/optimized/quadruped-hero-640.webp 640w, src/assets/images/optimized/quadruped-hero-960.webp 960w, src/assets/images/optimized/quadruped-hero-1280.webp 1280w" sizes="(max-width: 650px) 90vw, 43vw" width="1727" height="911" decoding="async" alt="Quadruped robot" fetchpriority="high"><span class="image-open">Explore project ↗</span></button>
-        <div class="spotlight-caption" aria-live="polite"><span class="sculpture-label" id="spotlight-tag">ROBOTICS / PROTOTYPE IN PROGRESS</span><h2 id="spotlight-title">Quadruped robot</h2><p id="spotlight-summary">A folding robot dog. From servo packaging to printed, working legs.</p></div>
-        <div class="spotlight-select" aria-label="Choose spotlight project"><button aria-pressed="true" data-spotlight="0"><span>01</span>Quadruped</button><button aria-pressed="false" data-spotlight="1"><span>02</span>Volumetric display</button><button aria-pressed="false" data-spotlight="2"><span>03</span>FEA &amp; GD&amp;T</button><button aria-pressed="false" data-spotlight="3"><span>04</span>VEX robot</button></div>
+      <div class="project-console" role="region" aria-roledescription="carousel" aria-label="Selected engineering projects">
+        <div class="console-top"><span class="console-heading">PROJECT SPOTLIGHT</span><span id="spotlight-count">01 / 04</span><button id="spotlight-toggle" class="spotlight-toggle" aria-label="Pause project rotation" aria-pressed="false"><i aria-hidden="true">Ⅱ</i> Pause</button></div>
+        <button class="spotlight-image" id="spotlight-open" onclick="showProjectDetail('box-12')" aria-label="View Quadruped robot project"><img id="spotlight-image" src="src/assets/images/optimized/quadruped-hero-640.webp" srcset="src/assets/images/optimized/quadruped-hero-640.webp 640w, src/assets/images/optimized/quadruped-hero-960.webp 960w, src/assets/images/optimized/quadruped-hero-1280.webp 1280w" sizes="(max-width: 650px) 90vw, 43vw" width="1727" height="911" decoding="async" alt="Quadruped robot" fetchpriority="high"><span class="image-open">Explore project <i aria-hidden="true">↗</i></span></button>
+        <div class="spotlight-caption" aria-live="off" aria-atomic="true"><span class="sculpture-label" id="spotlight-tag">ROBOTICS / PROTOTYPE IN PROGRESS</span><h2 id="spotlight-title">Quadruped robot</h2><p id="spotlight-summary">A folding robot dog. From servo packaging to printed, working legs.</p></div>
+        <div class="spotlight-select" aria-label="Choose spotlight project"><button aria-pressed="true" data-spotlight="0"><span>01</span>Quadruped<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="1"><span>02</span>Volumetric display<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="2"><span>03</span>FEA &amp; GD&amp;T<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="3"><span>04</span>VEX robot<i class="spotlight-progress" aria-hidden="true"></i></button></div>
       </div>
       <button id="motion-toggle" hidden aria-pressed="false">Pause animation</button>
     </section>
@@ -79,7 +79,70 @@
       <div class="workbench-copy"><p class="studio-eyebrow">02 / OFF THE SCREEN</p><h2>Beyond the model.<br><em>Into the workshop.</em></h2><p>A CAD model is a starting point. The interesting work happens when a part doesn’t fit, a mechanism binds, or the first test asks a better question.</p><p>I’m a mechanical engineering student at Rutgers, building my way through those questions—one prototype at a time.</p><button class="studio-button" onclick="showProjectDetail('box-6')">Inside the robot build <span>↗</span></button><div class="bench-facts"><div><strong>CAD & mechanisms</strong><p>Onshape and SolidWorks · servo packaging, folding linkages, and assembly fit.</p></div><div><strong>Prototyping & fabrication</strong><p>FDM printing · fit checks, locating features, and iterative hardware builds.</p></div><div><strong>Analysis & testing</strong><p>Preliminary FEA · defined load cases, stress interpretation, and physical testing.</p></div></div></div>
       <figure class="workbench-film"><video id="hero-bg-video" muted loop playsinline preload="none" poster="src/assets/video/Portfolio_Background_Video_poster.jpg" aria-label="Competition robot in action"><source data-src="src/assets/video/Portfolio_Background_Video.mp4" type="video/mp4"></video><div class="film-controls"><button id="film-toggle" aria-label="Play robot build video">Play film <span>▶</span></button><button id="film-sound" aria-pressed="false">Unmute sound</button></div><figcaption><span>FROM MY WORKBENCH</span><span>VEX ROBOTICS / BUILD FOOTAGE</span></figcaption></figure>
     </section>
-    <section class="studio-contact-cta"><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Let’s build<br><em>what comes next.</em></h2><button onclick="switchTab('contact')" class="contact-orbit"><span>Let&#8217;s talk</span><span aria-hidden="true">&#8599;</span><small>Discuss an engineering opportunity</small></button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
+    <section class="studio-contact-cta"><div class="contact-flow" aria-hidden="true"><svg viewBox="0 0 1000 500" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  <defs>
+    <linearGradient id="contact-flow-fade" x1="0" y1="0" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0"/>
+      <stop offset=".12" stop-color="white"/>
+      <stop offset=".86" stop-color="white"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="contact-flow-mask"><rect width="1000" height="500" fill="url(#contact-flow-fade)"/></mask>
+    <linearGradient id="contact-airfoil-surface" x1="370" y1="155" x2="580" y2="340" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:var(--contact-wing-top)"/>
+      <stop offset="1" style="stop-color:var(--contact-wing-bottom)"/>
+    </linearGradient>
+    <path id="contact-stream-01" pathLength="1000" d="M-20 88 C205 89 286 64 432 62 S772 76 1020 78"/>
+    <path id="contact-stream-02" pathLength="1000" d="M-20 117 C201 117 278 83 425 81 S774 100 1020 105"/>
+    <path id="contact-stream-03" pathLength="1000" d="M-20 146 C178 147 280 102 421 100 S774 125 1020 132"/>
+    <path id="contact-stream-04" pathLength="1000" d="M-20 175 C158 178 263 128 402 121 S768 154 1020 161"/>
+    <path id="contact-stream-05" pathLength="1000" d="M-20 204 C167 211 223 158 380 145 S750 182 1020 194"/>
+    <path id="contact-stream-06" pathLength="1000" d="M-20 233 C154 250 188 198 346 176 S756 214 1020 227"/>
+    <path id="contact-stream-07" pathLength="1000" d="M-20 282 C135 286 125 364 264 378 S770 278 1020 265"/>
+    <path id="contact-stream-08" pathLength="1000" d="M-20 311 C124 315 121 384 269 397 S765 314 1020 302"/>
+    <path id="contact-stream-09" pathLength="1000" d="M-20 340 C125 348 128 406 278 417 S761 350 1020 339"/>
+    <path id="contact-stream-10" pathLength="1000" d="M-20 369 C129 381 148 426 294 436 S772 389 1020 377"/>
+    <path id="contact-stream-11" pathLength="1000" d="M-20 398 C147 418 168 445 318 453 S791 425 1020 414"/>
+    <path id="contact-stream-12" pathLength="1000" d="M-20 427 C160 449 200 463 344 469 S815 460 1020 451"/>
+  </defs>
+  <g mask="url(#contact-flow-mask)">
+    <g class="cf-stream">
+      <use href="#contact-stream-01"/><use href="#contact-stream-02"/>
+      <use href="#contact-stream-03"/><use href="#contact-stream-04"/>
+      <use href="#contact-stream-05"/><use href="#contact-stream-06"/>
+      <use href="#contact-stream-07"/><use href="#contact-stream-08"/>
+      <use href="#contact-stream-09"/><use href="#contact-stream-10"/>
+      <use href="#contact-stream-11"/><use href="#contact-stream-12"/>
+    </g>
+    <g>
+      <use class="cf-streak" href="#contact-stream-03"/>
+      <use class="cf-streak" href="#contact-stream-05"/>
+      <use class="cf-streak" href="#contact-stream-08"/>
+      <use class="cf-streak" href="#contact-stream-10"/>
+    </g>
+  </g>
+  <g>
+    <path class="cf-wing" d="M210 330 C216 267 351 285 605 347 L855 187 C601 125 466 107 460 170 Z"/>
+    <g class="cf-rib">
+      <path d="M241.25 310 C247.25 247 382.25 265 636.25 327"/>
+      <path d="M272.5 290 C278.5 227 413.5 245 667.5 307"/>
+      <path d="M303.75 270 C309.75 207 444.75 225 698.75 287"/>
+      <path d="M335 250 C341 187 476 205 730 267"/>
+      <path d="M366.25 230 C372.25 167 507.25 185 761.25 247"/>
+      <path d="M397.5 210 C403.5 147 538.5 165 792.5 227"/>
+      <path d="M428.75 190 C434.75 127 569.75 145 823.75 207"/>
+    </g>
+    <g class="cf-seam">
+      <path d="M238 293 L488 133"/>
+      <path d="M298 292 L548 132"/>
+      <path d="M389 304 L639 144"/>
+      <path d="M494 323 L744 163"/>
+    </g>
+    <path class="cf-wing-face" d="M210 330 C216 267 351 285 605 347 C408 343 237 370 210 330 Z"/>
+    <path class="cf-rib" d="M225 328 C250 303 370 312 565 343"/>
+  </g>
+</svg>
+</div><p class="studio-eyebrow">03 / CAREER OPPORTUNITIES</p><h2>Let’s build<br><em>what comes next.</em></h2><button onclick="switchTab('contact')" class="contact-orbit"><span>Let&#8217;s talk</span><span aria-hidden="true">&#8599;</span><small>Discuss an engineering opportunity</small></button><p>Seeking mechanical engineering internships and hands-on opportunities.<br>Let’s talk about how I could contribute to your team.</p></section>
   </div>
 
   <!-- ======================== TAB: RESUME ======================== -->

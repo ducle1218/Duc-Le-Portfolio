@@ -5,7 +5,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const dependencies=fileURLToPath(new URL('../../tmp/cad-tools/node_modules/',import.meta.url));
 const require=createRequire(import.meta.url);
 const {transform}=require(require.resolve('esbuild',{paths:[root,dependencies]}));
-const styles=['../../output.css','fonts.css','legacy.css','projects.css','studio.css','resume-viewer.css','sprocket.css','sculptural.css','cad-evolution.css'];
+const styles=['../../output.css','fonts.css','legacy.css','projects.css','studio.css','resume-viewer.css','sprocket.css','sculptural.css','cad-evolution.css','spotlight.css','contact-flow.css'];
 const inputs=await Promise.all(styles.map(file=>readFile(new URL('../src/styles/'+file,import.meta.url),'utf8')));
 const result=await transform(inputs.join('\n'),{loader:'css',minify:true,legalComments:'eof'});
 await writeFile(new URL('../src/styles/site.min.css',import.meta.url),result.code);

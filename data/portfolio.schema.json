@@ -1,0 +1,504 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ducle1218.github.io/Duc-Le-Portfolio/data/portfolio.schema.json",
+  "title": "Public portfolio experience feed v1",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "snapshotId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "siteUrl": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceReviewedOn": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "const": "published-source-consistency-only"
+        },
+        "independentlyVerified": {
+          "const": false
+        },
+        "ownerApprovedForApplications": {
+          "const": false
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "level",
+        "independentlyVerified",
+        "ownerApprovedForApplications",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "quote": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "path",
+                  "quote"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "text",
+              "evidence"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "name",
+        "headline",
+        "facts"
+      ],
+      "additionalProperties": false
+    },
+    "resume": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "number"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contentUpdatedOn": {
+          "type": "null"
+        },
+        "projectReconciliation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "path",
+        "sha256",
+        "bytes",
+        "url",
+        "authority",
+        "contentUpdatedOn",
+        "projectReconciliation",
+        "template"
+      ],
+      "additionalProperties": false
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "requireClaimEvidence": {
+          "const": true
+        },
+        "allowInventedQualifications": {
+          "const": false
+        },
+        "preserveOwnership": {
+          "const": true
+        },
+        "preserveCompletionState": {
+          "const": true
+        },
+        "preserveMetricConditions": {
+          "const": true
+        },
+        "unknownMeans": {
+          "type": "string",
+          "minLength": 1
+        },
+        "submissionReviewRequired": {
+          "const": true
+        },
+        "jobPostingIsEvidenceAboutCandidate": {
+          "const": false
+        },
+        "privateApplicationAnswersIncluded": {
+          "const": false
+        }
+      },
+      "required": [
+        "requireClaimEvidence",
+        "allowInventedQualifications",
+        "preserveOwnership",
+        "preserveCompletionState",
+        "preserveMetricConditions",
+        "unknownMeans",
+        "submissionReviewRequired",
+        "jobPostingIsEvidenceAboutCandidate",
+        "privateApplicationAnswersIncluded"
+      ],
+      "additionalProperties": false
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^box-\\d+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stage": {
+            "enum": [
+              "College",
+              "High school"
+            ]
+          },
+          "category": {
+            "enum": [
+              "PERSONAL",
+              "STUDENT TEAMS",
+              "INTERNSHIPS"
+            ]
+          },
+          "dateLabel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "completionState": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownership": {
+            "type": "object",
+            "properties": {
+              "individual": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "team": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "notClaimed": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "individual",
+              "team",
+              "notClaimed"
+            ],
+            "additionalProperties": false
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "usage": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "owner": {
+                  "enum": [
+                    "individual",
+                    "team",
+                    "unclear"
+                  ]
+                },
+                "evidenceIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "name",
+                "usage",
+                "owner",
+                "evidenceIds"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "owner": {
+                  "enum": [
+                    "individual",
+                    "team",
+                    "unclear"
+                  ]
+                },
+                "state": {
+                  "enum": [
+                    "planned",
+                    "modeled",
+                    "simulated",
+                    "built",
+                    "tested",
+                    "documented"
+                  ]
+                },
+                "evidenceIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "metrics": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "meaning": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "conditions": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit",
+                      "meaning",
+                      "conditions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "owner",
+                "state",
+                "evidenceIds",
+                "metrics"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "url": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sourceSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "id",
+                "path",
+                "quote",
+                "url",
+                "sourceSha256"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reviewNeeded": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "updatedOn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "stage",
+          "category",
+          "dateLabel",
+          "location",
+          "summary",
+          "completionState",
+          "ownership",
+          "tools",
+          "claims",
+          "evidence",
+          "limitations",
+          "reviewNeeded",
+          "updatedOn",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "snapshotId",
+    "siteUrl",
+    "sourceReviewedOn",
+    "verification",
+    "profile",
+    "resume",
+    "usage",
+    "projects"
+  ],
+  "additionalProperties": false
+}

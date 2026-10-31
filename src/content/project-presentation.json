@@ -1,0 +1,118 @@
+{
+  "box-12": {
+    "icon": "orbit",
+    "iconImage": "",
+    "image": "src/assets/images/optimized/quadruped-card-640.webp",
+    "imageSet": "src/assets/images/optimized/quadruped-card-640.webp 640w, src/assets/images/optimized/quadruped-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 337,
+    "imageFit": "contain",
+    "spotlightTag": "ROBOTICS / PROTOTYPE IN PROGRESS",
+    "spotlightImage": "optimized/quadruped-hero-640.webp"
+  },
+  "box-7": {
+    "icon": "orbit",
+    "iconImage": "src/assets/images/logos/volumetric-display-icon.png",
+    "image": "src/assets/images/optimized/volumetric-display-card-501.webp",
+    "imageSet": "src/assets/images/optimized/volumetric-display-card-501.webp 501w, src/assets/images/optimized/volumetric-display-card-752.webp 752w",
+    "imageWidth": 501,
+    "imageHeight": 480,
+    "imageFit": "contain",
+    "spotlightTag": "MECHANISM DESIGN / DEVELOPMENT",
+    "spotlightImage": "optimized/volumetric-display-hero-640.webp"
+  },
+  "box-11": {
+    "icon": "ruler",
+    "iconImage": "",
+    "image": "src/assets/images/optimized/fea-card-640.webp",
+    "imageSet": "src/assets/images/optimized/fea-card-640.webp 640w, src/assets/images/optimized/fea-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 431,
+    "imageFit": "contain",
+    "spotlightTag": "STRUCTURAL ANALYSIS / STUDY",
+    "spotlightImage": "optimized/fea-hero-640.webp"
+  },
+  "box-3": {
+    "icon": "ruler",
+    "iconImage": "src/assets/images/logos/solidworks-cad-icon.png",
+    "image": "src/assets/images/optimized/solidworks-card-640.webp",
+    "imageSet": "src/assets/images/optimized/solidworks-card-640.webp 640w, src/assets/images/optimized/solidworks-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 480,
+    "imageFit": "cover"
+  },
+  "box-6": {
+    "icon": "gear",
+    "iconImage": "src/assets/images/logos/vex-capstone-icon.png",
+    "image": "src/assets/images/optimized/sprocket-card-430.webp",
+    "imageSet": "src/assets/images/optimized/sprocket-card-430.webp 430w, src/assets/images/optimized/sprocket-card-646.webp 646w",
+    "imageWidth": 430,
+    "imageHeight": 480,
+    "imageFit": "contain",
+    "spotlightTag": "COMPETITION ROBOTICS / BUILD",
+    "spotlightImage": "optimized/sprocket-hero-640.webp"
+  },
+  "box-4": {
+    "icon": "pencil",
+    "iconImage": "src/assets/images/logos/launch-vehicle-icon.png",
+    "image": "src/assets/images/optimized/launch-vehicle-card-620.webp",
+    "imageSet": "src/assets/images/optimized/launch-vehicle-card-620.webp 620w, src/assets/images/optimized/launch-vehicle-card-637.webp 637w",
+    "imageWidth": 620,
+    "imageHeight": 480,
+    "imageFit": "contain"
+  },
+  "box-1": {
+    "icon": "wrench",
+    "iconImage": "src/assets/images/logos/robot-build-icon.png",
+    "image": "src/assets/images/optimized/high-stakes-card-640.webp",
+    "imageSet": "src/assets/images/optimized/high-stakes-card-640.webp 640w, src/assets/images/optimized/high-stakes-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 480,
+    "imageFit": "cover"
+  },
+  "box-5": {
+    "icon": "bolt",
+    "iconImage": "src/assets/images/logos/arduino-icon.png",
+    "image": "src/assets/images/optimized/arduino-card-640.webp",
+    "imageSet": "src/assets/images/optimized/arduino-card-640.webp 640w, src/assets/images/optimized/arduino-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 480,
+    "imageFit": "cover"
+  },
+  "box-8": {
+    "icon": "triangle",
+    "iconImage": "src/assets/images/logos/tower-icon.png",
+    "image": "src/assets/images/optimized/tower-card-308.webp",
+    "imageSet": "src/assets/images/optimized/tower-card-308.webp 308w",
+    "imageWidth": 308,
+    "imageHeight": 231,
+    "imageFit": "cover"
+  },
+  "box-9": {
+    "icon": "radar",
+    "iconImage": "src/assets/images/logos/sensor-challenge-icon.png",
+    "image": "src/assets/images/optimized/sensor-challenge-card-463.webp",
+    "imageSet": "src/assets/images/optimized/sensor-challenge-card-463.webp 463w",
+    "imageWidth": 463,
+    "imageHeight": 347,
+    "imageFit": "cover"
+  },
+  "box-10": {
+    "icon": "wave",
+    "iconImage": "src/assets/images/logos/puttputt-icon.png",
+    "image": "src/assets/images/optimized/putt-putt-card-640.webp",
+    "imageSet": "src/assets/images/optimized/putt-putt-card-640.webp 640w, src/assets/images/optimized/putt-putt-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 480,
+    "imageFit": "cover"
+  },
+  "box-2": {
+    "icon": "wind",
+    "iconImage": "src/assets/images/logos/wind-turbine-icon.png",
+    "image": "src/assets/images/optimized/wind-turbine-card-640.webp",
+    "imageSet": "src/assets/images/optimized/wind-turbine-card-640.webp 640w, src/assets/images/optimized/wind-turbine-card-960.webp 960w",
+    "imageWidth": 640,
+    "imageHeight": 480,
+    "imageFit": "cover"
+  }
+}

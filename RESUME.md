@@ -10,6 +10,8 @@ The Google Docs synchronization automation remains paused. Do not run the histor
 
 ## Local preview
 
+The normal JavaScript build also refreshes `data/resume-manifest.json` with the PDF's SHA-256 and byte count, and updates the public dataset snapshot. It does not rewrite the PDF or infer qualifications. Application tools must review changed PDF content before reusing cached answers. See `APPLICATION_DATA.md`. Legacy exports and the outdated `src/assets/images/duc_le_resume.pdf` are excluded from the Pages artifact.
+
 Use Node 24 or newer, install `pdfjs-dist@6.4.299`, then run `node scripts/vendor-pdfjs.mjs`. Serve the repository over HTTP. The Pages workflow performs the same preparation automatically. Generated `src/vendor/pdfjs/` files are ignored by Git and included in the deployed Pages artifact.
 
 Before publishing, check the Resume tab on desktop and mobile, select some text, check the document links, and confirm that the downloaded file's SHA-256 matches the supplied PDF. The viewer supports multiple pages and includes a direct download fallback if rendering fails.

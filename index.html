@@ -4,11 +4,13 @@
   <script>if(new URLSearchParams(location.search).get("performance")==="1"){const s=document.createElement("script");s.src="src/scripts/performance-probe.js";document.head.append(s)}</script>
   <meta charset="UTF-8">
   <script>try{document.documentElement.classList.toggle("dark",localStorage.getItem("portfolio-theme-v2")!=="light")}catch(e){document.documentElement.classList.add("dark")}</script>
-  <link rel="stylesheet" href="src/styles/site.min.css?v=20261027-2">
+  <link rel="stylesheet" href="src/styles/site.min.css?v=20261030-1">
   <link rel="preload" href="src/assets/fonts/space-grotesk-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="src/assets/fonts/dm-sans-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Duc Le | Mechanical Engineer</title>
+  <link rel="alternate" type="application/json" href="data/portfolio.json" title="Public project facts">
+  <link rel="alternate" type="text/markdown" href="data/portfolio.md" title="Readable project facts">
   <meta name="description" content="Portfolio of Duc Le, a mechanical engineering student specializing in CAD design and mechanical prototyping. Projects spanning VEX Robotics, launch vehicles, wind turbine systems, and embedded electronics.">
 
 
@@ -35,7 +37,7 @@
 
 
 
-  <script src="src/scripts/site.bundle.js?v=20261027-2" defer></script>
+  <script src="src/scripts/site.bundle.js?v=20261030-1" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 font-sans antialiased min-h-screen flex flex-col">
   <div class="portfolio-atmosphere" aria-hidden="true"></div>
@@ -63,8 +65,8 @@
       <div class="hero-intro"><p class="sculpture-label">DUC LE / MECHANICAL ENGINEERING</p><h1>Ideas into<br><span>motion.</span></h1><div class="intro-bottom"><p>I design mechanisms, build prototypes, and test what comes next.<br><span>Mechanical engineering student at Rutgers.</span></p><button class="sculpture-link" onclick="switchTab('project')">Explore the work <span>↘</span></button></div></div>
       <div class="project-console" role="region" aria-roledescription="carousel" aria-label="Selected engineering projects">
         <div class="console-top"><span class="console-heading">PROJECT SPOTLIGHT</span><span id="spotlight-count">01 / 04</span><button id="spotlight-toggle" class="spotlight-toggle" aria-label="Pause project rotation" aria-pressed="false"><i aria-hidden="true">Ⅱ</i> Pause</button></div>
-        <button class="spotlight-image" id="spotlight-open" onclick="showProjectDetail('box-12')" aria-label="View Quadruped robot project"><img id="spotlight-image" src="src/assets/images/optimized/quadruped-hero-640.webp" srcset="src/assets/images/optimized/quadruped-hero-640.webp 640w, src/assets/images/optimized/quadruped-hero-960.webp 960w, src/assets/images/optimized/quadruped-hero-1280.webp 1280w" sizes="(max-width: 650px) 90vw, 43vw" width="1727" height="911" decoding="async" alt="Quadruped robot" fetchpriority="high"><span class="image-open">Explore project <i aria-hidden="true">↗</i></span></button>
-        <div class="spotlight-caption" aria-live="off" aria-atomic="true"><span class="sculpture-label" id="spotlight-tag">ROBOTICS / PROTOTYPE IN PROGRESS</span><h2 id="spotlight-title">Quadruped robot</h2><p id="spotlight-summary">A folding robot dog. From servo packaging to printed, working legs.</p></div>
+        <button class="spotlight-image" id="spotlight-open" onclick="showProjectDetail('box-12')" aria-label="View Quadruped Robot project"><img id="spotlight-image" src="src/assets/images/optimized/quadruped-hero-640.webp" srcset="src/assets/images/optimized/quadruped-hero-640.webp 640w, src/assets/images/optimized/quadruped-hero-960.webp 960w, src/assets/images/optimized/quadruped-hero-1280.webp 1280w" sizes="(max-width: 650px) 90vw, 43vw" width="1727" height="911" decoding="async" alt="Quadruped robot" fetchpriority="high"><span class="image-open">Explore project <i aria-hidden="true">↗</i></span></button>
+        <div class="spotlight-caption" aria-live="off" aria-atomic="true"><span class="sculpture-label" id="spotlight-tag">ROBOTICS / PROTOTYPE IN PROGRESS</span><h2 id="spotlight-title">Quadruped Robot</h2><p id="spotlight-summary">A collaborative quadruped prototype developed through CAD revisions, printed parts, and assembly fit checks.</p></div>
         <div class="spotlight-select" aria-label="Choose spotlight project"><button aria-pressed="true" data-spotlight="0"><span>01</span>Quadruped<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="1"><span>02</span>Volumetric display<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="2"><span>03</span>FEA &amp; GD&amp;T<i class="spotlight-progress" aria-hidden="true"></i></button><button aria-pressed="false" data-spotlight="3"><span>04</span>VEX robot<i class="spotlight-progress" aria-hidden="true"></i></button></div>
       </div>
       <button id="motion-toggle" hidden aria-pressed="false">Pause animation</button>

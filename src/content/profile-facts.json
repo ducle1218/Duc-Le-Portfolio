@@ -1,0 +1,22 @@
+{
+  "name": "Duc Le",
+  "headline": "Mechanical engineering student at Rutgers University",
+  "facts": [
+    {
+      "id": "education-current",
+      "text": "Mechanical engineering student at Rutgers University; no completed degree is asserted by this record.",
+      "evidence": {
+        "path": "index.html",
+        "quote": "Mechanical engineering student at Rutgers."
+      }
+    },
+    {
+      "id": "career-interest",
+      "text": "Seeking mechanical engineering internships and hands-on opportunities.",
+      "evidence": {
+        "path": "index.html",
+        "quote": "Seeking mechanical engineering internships and hands-on opportunities."
+      }
+    }
+  ]
+}

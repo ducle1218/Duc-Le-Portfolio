@@ -115,6 +115,7 @@
     async function showProjectDetail(projectId) {
       const item = TIMELINE_ITEMS.find(item => item.id === projectId);
       if (!item) return;
+      window.updateProjectUrl?.(projectId);
       const revision = ++detailRevision;
       document.body.dataset.atmospherePage = 'detail-' + projectId;
       const body = document.getElementById('project-detail-body');
@@ -181,92 +182,7 @@
       wind: '<path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M12.59 19.41A2 2 0 1 0 14 16H2"/><path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2"/>',
     };
 
-    const TIMELINE_ITEMS = [
-      {
-        id: 'box-12', stage: 'College', title: 'Quadruped Robot', subtitle: 'Prototype in progress', category: 'PERSONAL',
-        dateLabel: 'Oct 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: '',
-        image: 'src/assets/images/optimized/quadruped-card-640.webp', imageSet: 'src/assets/images/optimized/quadruped-card-640.webp 640w, src/assets/images/optimized/quadruped-card-960.webp 960w', imageWidth: 640, imageHeight: 337, imageFit: 'contain',
-        tags: ['Onshape', '3D Printing', 'Mechanism Design'],
-        desc: "A folding quadruped developed with Ethan.\n• <strong>Mechanism packaging:</strong> extended the chassis 160 → 225 mm and shortened upper legs 143 → 135 mm.\n• <strong>Design for assembly:</strong> iterated locating slots, servo-axis alignment, and mirrored printed supports.\n• <strong>Hardware progress:</strong> four legs assembled; one leg actuated. Walking control is next."
-      },
-      {
-        id: 'box-7', stage: 'College', title: 'Volumetric Display', subtitle: 'Mechanical development', category: 'PERSONAL',
-        dateLabel: 'Aug 2026 — Present', location: 'Collaborative Build', icon: 'orbit', iconImage: 'src/assets/images/logos/volumetric-display-icon.png',
-        image: 'src/assets/images/optimized/volumetric-display-card-501.webp', imageSet: 'src/assets/images/optimized/volumetric-display-card-501.webp 501w, src/assets/images/optimized/volumetric-display-card-752.webp 752w', imageWidth: 501, imageHeight: 480, imageFit: 'contain',
-        tags: ['Onshape', 'SolidWorks', 'FEA Simulation'],
-        desc: "Mechanical architecture for a swept-volume LED display.\n• <strong>Rotor redesign:</strong> replaced a broad wall with 20 modular radial arms to reduce exposed area.\n• <strong>Integration:</strong> packaged the motor, slip ring, and split printable shaft.\n• <strong>Preliminary FEA:</strong> arm model reported ~23 psi at 0.28 lbf; dynamic validation remains ahead."
-      },
-      {
-        id: 'box-11', stage: 'College', title: 'FEA & GD&T', subtitle: 'Structural analysis', category: 'PERSONAL',
-        dateLabel: '2026', location: 'Independent Build', icon: 'ruler', iconImage: '',
-        image: 'src/assets/images/optimized/fea-card-640.webp', imageSet: 'src/assets/images/optimized/fea-card-640.webp 640w, src/assets/images/optimized/fea-card-960.webp 960w', imageWidth: 640, imageHeight: 431, imageFit: 'contain',
-        tags: ['Onshape', 'FEA Simulation', 'GD&T'],
-        desc: "Structural study of a two-plate VEX robot aligner.\n• <strong>Load definition:</strong> applied −200 lbf in Y to each plate in the assembly model.\n• <strong>Stress distribution:</strong> examined the load path around cutouts, holes, and spacers.\n• <strong>Next refinement:</strong> validate constraints and material inputs, then document critical fits."
-      },
-      {
-        id: 'box-3', stage: 'College', title: 'SolidWorks CAD to Manufacturing Readiness', subtitle: 'Personal Project', category: 'PERSONAL',
-        dateLabel: '2025 — Present', location: 'Independent Build', icon: 'ruler', iconImage: 'src/assets/images/logos/solidworks-cad-icon.png',
-        image: 'src/assets/images/optimized/solidworks-card-640.webp', imageSet: 'src/assets/images/optimized/solidworks-card-640.webp 640w, src/assets/images/optimized/solidworks-card-960.webp 960w', imageWidth: 640, imageHeight: 480, imageFit: 'cover',
-        tags: ['SolidWorks', 'GD&T', 'DFM/DFA'],
-        desc: "Developing CAD models into manufacturing documentation.\n• <strong>Parametric modeling:</strong> built parts from official CSWA practice exercises.\n• <strong>Manufacturing readiness:</strong> extending selected models into toleranced drawings and DFM/DFA reviews."
-      },
-      {
-        id: 'box-6', stage: 'High school', title: 'Sprocket · VEX Pushback', subtitle: 'Lead Robotics Designer', category: 'STUDENT TEAMS',
-        dateLabel: 'Sept 2025 — Apr 2026', location: 'Atlantic County Institute of Technology', icon: 'gear', iconImage: 'src/assets/images/logos/vex-capstone-icon.png',
-        image: 'src/assets/images/optimized/sprocket-card-430.webp', imageSet: 'src/assets/images/optimized/sprocket-card-430.webp 430w, src/assets/images/optimized/sprocket-card-646.webp 646w', imageWidth: 430, imageHeight: 480, imageFit: 'contain',
-        tags: ['Onshape', 'Mechanism Design', 'Sensor Integration'],
-        desc: "Mechanical design lead on a four-person competition team.\n• <strong>Design decisions:</strong> developed the L-shaped intake and drivetrain assembly in CAD.\n• <strong>Hardware integration:</strong> redesigned mounts for the tracking sensors.\n• <strong>Team result:</strong> 60 combined skills points against a 50-point target; Judge’s Award."
-      },
-      {
-        id: 'box-4', stage: 'High school', title: 'Launch Vehicle Project', subtitle: 'Lead Designer', category: 'STUDENT TEAMS',
-        dateLabel: 'Sept 2024 — May 2025', location: 'Atlantic County Institute of Technology', icon: 'pencil', iconImage: 'src/assets/images/logos/launch-vehicle-icon.png',
-        image: 'src/assets/images/optimized/launch-vehicle-card-620.webp', imageSet: 'src/assets/images/optimized/launch-vehicle-card-620.webp 620w, src/assets/images/optimized/launch-vehicle-card-637.webp 637w', imageWidth: 620, imageHeight: 480, imageFit: 'contain',
-        tags: ['MATLAB', 'SolidWorks', 'Structural Modeling'],
-        desc: "Student launch-vehicle design study for a 4,500 lb target payload.\n• <strong>System sizing:</strong> explored staging and propulsion using MATLAB.\n• <strong>Mechanical development:</strong> modeled vehicle structure and packaging in SolidWorks."
-      },
-      {
-        id: 'box-1', stage: 'High school', title: 'High Stakes Competition Robot Build', subtitle: 'Robotics Team', category: 'STUDENT TEAMS',
-        dateLabel: 'Jan 2025', location: 'Atlantic County Institute of Technology', icon: 'wrench', iconImage: 'src/assets/images/logos/robot-build-icon.png',
-        image: 'src/assets/images/optimized/high-stakes-card-640.webp', imageSet: 'src/assets/images/optimized/high-stakes-card-640.webp 640w, src/assets/images/optimized/high-stakes-card-960.webp 960w', imageWidth: 640, imageHeight: 480, imageFit: 'cover',
-        tags: ['Onshape', 'AutoCAD', 'C++'],
-        desc: "Competition robot chassis and mechanism development.\n• <strong>CAD & fabrication planning:</strong> designed the chassis in Onshape and AutoCAD.\n• <strong>Motion control:</strong> programmed dual-motor lifters and autonomous routines in C++."
-      },
-      {
-        id: 'box-5', stage: 'High school', title: 'Arduino Electronics', subtitle: 'Personal Project', category: 'PERSONAL',
-        dateLabel: 'Feb 2024', location: 'Independent Build', icon: 'bolt', iconImage: 'src/assets/images/logos/arduino-icon.png',
-        image: 'src/assets/images/optimized/arduino-card-640.webp', imageSet: 'src/assets/images/optimized/arduino-card-640.webp 640w, src/assets/images/optimized/arduino-card-960.webp 960w', imageWidth: 640, imageHeight: 480, imageFit: 'cover',
-        tags: ['Arduino', 'C++', 'Circuit Design'],
-        desc: "An eight-key Arduino synthesizer built on a breadboard.\n• <strong>Circuit design:</strong> read a resistor-ladder keyboard through one analog input.\n• <strong>Embedded programming:</strong> translated physical button inputs into real-time sound."
-      },
-      {
-        id: 'box-8', stage: 'High school', title: 'Tower Design Project', subtitle: 'Student Team', category: 'STUDENT TEAMS',
-        dateLabel: 'Jan 2024', location: 'Atlantic County Institute of Technology', icon: 'triangle', iconImage: 'src/assets/images/logos/tower-icon.png',
-        image: 'src/assets/images/optimized/tower-card-308.webp', imageSet: 'src/assets/images/optimized/tower-card-308.webp 308w', imageWidth: 308, imageHeight: 231, imageFit: 'cover',
-        tags: ['AutoCAD', 'Structural Design', 'Load Testing'],
-        desc: "An 11-inch balsa tower designed for load testing.\n• <strong>Structural design:</strong> incorporated torsional bracing into the tower geometry.\n• <strong>Physical testing:</strong> supported 45 lb before failure."
-      },
-      {
-        id: 'box-9', stage: 'High school', title: 'Sensor Challenge', subtitle: 'Team: Electrifying Tempest', category: 'STUDENT TEAMS',
-        dateLabel: 'June 2023', location: 'Atlantic County Institute of Technology', icon: 'radar', iconImage: 'src/assets/images/logos/sensor-challenge-icon.png',
-        image: 'src/assets/images/optimized/sensor-challenge-card-463.webp', imageSet: 'src/assets/images/optimized/sensor-challenge-card-463.webp 463w', imageWidth: 463, imageHeight: 347, imageFit: 'cover',
-        tags: ['Autonomy', 'Sonar', 'Sensor Fusion'],
-        desc: "Autonomous navigation through a warehouse-style course.\n• <strong>Sensor integration:</strong> combined line following and sonar-based distance sensing.\n• <strong>Iterative tuning:</strong> refined navigation and parking between boxes through repeated trials."
-      },
-      {
-        id: 'box-10', stage: 'High school', title: 'Putt-Putt Boat: Straight-Line Redesign', subtitle: 'Student Team', category: 'STUDENT TEAMS',
-        dateLabel: 'May 2023', location: 'Atlantic County Institute of Technology', icon: 'wave', iconImage: 'src/assets/images/logos/puttputt-icon.png',
-        image: 'src/assets/images/optimized/putt-putt-card-640.webp', imageSet: 'src/assets/images/optimized/putt-putt-card-640.webp 640w, src/assets/images/optimized/putt-putt-card-960.webp 960w', imageWidth: 640, imageHeight: 480, imageFit: 'cover',
-        tags: ['Rapid Prototyping'],
-        desc: "A candle-powered boat redesigned for straight-line travel.\n• <strong>Failure diagnosis:</strong> investigated drift and revised the twin-straw exhaust.\n• <strong>Measured improvement:</strong> the revised boat ran 58% faster than the baseline."
-      },
-      {
-        id: 'box-2', stage: 'High school', title: 'Wind Turbine Competition', subtitle: 'Student Team', category: 'STUDENT TEAMS',
-        dateLabel: 'Mar 2023', location: 'Atlantic County Institute of Technology', icon: 'wind', iconImage: 'src/assets/images/logos/wind-turbine-icon.png',
-        image: 'src/assets/images/optimized/wind-turbine-card-640.webp', imageSet: 'src/assets/images/optimized/wind-turbine-card-640.webp 640w, src/assets/images/optimized/wind-turbine-card-960.webp 960w', imageWidth: 640, imageHeight: 480, imageFit: 'cover',
-        tags: ['AutoCAD', 'Aerodynamics', '3D Printing'],
-        desc: "Blade development for a low-wind-speed turbine competition.\n• <strong>Rapid iteration:</strong> varied blade geometry and pitch with CAD and 3D printing.\n• <strong>Competition result:</strong> the team placed 6th statewide."
-      },
-    ];
+    // TIMELINE_ITEMS is generated from the shared project facts at build time.
 
     const TIMELINE_WINDOW = 3;
     let timelineIndex = 0;
@@ -274,7 +190,7 @@
     // ======================== Home "All Projects" Stacked List ========================
     // Renders every entry in TIMELINE_ITEMS as one big vertical card — title,
     // media, description, tech stack, link — instead of a grid of small
-    // previews. Single source of truth (TIMELINE_ITEMS) keeps this in sync
+    // previews. Generated project facts keep the card summaries in sync
     // with the timeline carousel and the project detail pages automatically.
     function escapeHtml(str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -536,6 +452,7 @@
 
     // Tab switching engine
     function switchTab(tabId) {
+      window.updateProjectUrl?.(null);
       detailRevision++;
       if (tabId === 'project' && !projectListReady) { renderProjectPageList(); projectListReady = true; }
       document.body.dataset.atmospherePage = tabId;

@@ -10,7 +10,7 @@ assert(!html.includes('PROJECT_DETAILS'),'Project write-ups must not ship in the
 assert(!html.includes('fonts.googleapis.com'),'Initial fonts must be self-hosted');
 assert(!/<source\s+src="[^"]+Portfolio_Background_Video/.test(html),'Workbench video must stay deferred');
 assert(!/id="hero-bg-video"[^>]+autoplay/.test(html),'Workbench video must not autoplay on startup');
-const catalog=source.slice(source.indexOf('const TIMELINE_ITEMS ='),source.indexOf('const TIMELINE_WINDOW ='));
+const catalog=await read('src/scripts/project-catalog.generated.js');
 const items=vm.runInNewContext(catalog+';TIMELINE_ITEMS');
 for(const item of items){
  const content=await read('src/content/projects/'+item.id+'.html');

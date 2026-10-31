@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../src/scripts/sculptural.js', import.meta.url), 'utf8');
+const catalog = readFileSync(new URL('../src/scripts/project-catalog.generated.js', import.meta.url), 'utf8');
 const flush = async () => { for (let i=0;i<8;i++) await Promise.resolve(); };
 
 function harness({reduced=false, globalPaused=false}={}) {
@@ -48,7 +49,7 @@ function harness({reduced=false, globalPaused=false}={}) {
     setTimeout:(callback,delay)=>{const id=nextTimer++;timers.set(id,{callback,due:now+delay});return id;},clearTimeout:id=>timers.delete(id),
     IntersectionObserver:class{constructor(callback){this.callback=callback;intersections.push(this);}observe(target){this.target=target;}},
     MutationObserver:class{constructor(callback){this.callback=callback;mutations.push(this);}observe(){}},showProjectDetail:id=>{context.opened=id;}};
-  vm.runInNewContext(source,context,{filename:'sculptural.js'});
+  vm.runInNewContext(catalog+'\n'+source,context,{filename:'sculptural.js'});
   async function tick(ms){const end=now+ms;for(;;){const entry=[...timers].filter(([,timer])=>timer.due<=end).sort((a,b)=>a[1].due-b[1].due)[0];if(!entry)break;now=entry[1].due;timers.delete(entry[0]);entry[1].callback();await flush();}now=end;await flush();}
   const visible=on=>intersections.find(observer=>observer.target===consoleEl).callback([{isIntersecting:on,intersectionRatio:on?1:0}]);
   const route=page=>{document.body.dataset.atmospherePage=page;mutations.forEach(observer=>observer.callback([]));};

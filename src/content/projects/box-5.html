@@ -57,7 +57,7 @@
         Project Overview
       </h3>
       <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-        I built an 8-key musical keyboard on an Arduino Uno — designed the circuit, worked out the math behind it, and prototyped the electronics myself. The Uno doesn't have enough digital pins to give each button its own, so to get around that I designed and built an <strong>analog resistor ladder (voltage divider)</strong>.
+        I built an 8-key musical keyboard on an Arduino Uno — designed the circuit, worked out the math behind it, and prototyped the electronics myself. To read all eight buttons through one analog input, I designed and built an <strong>analog resistor ladder (voltage divider)</strong>.
       </p>
       <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
         Instead of burning eight digital pins polling each button separately, the resistor ladder feeds a different voltage into a <strong>single analog pin (A0)</strong> depending on which key's pressed. The Arduino reads that voltage in real time and maps each range to its own frequency on a piezo buzzer.

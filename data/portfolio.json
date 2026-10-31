@@ -1,0 +1,1771 @@
+{
+  "$schema": "https://ducle1218.github.io/Duc-Le-Portfolio/data/portfolio.schema.json",
+  "schemaVersion": "1.0.0",
+  "snapshotId": "fcfc6767d7c98bddf01ff0431d914344dffacbb07b073b378a03d5c6e929e7d6",
+  "siteUrl": "https://ducle1218.github.io/Duc-Le-Portfolio/",
+  "sourceReviewedOn": "2026-10-30",
+  "verification": {
+    "level": "published-source-consistency-only",
+    "independentlyVerified": false,
+    "ownerApprovedForApplications": false,
+    "description": "Extracted from the existing public portfolio. Source links and quotations support traceability, not independent verification. Unknown ownership and unfinished work remain explicit."
+  },
+  "profile": {
+    "name": "Duc Le",
+    "headline": "Mechanical engineering student at Rutgers University",
+    "facts": [
+      {
+        "id": "education-current",
+        "text": "Mechanical engineering student at Rutgers University; no completed degree is asserted by this record.",
+        "evidence": {
+          "path": "index.html",
+          "quote": "Mechanical engineering student at Rutgers."
+        }
+      },
+      {
+        "id": "career-interest",
+        "text": "Seeking mechanical engineering internships and hands-on opportunities.",
+        "evidence": {
+          "path": "index.html",
+          "quote": "Seeking mechanical engineering internships and hands-on opportunities."
+        }
+      }
+    ]
+  },
+  "resume": {
+    "schemaVersion": "1.0.0",
+    "path": "src/assets/resume/Duc_Le_Resume.pdf",
+    "sha256": "a1827a739087d4f40bfe0428eb67362d81a90eddbafbecbe282676cb4dd3c2fa",
+    "bytes": 142336,
+    "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/assets/resume/Duc_Le_Resume.pdf",
+    "authority": "Current public PDF; preview and download use this file.",
+    "contentUpdatedOn": null,
+    "projectReconciliation": "Not certified against every project claim. Resolve differences using current evidence; do not merge older exports.",
+    "template": "PDF is the published baseline, not an editable resume template. Generate future tailored copies separately."
+  },
+  "usage": {
+    "requireClaimEvidence": true,
+    "allowInventedQualifications": false,
+    "preserveOwnership": true,
+    "preserveCompletionState": true,
+    "preserveMetricConditions": true,
+    "unknownMeans": "unknown, not no",
+    "submissionReviewRequired": true,
+    "jobPostingIsEvidenceAboutCandidate": false,
+    "privateApplicationAnswersIncluded": false
+  },
+  "projects": [
+    {
+      "id": "box-12",
+      "title": "Quadruped Robot",
+      "stage": "College",
+      "category": "PERSONAL",
+      "dateLabel": "Oct 2026 — Present",
+      "location": "Collaborative Build",
+      "summary": "A collaborative quadruped prototype developed through CAD revisions, printed parts, and assembly fit checks.",
+      "completionState": "prototype-in-progress",
+      "ownership": {
+        "individual": [
+          "Onshape modeling, assembly clearances, and print-efficient revisions.",
+          "Recreated the initial body and head from Ethan’s SolidWorks dimensions."
+        ],
+        "team": [
+          "Ethan provided the initial SolidWorks dimensions.",
+          "The notebook records four legs attached and one leg actuated."
+        ],
+        "notClaimed": [
+          "Sole authorship of the initial SolidWorks design.",
+          "Walking, tracking, or complete physical folding validation.",
+          "A rated payload or measured production cost savings."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Onshape",
+          "usage": "Body and head recreation, mechanism packaging, and clearance revisions.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-12-role"
+          ]
+        },
+        {
+          "name": "3D Printing",
+          "usage": "Printed fit checks and a mirrored support reprint; printer operator is not identified.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-12-printing"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-12-cad-revisions",
+          "text": "Extended the chassis from 160 to 225 mm and shortened the upper leg link from 143 to 135 mm in CAD.",
+          "owner": "individual",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-12-role",
+            "box-12-body",
+            "box-12-leg"
+          ],
+          "metrics": [
+            {
+              "value": 160,
+              "unit": "mm",
+              "meaning": "Initial body length",
+              "conditions": "CAD dimension before revision."
+            },
+            {
+              "value": 225,
+              "unit": "mm",
+              "meaning": "Revised body length",
+              "conditions": "CAD dimension; not a performance result."
+            },
+            {
+              "value": 143,
+              "unit": "mm",
+              "meaning": "Initial upper leg link length",
+              "conditions": "CAD dimension before revision."
+            },
+            {
+              "value": 135,
+              "unit": "mm",
+              "meaning": "Revised upper leg link length",
+              "conditions": "CAD dimension; not a performance result."
+            }
+          ]
+        },
+        {
+          "id": "box-12-assembly-progress",
+          "text": "The collaborative build record documents four legs attached and one leg actuated.",
+          "owner": "team",
+          "state": "built",
+          "evidenceIds": [
+            "box-12-hardware"
+          ],
+          "metrics": [
+            {
+              "value": 4,
+              "unit": "legs",
+              "meaning": "Attached legs",
+              "conditions": "Notebook record; does not establish walking."
+            },
+            {
+              "value": 1,
+              "unit": "leg",
+              "meaning": "Actuated leg",
+              "conditions": "Notebook record; full robot gait remains unverified."
+            }
+          ]
+        },
+        {
+          "id": "box-12-folding-next",
+          "text": "The CAD packages all four legs below the body; physical folding validation is next.",
+          "owner": "unclear",
+          "state": "planned",
+          "evidenceIds": [
+            "box-12-folding"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-12-role",
+          "path": "src/content/projects/box-12.html",
+          "quote": "My work focuses on Onshape modeling, assembly clearances, and print-efficient revisions. I recreated the initial body and head from teammate Ethan’s SolidWorks dimensions, then developed the changes shown here.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        },
+        {
+          "id": "box-12-body",
+          "path": "src/content/projects/box-12.html",
+          "quote": "Increased body length from 160 to 225 mm while simplifying the frame for continued prototyping.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        },
+        {
+          "id": "box-12-leg",
+          "path": "src/content/projects/box-12.html",
+          "quote": "Reduced the link from 143 to 135 mm so the legs fit without further lengthening the body.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        },
+        {
+          "id": "box-12-hardware",
+          "path": "src/content/projects/box-12.html",
+          "quote": "The notebook later records all four legs attached and one leg actuated.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        },
+        {
+          "id": "box-12-folding",
+          "path": "src/content/projects/box-12.html",
+          "quote": "Latest CAD configuration shows all four legs packaged below the body. Physical folding validation is next.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        },
+        {
+          "id": "box-12-printing",
+          "path": "src/content/projects/box-12.html",
+          "quote": "A right-hand support did not fit the left side. Mirroring and reprinting corrected the mismatch.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
+          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+        }
+      ],
+      "limitations": [
+        "Single-leg actuation does not establish a walking robot.",
+        "All-leg folding is shown in CAD; physical folding validation remains next.",
+        "Slicer estimates are estimates, and export dates are not design dates."
+      ],
+      "reviewNeeded": [
+        "Confirm the division of assembly and actuation work between collaborators.",
+        "Confirm progress after the October 2–11 notebook entries."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-12"
+    },
+    {
+      "id": "box-7",
+      "title": "Volumetric Display",
+      "stage": "College",
+      "category": "PERSONAL",
+      "dateLabel": "Aug 2026 — Present",
+      "location": "Collaborative Build",
+      "summary": "Mechanical CAD and preliminary structural studies for a swept-volume display.",
+      "completionState": "cad-and-preliminary-analysis",
+      "ownership": {
+        "individual": [],
+        "team": [
+          "Listed as a collaborative build; task ownership is not separated in the detailed record."
+        ],
+        "notClaimed": [
+          "A functioning display, completed electronics, or physical spin testing.",
+          "A verified safe rotational speed or measured drag reduction.",
+          "Sole authorship of all CAD and analysis."
+        ]
+      },
+      "tools": [
+        {
+          "name": "SolidWorks",
+          "usage": "Named CAD tool in the project; individual operator is not identified.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-7-solidworks"
+          ]
+        },
+        {
+          "name": "Onshape",
+          "usage": "Preliminary FEA studies; individual analyst is not identified.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-7-onshape",
+            "box-7-arm",
+            "box-7-shaft"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-7-radial-supports",
+          "text": "Replaced the broad rotating wall with twenty radial supports in the revised CAD model.",
+          "owner": "unclear",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-7-rotor"
+          ],
+          "metrics": [
+            {
+              "value": 20,
+              "unit": "supports",
+              "meaning": "Revised radial support count",
+              "conditions": "CAD configuration; not a completed display."
+            }
+          ]
+        },
+        {
+          "id": "box-7-arm-analysis",
+          "text": "A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load.",
+          "owner": "unclear",
+          "state": "simulated",
+          "evidenceIds": [
+            "box-7-arm"
+          ],
+          "metrics": [
+            {
+              "value": 23,
+              "unit": "psi",
+              "meaning": "Approximate peak arm stress",
+              "conditions": "Preliminary arm model with 0.28 lbf load and three support arms approximating the center constraint."
+            },
+            {
+              "value": 0.28,
+              "unit": "lbf",
+              "meaning": "Modeled arm load",
+              "conditions": "Analysis input; not a demonstrated load rating."
+            }
+          ]
+        },
+        {
+          "id": "box-7-printable-shaft",
+          "text": "Split the center shaft into printable sections for the Prusa Mini build envelope.",
+          "owner": "unclear",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-7-printing"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-7-shaft-input",
+          "text": "The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input.",
+          "owner": "unclear",
+          "state": "simulated",
+          "evidenceIds": [
+            "box-7-shaft"
+          ],
+          "metrics": [
+            {
+              "value": 4500,
+              "unit": "degrees/second",
+              "meaning": "Specified shaft model rotational input",
+              "conditions": "Not RPM, a physical test speed, or a validated safe operating speed."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-7-rotor",
+          "path": "src/content/projects/box-7.html",
+          "quote": "Twenty radial supports replace the broad rotating wall in the revised CAD model.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-arm",
+          "path": "src/content/projects/box-7.html",
+          "quote": "The arm plot reports about 23 psi peak stress under a modeled 0.28 lbf load. Three support arms approximate the center constraint.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-shaft",
+          "path": "src/content/projects/box-7.html",
+          "quote": "The notebook specifies approximately 4,500°/s for the shaft model.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-status",
+          "path": "src/content/projects/box-7.html",
+          "quote": "The notebook does not yet document a functioning display.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-printing",
+          "path": "src/content/projects/box-7.html",
+          "quote": "The center shaft was split into printable sections to fit the Prusa Mini’s approximately 7-inch build envelope.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-solidworks",
+          "path": "src/content/projects/box-7.html",
+          "quote": "SolidWorks",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        },
+        {
+          "id": "box-7-onshape",
+          "path": "src/content/projects/box-7.html",
+          "quote": "Onshape FEA",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+        }
+      ],
+      "limitations": [
+        "The arm and shaft are separate analysis models.",
+        "The arm result is preliminary and depends on its modeled load and supports.",
+        "Reduced drag is a design intention, not an established measurement."
+      ],
+      "reviewNeeded": [
+        "Identify who used SolidWorks and Onshape and which work each collaborator performed.",
+        "Confirm progress after the August 4–12 notebook entries."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-7"
+    },
+    {
+      "id": "box-11",
+      "title": "FEA & GD&T",
+      "stage": "College",
+      "category": "PERSONAL",
+      "dateLabel": "2026",
+      "location": "Independent Build",
+      "summary": "A preliminary load-path study of a two-plate robot aligner, with validation and toleranced drawings still to develop.",
+      "completionState": "preliminary-analysis",
+      "ownership": {
+        "individual": [],
+        "team": [],
+        "notClaimed": [
+          "A verified impact capacity or a 400 lbf load rating.",
+          "Mesh convergence, resolved model warnings, or a demonstrated factor of safety.",
+          "Completed GD&T drawings or known stress-plot units."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Onshape",
+          "usage": "Preliminary force definitions and stress-contour study.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-11-source",
+            "box-11-forces"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-11-force-definitions",
+          "text": "Modeled separate −200 lbf Y-direction force inputs on the two selected plates.",
+          "owner": "unclear",
+          "state": "simulated",
+          "evidenceIds": [
+            "box-11-forces"
+          ],
+          "metrics": [
+            {
+              "value": -200,
+              "unit": "lbf",
+              "meaning": "Y-direction force on each selected plate",
+              "conditions": "Per-plate analysis input; X and Z are zero. Not a demonstrated load rating."
+            }
+          ]
+        },
+        {
+          "id": "box-11-load-path",
+          "text": "Examined stress-contour variation around holes, cutout corners, and spacer interfaces.",
+          "owner": "unclear",
+          "state": "simulated",
+          "evidenceIds": [
+            "box-11-distribution"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-11-validation-next",
+          "text": "Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing.",
+          "owner": "unclear",
+          "state": "planned",
+          "evidenceIds": [
+            "box-11-next",
+            "box-11-status"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-11-forces",
+          "path": "src/content/projects/box-11.html",
+          "quote": "Each selected plate has a separate force definition: X = 0 lbf, Y = −200 lbf, Z = 0 lbf. These are model inputs, not a demonstrated load rating.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+        },
+        {
+          "id": "box-11-distribution",
+          "path": "src/content/projects/box-11.html",
+          "quote": "The contour highlights local variation around the holes, cutout corners, and spacer interfaces.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+        },
+        {
+          "id": "box-11-next",
+          "path": "src/content/projects/box-11.html",
+          "quote": "Document the load rationale and material inputs, resolve model warnings, check mesh sensitivity, and define the critical plate-and-spacer fits in a toleranced drawing.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+        },
+        {
+          "id": "box-11-status",
+          "path": "src/content/projects/box-11.html",
+          "quote": "This is a preliminary model. The setup screenshots show warnings, and the supplied evidence does not establish resolved constraints, mesh convergence, or a factor of safety.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+        },
+        {
+          "id": "box-11-source",
+          "path": "src/content/projects/box-11.html",
+          "quote": "Evidence: owner-supplied Onshape stress contour and Force 1 / Force 2 setup screenshots. GD&T drawing work remains in progress.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+        }
+      ],
+      "limitations": [
+        "Applied forces are model inputs, not demonstrated capacity.",
+        "The supplied stress contour does not establish the stress units.",
+        "The setup contains warnings; drawing work remains in progress."
+      ],
+      "reviewNeeded": [
+        "Confirm individual authorship of the analysis; the listing says independent, but the detailed evidence does not assign each task.",
+        "Verify material inputs, constraint warnings, stress units, and mesh sensitivity before using quantitative conclusions."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-11"
+    },
+    {
+      "id": "box-3",
+      "title": "SolidWorks CAD to Manufacturing Readiness",
+      "stage": "College",
+      "category": "PERSONAL",
+      "dateLabel": "2025 — Present",
+      "location": "Independent Build",
+      "summary": "SolidWorks practice models, with selected parts intended for toleranced drawings and manufacturing reviews.",
+      "completionState": "practice-in-progress",
+      "ownership": {
+        "individual": [
+          "Working through the official SolidWorks CSWA practice set."
+        ],
+        "team": [],
+        "notClaimed": [
+          "CSWA certification or completion of every practice problem.",
+          "A completed manufacturing drawing package or finished DFM/DFA reviews."
+        ]
+      },
+      "tools": [
+        {
+          "name": "SolidWorks",
+          "usage": "CSWA practice modeling; completion varies by problem.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-3-practice"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-3-cad-practice",
+          "text": "Working through the official SolidWorks CSWA practice problem set to develop CAD fluency.",
+          "owner": "individual",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-3-practice",
+            "box-3-unfinished"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-3-drawing-next",
+          "text": "Extending selected practice parts toward GD&T drawings and DFM/DFA reviews.",
+          "owner": "individual",
+          "state": "planned",
+          "evidenceIds": [
+            "box-3-practice",
+            "box-3-unfinished"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-3-practice",
+          "path": "src/content/projects/box-3.html",
+          "quote": "I'm working through the official SOLIDWORKS CSWA practice problem set to build real CAD fluency, then pushing select parts further with full GD&T-toleranced drawings and DFM/DFA reviews to practice designing with manufacturing in mind.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-3.html",
+          "sourceSha256": "584cf7237d00752cc27057a9417726810f1a58cf0220eed7d4a39aab3fb434ef"
+        },
+        {
+          "id": "box-3-unfinished",
+          "path": "src/content/projects/box-3.html",
+          "quote": "Each problem below links to its official practice drawing PDF — I'll add the CAD files as I finish them.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-3.html",
+          "sourceSha256": "584cf7237d00752cc27057a9417726810f1a58cf0220eed7d4a39aab3fb434ef"
+        }
+      ],
+      "limitations": [
+        "The page describes ongoing practice and says CAD files will be added as they are finished.",
+        "Official practice drawings are reference material, not authored deliverables."
+      ],
+      "reviewNeeded": [
+        "Confirm which models, drawings, and manufacturing reviews are complete; verify certification separately."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-3"
+    },
+    {
+      "id": "box-6",
+      "title": "Sprocket · VEX Pushback",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "Sept 2025 — Apr 2026",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "Mechanical design and hardware integration for a four-person VEX Pushback team.",
+      "completionState": "built-and-tested",
+      "ownership": {
+        "individual": [
+          "Led Onshape chassis and intake CAD.",
+          "Developed the pneumatic tongue and redesigned sensor mounts."
+        ],
+        "team": [
+          "Ethan led C++ programming, odometry, and PID control.",
+          "Assembly, competition testing, documentation, and competition scores were team efforts."
+        ],
+        "notClaimed": [
+          "Personal authorship of the control software.",
+          "Reliable autonomous operation across all trials or an isolated measured cycle-time gain."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Onshape",
+          "usage": "Chassis, intake, and sensor-mount CAD.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-6-cad",
+            "box-6-sensor"
+          ]
+        },
+        {
+          "name": "Pneumatics",
+          "usage": "Pneumatic tongue mechanism and scoring-hardware packaging.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-6-mechanism"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-6-mechanical-cad",
+          "text": "Led chassis and intake development in Onshape.",
+          "owner": "individual",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-6-cad"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-6-integration",
+          "text": "Developed the pneumatic tongue and redesigned sensor mounts to integrate tracking hardware within the robot envelope.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-6-mechanism",
+            "box-6-sensor",
+            "box-6-controls"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-6-skills-result",
+          "text": "The team’s final recorded trial scored 60 points: 45 driver and 15 autonomous, above its 50-point target.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-6-score",
+            "box-6-team"
+          ],
+          "metrics": [
+            {
+              "value": 60,
+              "unit": "points",
+              "meaning": "Final recorded combined trial score",
+              "conditions": "Team result from one recorded trial; 45 driver plus 15 autonomous."
+            },
+            {
+              "value": 45,
+              "unit": "points",
+              "meaning": "Driver portion of final trial",
+              "conditions": "Team result."
+            },
+            {
+              "value": 15,
+              "unit": "points",
+              "meaning": "Autonomous portion of final trial",
+              "conditions": "Team result; does not establish repeatability."
+            },
+            {
+              "value": 50,
+              "unit": "points",
+              "meaning": "Team skills target",
+              "conditions": "Target used for comparison, not an additional test result."
+            }
+          ]
+        },
+        {
+          "id": "box-6-team-award",
+          "text": "The team earned the Judge’s Award and documented the robot in a CAD assembly and engineering notebook.",
+          "owner": "team",
+          "state": "documented",
+          "evidenceIds": [
+            "box-6-award"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-6-cad",
+          "path": "src/content/projects/box-6.html",
+          "quote": "Led CAD development of the chassis and intake assembly in Onshape.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-sensor",
+          "path": "src/content/projects/box-6.html",
+          "quote": "I redesigned the sensor mounts in CAD to accommodate the tracking hardware while preserving the robot’s envelope.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-controls",
+          "path": "src/content/projects/box-6.html",
+          "quote": "Ethan led C++ programming, odometry, and PID control. My contribution was the mechanical design and hardware integration supporting that system.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-team",
+          "path": "src/content/projects/box-6.html",
+          "quote": "Assembly, competition testing, and documentation were team efforts. The scores below are team results.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-score",
+          "path": "src/content/projects/box-6.html",
+          "quote": "The final recorded trial totaled 60 points: 45 driver + 15 autonomous , exceeding the team’s 50-point skills target.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-mechanism",
+          "path": "src/content/projects/box-6.html",
+          "quote": "Developed the pneumatic tongue mechanism and packaged the scoring hardware.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        },
+        {
+          "id": "box-6-award",
+          "path": "src/content/projects/box-6.html",
+          "quote": "The team earned the Judge’s Award and left behind a full CAD assembly and engineering notebook.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
+          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+        }
+      ],
+      "limitations": [
+        "Season results reflect multiple changes and team work.",
+        "Autonomous performance varied; faster collection is not supported by a timed comparison."
+      ],
+      "reviewNeeded": [
+        "Confirm any later progress beyond the final recorded trial and report."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-6"
+    },
+    {
+      "id": "box-4",
+      "title": "Launch Vehicle Project",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "Sept 2024 — May 2025",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "A student two-stage launch vehicle concept supported by trajectory work and preliminary structural calculations.",
+      "completionState": "concept-study",
+      "ownership": {
+        "individual": [
+          "Lead designer responsible for core math, trajectory simulations, and structural analysis."
+        ],
+        "team": [
+          "EGR 101 launch vehicle concept developed for a student team."
+        ],
+        "notClaimed": [
+          "A built, launched, qualified, or flight-proven vehicle.",
+          "Successful payload delivery or a verified flight budget.",
+          "Proof of flutter safety from a slenderness ratio alone."
+        ]
+      },
+      "tools": [
+        {
+          "name": "MATLAB",
+          "usage": "Propulsion staging parameters and trajectory work.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-4-role",
+            "box-4-matlab"
+          ]
+        },
+        {
+          "name": "SolidWorks",
+          "usage": "Listed CAD tool; the detailed page does not identify its individual operator.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-4-solidworks"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-4-concept-design",
+          "text": "Led the concept’s core calculations, trajectory simulations, and structural analysis for the student team.",
+          "owner": "individual",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-4-role"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-4-staging",
+          "text": "Used MATLAB to develop staging parameters for a concept targeting a 4,500 lb satellite payload.",
+          "owner": "individual",
+          "state": "simulated",
+          "evidenceIds": [
+            "box-4-role",
+            "box-4-matlab",
+            "box-4-target"
+          ],
+          "metrics": [
+            {
+              "value": 4500,
+              "unit": "lb",
+              "meaning": "Satellite payload design goal",
+              "conditions": "Concept target, not a delivered or experimentally verified payload."
+            }
+          ]
+        },
+        {
+          "id": "box-4-bulkheads",
+          "text": "Developed a bulkhead-sizing spreadsheet that compares calculated stress with material allowable stress.",
+          "owner": "individual",
+          "state": "modeled",
+          "evidenceIds": [
+            "box-4-calculator"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-4-role",
+          "path": "src/content/projects/box-4.html",
+          "quote": "I was lead designer on this EGR 101 launch vehicle project through Embry-Riddle — I handled the core math, trajectory sims, and structural analysis for the team.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
+          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+        },
+        {
+          "id": "box-4-target",
+          "path": "src/content/projects/box-4.html",
+          "quote": "The goal was a medium-lift, two-stage orbital rocket (we named it \"The Crayon\") that could carry a 4,500 lb satellite payload safely into low Earth orbit.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
+          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+        },
+        {
+          "id": "box-4-matlab",
+          "path": "src/content/projects/box-4.html",
+          "quote": "Formulated propulsion staging parameters in MATLAB to select a solid Castor-120 booster for Stage 1",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
+          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+        },
+        {
+          "id": "box-4-calculator",
+          "path": "src/content/projects/box-4.html",
+          "quote": "A working version of the spreadsheet I used to size each bulkhead — pick a load case (or enter your own numbers) and it recomputes the applied stress live and checks it against the material's allowable stress.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
+          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+        },
+        {
+          "id": "box-4-solidworks",
+          "path": "src/content/projects/box-4.html",
+          "quote": "SolidWorks",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
+          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+        }
+      ],
+      "limitations": [
+        "The 4,500 lb payload is a design goal, not demonstrated capability.",
+        "Sizing calculations and spreadsheet stress checks are preliminary.",
+        "Published slenderness values are inconsistent with the listed overall dimensions."
+      ],
+      "reviewNeeded": [
+        "Resolve the listed 125 ft height, 10.35 ft diameter, and 11.42 H/D ratio before using it quantitatively.",
+        "Identify CAD authorship and distinguish cost estimates from actual expenditure."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-4"
+    },
+    {
+      "id": "box-1",
+      "title": "High Stakes Competition Robot Build",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "Jan 2025",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "A VEX High Stakes team robot developed around ground pickup, a conveyor, and mobile-goal capture.",
+      "completionState": "built-and-tested",
+      "ownership": {
+        "individual": [
+          "Credited for CAD and lead assembly."
+        ],
+        "team": [
+          "Ethan Tran is credited for controls programming.",
+          "Mechanism iteration and match trials were team work."
+        ],
+        "notClaimed": [
+          "Personal authorship of C++ controls without clarification.",
+          "A Judge’s Award based only on the ambiguous “Judge’s Award Method” label.",
+          "Repeatable 12-point scoring across all trials."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Onshape",
+          "usage": "Listed CAD tool for a project where Duc is credited for CAD and lead assembly; exact tasks require confirmation.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-1-cad-role",
+            "box-1-onshape"
+          ]
+        },
+        {
+          "name": "AutoCAD",
+          "usage": "Listed CAD tool; source does not separate each software task.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-1-cad-role",
+            "box-1-autocad"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-1-assembly-role",
+          "text": "Contributed CAD and led assembly for the team’s competition robot.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-1-cad-role"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-1-mechanisms",
+          "text": "The team revised ground pickup and added a bracket below the conveyor to stabilize mobile-goal capture.",
+          "owner": "team",
+          "state": "built",
+          "evidenceIds": [
+            "box-1-intake",
+            "box-1-capture"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-1-match-trials",
+          "text": "Across seven match trials, the team’s highest recorded result was 12 points in Trial 6.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-1-trials"
+          ],
+          "metrics": [
+            {
+              "value": 7,
+              "unit": "trials",
+              "meaning": "Recorded match trials",
+              "conditions": "Team match trials."
+            },
+            {
+              "value": 12,
+              "unit": "points",
+              "meaning": "Peak recorded trial score",
+              "conditions": "Trial 6 only; not an average or repeatability claim."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-1-cad-role",
+          "path": "src/content/projects/box-1.html",
+          "quote": "CAD & Lead Assembly: Duc Le",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-controls-role",
+          "path": "src/content/projects/box-1.html",
+          "quote": "Controls Programmer: Ethan Tran",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-intake",
+          "path": "src/content/projects/box-1.html",
+          "quote": "Remodeled the initial intake to support direct ground pickups, eliminating manual loading.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-capture",
+          "path": "src/content/projects/box-1.html",
+          "quote": "Added a horizontal shaft bracket below the conveyor to lock the goal base at a stable angle and prevent conveyor jams.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-trials",
+          "path": "src/content/projects/box-1.html",
+          "quote": "We conducted 7 match trials to measure consistency. In Trial 6 , we reached peak performance, scoring 12 points with fast pickups and smooth ring loading!",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-onshape",
+          "path": "src/content/projects/box-1.html",
+          "quote": "Onshape",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        },
+        {
+          "id": "box-1-autocad",
+          "path": "src/content/projects/box-1.html",
+          "quote": "AutoCAD",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
+          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+        }
+      ],
+      "limitations": [
+        "Peak performance is one match trial, not an average or reliability measure.",
+        "Mechanism outcomes are described collectively."
+      ],
+      "reviewNeeded": [
+        "Resolve the older card’s personal programming claim against the explicit Ethan controls credit.",
+        "Clarify whether the award-related label represents an actual award."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-1"
+    },
+    {
+      "id": "box-5",
+      "title": "Arduino Electronics",
+      "stage": "High school",
+      "category": "PERSONAL",
+      "dateLabel": "Date under review",
+      "location": "Project context under review",
+      "summary": "An eight-key Arduino keyboard using a resistor ladder to read button inputs through one analog pin.",
+      "completionState": "built-prototype",
+      "ownership": {
+        "individual": [
+          "Designed the keyboard circuit, worked out the math, and prototyped the electronics."
+        ],
+        "team": [
+          "The detail header lists a two-person team; the partner’s tasks are not separated."
+        ],
+        "notClaimed": [
+          "Measured noise immunity, debounce performance, latency, or polyphonic operation.",
+          "A technical requirement arising from an Arduino Uno having fewer than eight digital pins.",
+          "Sole authorship of all work in the broader two-person project."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Arduino Uno",
+          "usage": "Circuit design and breadboard keyboard prototyping.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-5-own-build"
+          ]
+        },
+        {
+          "name": "Arduino C++",
+          "usage": "Threshold-based analog-to-tone decoder is shown; exact individual code ownership requires confirmation.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-5-cpp",
+            "box-5-decoder"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-5-keyboard",
+          "text": "Designed and prototyped an eight-key musical keyboard on an Arduino Uno.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-5-own-build"
+          ],
+          "metrics": [
+            {
+              "value": 8,
+              "unit": "keys",
+              "meaning": "Keyboard input count",
+              "conditions": "Breadboard keyboard prototype; not a polyphony claim."
+            }
+          ]
+        },
+        {
+          "id": "box-5-analog-input",
+          "text": "Used a resistor ladder to read the keyboard through analog input A0 and map voltage ranges to tones.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-5-own-build",
+            "box-5-ladder",
+            "box-5-decoder"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-5-tutorial-record",
+          "text": "The project documents four preparatory Arduino tutorials across 31 notebook pages.",
+          "owner": "unclear",
+          "state": "documented",
+          "evidenceIds": [
+            "box-5-notebook"
+          ],
+          "metrics": [
+            {
+              "value": 4,
+              "unit": "tutorials",
+              "meaning": "Preparatory Arduino tutorials",
+              "conditions": "Recorded in the project notebook."
+            },
+            {
+              "value": 31,
+              "unit": "pages",
+              "meaning": "Logged notebook pages",
+              "conditions": "For the four preparatory tutorials."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-5-own-build",
+          "path": "src/content/projects/box-5.html",
+          "quote": "I built an 8-key musical keyboard on an Arduino Uno — designed the circuit, worked out the math behind it, and prototyped the electronics myself.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
+          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+        },
+        {
+          "id": "box-5-ladder",
+          "path": "src/content/projects/box-5.html",
+          "quote": "Instead of burning eight digital pins polling each button separately, the resistor ladder feeds a different voltage into a single analog pin (A0) depending on which key's pressed.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
+          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+        },
+        {
+          "id": "box-5-decoder",
+          "path": "src/content/projects/box-5.html",
+          "quote": "Programmed a high-performance Arduino loop utilizing customized logic brackets to map analog values (0 to 1023 resolution) to specific musical note frequencies.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
+          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+        },
+        {
+          "id": "box-5-cpp",
+          "path": "src/content/projects/box-5.html",
+          "quote": "Source Code (Arduino C++)",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
+          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+        },
+        {
+          "id": "box-5-notebook",
+          "path": "src/content/projects/box-5.html",
+          "quote": "Before the keyboard, four Arduino tutorials — 31 logged notebook pages — built up the exact skills the resistor ladder needed.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
+          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+        }
+      ],
+      "limitations": [
+        "The card says February 2024, the header says May 2025, and tutorials show February–March 2024.",
+        "A threshold-based tone decoder is documented, without quantitative latency or noise testing."
+      ],
+      "reviewNeeded": [
+        "Confirm the correct project date and independent-versus-team context.",
+        "Clarify the partner’s contributions and individual code authorship."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-5"
+    },
+    {
+      "id": "box-8",
+      "title": "Tower Design Project",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "Jan 2024",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "An 11-inch balsa tower developed and tested against dimensional and structural requirements.",
+      "completionState": "tested-with-unmet-requirement",
+      "ownership": {
+        "individual": [
+          "Credited for design and notebook work; rebuilt the AutoCAD drawing."
+        ],
+        "team": [
+          "Gabriel handled physical construction.",
+          "Structural test results belong to the team project."
+        ],
+        "notClaimed": [
+          "Meeting every specification or a 45 lb working-load rating.",
+          "Completed diagonal torsional bracing; it is proposed for a later iteration.",
+          "Sole physical construction."
+        ]
+      },
+      "tools": [
+        {
+          "name": "AutoCAD",
+          "usage": "Rebuilt dimensioned tower drawings.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-8-role",
+            "box-8-cad"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-8-drawing-role",
+          "text": "Handled design and notebook work and rebuilt the AutoCAD model when the original file was unavailable.",
+          "owner": "individual",
+          "state": "documented",
+          "evidenceIds": [
+            "box-8-role",
+            "box-8-cad"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-8-load-test",
+          "text": "The team’s tower held 45 lb before failure, while visible bending at 67 N left the stated 100 N criterion unmet.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-8-ultimate",
+            "box-8-spec-result"
+          ],
+          "metrics": [
+            {
+              "value": 45,
+              "unit": "lbf",
+              "meaning": "Reported compressive force before failure",
+              "conditions": "Ultimate test result, not a working-load rating."
+            },
+            {
+              "value": 67,
+              "unit": "N",
+              "meaning": "First reported visible bending",
+              "conditions": "The exact allowable deflection criterion needs confirmation."
+            }
+          ]
+        },
+        {
+          "id": "box-8-bracing-next",
+          "text": "Proposed diagonal bracing between layers to address twisting in a next iteration.",
+          "owner": "unclear",
+          "state": "planned",
+          "evidenceIds": [
+            "box-8-bracing-plan"
+          ],
+          "metrics": []
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-8-role",
+          "path": "src/content/projects/box-8.html",
+          "quote": "Design & Notebook: Duc Le",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        },
+        {
+          "id": "box-8-cad",
+          "path": "src/content/projects/box-8.html",
+          "quote": "Gabriel was absent and had the only copy of the CAD file, so the AutoCAD model had to be rebuilt from zero to keep the project moving.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        },
+        {
+          "id": "box-8-build-credit",
+          "path": "src/content/projects/box-8.html",
+          "quote": "Gabriel handled the physical construction of the tower",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        },
+        {
+          "id": "box-8-ultimate",
+          "path": "src/content/projects/box-8.html",
+          "quote": "The tower ultimately held 45 lbs of compressive force before failing",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        },
+        {
+          "id": "box-8-spec-result",
+          "path": "src/content/projects/box-8.html",
+          "quote": "Result: 3 of 4 specifications met (height, footprint, material); the 100 N no-bend spec was not met — first visible bending occurred at 67 N.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        },
+        {
+          "id": "box-8-bracing-plan",
+          "path": "src/content/projects/box-8.html",
+          "quote": "Diagonal bracing connecting each layer — so twisting beams put diagonals into torsion instead — is the proposed fix for a next iteration.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
+          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+        }
+      ],
+      "limitations": [
+        "Visible bending and ultimate failure are separate events.",
+        "The record says three of four specifications were met.",
+        "Published cut-list and 100 N deflection descriptions are inconsistent."
+      ],
+      "reviewNeeded": [
+        "Confirm the precise 100 N deflection criterion; the page alternates between a deflection allowance and no bending.",
+        "Reconcile cut-list quantities and remove the older card’s implication that diagonal bracing was already incorporated."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-8"
+    },
+    {
+      "id": "box-9",
+      "title": "Sensor Challenge",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "June 2023",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "A team robot developed for line-following and sonar-guided parallel-parking challenges.",
+      "completionState": "built-and-tested",
+      "ownership": {
+        "individual": [
+          "Credited for notebook and build work."
+        ],
+        "team": [
+          "Worked with Sarah Lovullo on the two robot challenges.",
+          "Challenge performance is reported collectively."
+        ],
+        "notClaimed": [
+          "Sole authorship of all robot programming.",
+          "Reliable parallel parking across repeated trials.",
+          "An established sensor-fusion algorithm solely from using multiple sensors."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Sonar",
+          "usage": "Distance-triggered parking behavior and obstacle sensing; individual task ownership is not separated.",
+          "owner": "team",
+          "evidenceIds": [
+            "box-9-partner",
+            "box-9-sonar"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-9-build-role",
+          "text": "Contributed notebook and build work to the two sensor-guided robot challenges.",
+          "owner": "individual",
+          "state": "documented",
+          "evidenceIds": [
+            "box-9-role",
+            "box-9-partner"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-9-warehouse-results",
+          "text": "The team robot avoided obstacles and finished the warehouse course in four of five runs.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-9-warehouse"
+          ],
+          "metrics": [
+            {
+              "value": 4,
+              "unit": "successful runs",
+              "meaning": "Completed warehouse runs",
+              "conditions": "Four successful completions among five recorded runs."
+            },
+            {
+              "value": 5,
+              "unit": "runs",
+              "meaning": "Recorded warehouse run count",
+              "conditions": "Small trial set; not a general reliability estimate."
+            }
+          ]
+        },
+        {
+          "id": "box-9-parking-result",
+          "text": "After motor-power tuning, the robot completed a clean parallel park on the seventh trial.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-9-parking"
+          ],
+          "metrics": [
+            {
+              "value": 7,
+              "unit": "trial",
+              "meaning": "First reported clean parking trial",
+              "conditions": "Tuning sequence, not seven successful repetitions."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-9-role",
+          "path": "src/content/projects/box-9.html",
+          "quote": "Notebook & Build: Duc Le",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
+          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+        },
+        {
+          "id": "box-9-partner",
+          "path": "src/content/projects/box-9.html",
+          "quote": "An autonomous, sensor-driven robot programmed to solve two independent challenges — warehouse line-following and sonar-guided parallel parking — with partner Sarah Lovullo.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
+          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+        },
+        {
+          "id": "box-9-warehouse",
+          "path": "src/content/projects/box-9.html",
+          "quote": "For the Warehouse Challenge, the robot avoided the obstacles and finished the course in 4 of 5 runs",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
+          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+        },
+        {
+          "id": "box-9-parking",
+          "path": "src/content/projects/box-9.html",
+          "quote": "Only on test 7 , after rebalancing motor C's final-turn power down to 60%, did the robot park cleanly.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
+          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+        },
+        {
+          "id": "box-9-sonar",
+          "path": "src/content/projects/box-9.html",
+          "quote": "setting the sonar trigger distance to 23 cm",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
+          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+        }
+      ],
+      "limitations": [
+        "Warehouse completion was four of five runs.",
+        "The clean parking result occurred in the seventh tuning trial, not a repeated success-rate study."
+      ],
+      "reviewNeeded": [
+        "Clarify individual versus partner programming work.",
+        "Confirm whether the “Sensor Fusion” tag represents a specific implemented algorithm."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-9"
+    },
+    {
+      "id": "box-10",
+      "title": "Putt-Putt Boat: Straight-Line Redesign",
+      "stage": "High school",
+      "category": "PERSONAL",
+      "dateLabel": "May 2023",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "An independent twin-straw redesign of a class-built candle-powered boat, evaluated in five gutter trials.",
+      "completionState": "built-and-tested",
+      "ownership": {
+        "individual": [
+          "Independently redesigned, tested, and analyzed the straight-line modification."
+        ],
+        "team": [
+          "The original baseline boat was built as a class-wide team exercise."
+        ],
+        "notClaimed": [
+          "Sole authorship of the baseline boat.",
+          "A 58% increase in speed; the cited percentage refers to shorter travel time.",
+          "Completion of proposed stabilization fins or pressure dampeners."
+        ]
+      },
+      "tools": [
+        {
+          "name": "Hand Fabrication",
+          "usage": "Twin-straw attachment and removable alignment spacer.",
+          "owner": "individual",
+          "evidenceIds": [
+            "box-10-solo",
+            "box-10-attachment",
+            "box-10-jig"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-10-twin-straws",
+          "text": "Independently added twin paper-straw exhaust extensions to a class-built boat for straighter travel.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-10-solo",
+            "box-10-attachment"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-10-assembly-jig",
+          "text": "Used a removable wooden spacer to hold straw spacing and angle while the adhesive set.",
+          "owner": "individual",
+          "state": "built",
+          "evidenceIds": [
+            "box-10-solo",
+            "box-10-jig"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-10-gutter-tests",
+          "text": "Five trials over a 33-inch course averaged about 13.7 seconds, compared with the recorded 33.07-second baseline.",
+          "owner": "individual",
+          "state": "tested",
+          "evidenceIds": [
+            "box-10-solo",
+            "box-10-five-trials",
+            "box-10-timing",
+            "box-10-test-method"
+          ],
+          "metrics": [
+            {
+              "value": 5,
+              "unit": "trials",
+              "meaning": "Redesign trial count",
+              "conditions": "Each timed from first movement to the end of the gutter."
+            },
+            {
+              "value": 33,
+              "unit": "inches",
+              "meaning": "Test course length",
+              "conditions": "Gutter course."
+            },
+            {
+              "value": 13.7,
+              "unit": "seconds",
+              "meaning": "Approximate mean redesign travel time",
+              "conditions": "Rounded page summary from five trials; measurement uncertainty not established."
+            },
+            {
+              "value": 33.07,
+              "unit": "seconds",
+              "meaning": "Recorded baseline travel time",
+              "conditions": "Baseline boat was a class-team build; comparison conditions require confirmation."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-10-solo",
+          "path": "src/content/projects/box-10.html",
+          "quote": "The original boat that motivated this project was built as a class-wide team exercise; the straight-line redesign, testing, and analysis were done independently.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        },
+        {
+          "id": "box-10-attachment",
+          "path": "src/content/projects/box-10.html",
+          "quote": "The attachment is two 6\"-long paper straws (0.25\" diameter), each glued 1\" from the boat's existing center exhaust straw and angled 10° downward.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        },
+        {
+          "id": "box-10-jig",
+          "path": "src/content/projects/box-10.html",
+          "quote": "A loose wooden stick was clamped between the two new straws to hold that spacing and angle while the adhesive set, then pulled out once it dried",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        },
+        {
+          "id": "box-10-five-trials",
+          "path": "src/content/projects/box-10.html",
+          "quote": "5 Trials on the 33\" Gutter",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        },
+        {
+          "id": "box-10-timing",
+          "path": "src/content/projects/box-10.html",
+          "quote": "average run time ≈13.7s vs. a 33.07s baseline",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        },
+        {
+          "id": "box-10-test-method",
+          "path": "src/content/projects/box-10.html",
+          "quote": "Each trial primed and lit the boiler, timed the run from first movement to the end of the 33\" gutter, and measured sideways displacement from a straight line.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
+          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+        }
+      ],
+      "limitations": [
+        "Five short-course trials do not establish broad operating reliability.",
+        "The summary rounds the mean travel time to approximately 13.7 seconds.",
+        "Baseline comparability and timing uncertainty are not fully established."
+      ],
+      "reviewNeeded": [
+        "Confirm equivalent timing, heating, and course conditions for the baseline comparison.",
+        "Keep percentage wording as travel-time reduction rather than speed increase."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-10"
+    },
+    {
+      "id": "box-2",
+      "title": "Wind Turbine Competition",
+      "stage": "High school",
+      "category": "STUDENT TEAMS",
+      "dateLabel": "Mar 2023",
+      "location": "Atlantic County Institute of Technology",
+      "summary": "A team wind-turbine study comparing blade geometry and materials through prototypes and wind-tunnel tests.",
+      "completionState": "built-and-tested",
+      "ownership": {
+        "individual": [
+          "Notebook drawings are credited to Duc Le."
+        ],
+        "team": [
+          "The project names Marco, Duc, and Connor as the team.",
+          "Prototype and test outcomes are team results; the appendix also contains other teams’ shared reference data."
+        ],
+        "notClaimed": [
+          "Individual authorship of every shared appendix test.",
+          "Verified 7.4 W output or a directly measured drag reduction.",
+          "A corroborated sixth-place statewide result from the detailed source alone."
+        ]
+      },
+      "tools": [
+        {
+          "name": "AutoCAD",
+          "usage": "Listed CAD tool; individual operator and exact deliverables need confirmation.",
+          "owner": "unclear",
+          "evidenceIds": [
+            "box-2-autocad"
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "id": "box-2-notebook-drawings",
+          "text": "Produced notebook drawings documenting the blade development process.",
+          "owner": "individual",
+          "state": "documented",
+          "evidenceIds": [
+            "box-2-notebook"
+          ],
+          "metrics": []
+        },
+        {
+          "id": "box-2-blade-prototype",
+          "text": "The March 16 team prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
+          "owner": "team",
+          "state": "built",
+          "evidenceIds": [
+            "box-2-team",
+            "box-2-final-geometry"
+          ],
+          "metrics": [
+            {
+              "value": 3,
+              "unit": "blades",
+              "meaning": "March 16 prototype blade count",
+              "conditions": "Specific prototype, distinct from later configurations."
+            },
+            {
+              "value": 14,
+              "unit": "inches",
+              "meaning": "Cardboard blade length",
+              "conditions": "March 16 prototype."
+            },
+            {
+              "value": 3,
+              "unit": "inches",
+              "meaning": "Cardboard blade width",
+              "conditions": "March 16 prototype."
+            }
+          ]
+        },
+        {
+          "id": "box-2-wind-tunnel-trial",
+          "text": "Tested that prototype facing backward in a wind tunnel for 20 seconds.",
+          "owner": "team",
+          "state": "tested",
+          "evidenceIds": [
+            "box-2-team",
+            "box-2-wind-tunnel"
+          ],
+          "metrics": [
+            {
+              "value": 20,
+              "unit": "seconds",
+              "meaning": "Wind-tunnel test duration",
+              "conditions": "Power output is withheld pending unit and measurement review."
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "box-2-team",
+          "path": "src/content/projects/box-2.html",
+          "quote": "Team: Marco, Duc, Connor",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        },
+        {
+          "id": "box-2-notebook",
+          "path": "src/content/projects/box-2.html",
+          "quote": "Drawn by Duc Le",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        },
+        {
+          "id": "box-2-final-geometry",
+          "path": "src/content/projects/box-2.html",
+          "quote": "The final prototype (March 16, 2023) consisted of 3 cardboard blades, 14 inches long and 3 inches wide, curved at 10°, with 0° pitch.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        },
+        {
+          "id": "box-2-wind-tunnel",
+          "path": "src/content/projects/box-2.html",
+          "quote": "Turbine faced away in the wind tunnel and run for 20 seconds; average power was determined.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        },
+        {
+          "id": "box-2-autocad",
+          "path": "src/content/projects/box-2.html",
+          "quote": "AutoCAD",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        },
+        {
+          "id": "box-2-shared-data",
+          "path": "src/content/projects/box-2.html",
+          "quote": "Reference data shared across all teams in Block 1 and Block 2 of the KidWind wind turbine challenge, for comparison against The Electrifying Tempest's own findings.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
+          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+        }
+      ],
+      "limitations": [
+        "Published W and mW values are inconsistent.",
+        "The three-blade March 16 prototype and later lifting configurations are distinct test stages.",
+        "Wind speed, load resistance, and instrument calibration are not consistently documented."
+      ],
+      "reviewNeeded": [
+        "Resolve the 7.4 W/3 V result and power-unit inconsistencies before using output metrics.",
+        "Check the stated blade spacing and configuration sequence.",
+        "Confirm who used AutoCAD and whether 3D printing was part of the documented build.",
+        "Verify the card’s statewide placing separately; the detailed page does not clearly corroborate it."
+      ],
+      "updatedOn": null,
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-2"
+    }
+  ]
+}

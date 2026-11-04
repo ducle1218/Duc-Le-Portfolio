@@ -1,7 +1,7 @@
 {
   "$schema": "https://ducle1218.github.io/Duc-Le-Portfolio/data/portfolio.schema.json",
   "schemaVersion": "1.0.0",
-  "snapshotId": "fcfc6767d7c98bddf01ff0431d914344dffacbb07b073b378a03d5c6e929e7d6",
+  "snapshotId": "1d0a40e1247b13c46f4816423fe0d904b1be9dfb4574553b82090c1583c509c3",
   "siteUrl": "https://ducle1218.github.io/Duc-Le-Portfolio/",
   "sourceReviewedOn": "2026-10-30",
   "verification": {
@@ -175,42 +175,42 @@
           "path": "src/content/projects/box-12.html",
           "quote": "My work focuses on Onshape modeling, assembly clearances, and print-efficient revisions. I recreated the initial body and head from teammate Ethan’s SolidWorks dimensions, then developed the changes shown here.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         },
         {
           "id": "box-12-body",
           "path": "src/content/projects/box-12.html",
           "quote": "Increased body length from 160 to 225 mm while simplifying the frame for continued prototyping.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         },
         {
           "id": "box-12-leg",
           "path": "src/content/projects/box-12.html",
           "quote": "Reduced the link from 143 to 135 mm so the legs fit without further lengthening the body.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         },
         {
           "id": "box-12-hardware",
           "path": "src/content/projects/box-12.html",
           "quote": "The notebook later records all four legs attached and one leg actuated.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         },
         {
           "id": "box-12-folding",
           "path": "src/content/projects/box-12.html",
           "quote": "Latest CAD configuration shows all four legs packaged below the body. Physical folding validation is next.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         },
         {
           "id": "box-12-printing",
           "path": "src/content/projects/box-12.html",
           "quote": "A right-hand support did not fit the left side. Mirroring and reprinting corrected the mismatch.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-12.html",
-          "sourceSha256": "0db869b142e714b3f768ee306f8bef9953b7162819d4e5a09e572779f4244561"
+          "sourceSha256": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a"
         }
       ],
       "limitations": [
@@ -340,49 +340,49 @@
           "path": "src/content/projects/box-7.html",
           "quote": "Twenty radial supports replace the broad rotating wall in the revised CAD model.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-arm",
           "path": "src/content/projects/box-7.html",
           "quote": "The arm plot reports about 23 psi peak stress under a modeled 0.28 lbf load. Three support arms approximate the center constraint.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-shaft",
           "path": "src/content/projects/box-7.html",
           "quote": "The notebook specifies approximately 4,500°/s for the shaft model.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-status",
           "path": "src/content/projects/box-7.html",
           "quote": "The notebook does not yet document a functioning display.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-printing",
           "path": "src/content/projects/box-7.html",
           "quote": "The center shaft was split into printable sections to fit the Prusa Mini’s approximately 7-inch build envelope.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-solidworks",
           "path": "src/content/projects/box-7.html",
           "quote": "SolidWorks",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         },
         {
           "id": "box-7-onshape",
           "path": "src/content/projects/box-7.html",
           "quote": "Onshape FEA",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "ec104a824c7bf6dda8a612d149adea56aed5702f8a5c024ab511c2c76de1a577"
+          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
         }
       ],
       "limitations": [
@@ -472,35 +472,35 @@
           "path": "src/content/projects/box-11.html",
           "quote": "Each selected plate has a separate force definition: X = 0 lbf, Y = −200 lbf, Z = 0 lbf. These are model inputs, not a demonstrated load rating.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
         },
         {
           "id": "box-11-distribution",
           "path": "src/content/projects/box-11.html",
           "quote": "The contour highlights local variation around the holes, cutout corners, and spacer interfaces.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
         },
         {
           "id": "box-11-next",
           "path": "src/content/projects/box-11.html",
           "quote": "Document the load rationale and material inputs, resolve model warnings, check mesh sensitivity, and define the critical plate-and-spacer fits in a toleranced drawing.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
         },
         {
           "id": "box-11-status",
           "path": "src/content/projects/box-11.html",
           "quote": "This is a preliminary model. The setup screenshots show warnings, and the supplied evidence does not establish resolved constraints, mesh convergence, or a factor of safety.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
         },
         {
           "id": "box-11-source",
           "path": "src/content/projects/box-11.html",
           "quote": "Evidence: owner-supplied Onshape stress contour and Force 1 / Force 2 setup screenshots. GD&T drawing work remains in progress.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "1b6c8430973e8b743a9cc8c028e5fd34455d331eb17d0981a6a62cec49899fef"
+          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
         }
       ],
       "limitations": [
@@ -574,14 +574,14 @@
           "path": "src/content/projects/box-3.html",
           "quote": "I'm working through the official SOLIDWORKS CSWA practice problem set to build real CAD fluency, then pushing select parts further with full GD&T-toleranced drawings and DFM/DFA reviews to practice designing with manufacturing in mind.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-3.html",
-          "sourceSha256": "584cf7237d00752cc27057a9417726810f1a58cf0220eed7d4a39aab3fb434ef"
+          "sourceSha256": "4c799222a804381cd60ef13b93417d8251bc311df98672d58e68d5affe5f824a"
         },
         {
           "id": "box-3-unfinished",
           "path": "src/content/projects/box-3.html",
           "quote": "Each problem below links to its official practice drawing PDF — I'll add the CAD files as I finish them.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-3.html",
-          "sourceSha256": "584cf7237d00752cc27057a9417726810f1a58cf0220eed7d4a39aab3fb434ef"
+          "sourceSha256": "4c799222a804381cd60ef13b93417d8251bc311df98672d58e68d5affe5f824a"
         }
       ],
       "limitations": [
@@ -712,49 +712,49 @@
           "path": "src/content/projects/box-6.html",
           "quote": "Led CAD development of the chassis and intake assembly in Onshape.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-sensor",
           "path": "src/content/projects/box-6.html",
           "quote": "I redesigned the sensor mounts in CAD to accommodate the tracking hardware while preserving the robot’s envelope.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-controls",
           "path": "src/content/projects/box-6.html",
           "quote": "Ethan led C++ programming, odometry, and PID control. My contribution was the mechanical design and hardware integration supporting that system.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-team",
           "path": "src/content/projects/box-6.html",
           "quote": "Assembly, competition testing, and documentation were team efforts. The scores below are team results.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-score",
           "path": "src/content/projects/box-6.html",
           "quote": "The final recorded trial totaled 60 points: 45 driver + 15 autonomous , exceeding the team’s 50-point skills target.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-mechanism",
           "path": "src/content/projects/box-6.html",
           "quote": "Developed the pneumatic tongue mechanism and packaged the scoring hardware.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         },
         {
           "id": "box-6-award",
           "path": "src/content/projects/box-6.html",
           "quote": "The team earned the Judge’s Award and left behind a full CAD assembly and engineering notebook.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-6.html",
-          "sourceSha256": "4420c2524b66faeee1a859507c6291e806d8da327c5b4fc71f7fcd565ccd50a3"
+          "sourceSha256": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384"
         }
       ],
       "limitations": [
@@ -855,35 +855,35 @@
           "path": "src/content/projects/box-4.html",
           "quote": "I was lead designer on this EGR 101 launch vehicle project through Embry-Riddle — I handled the core math, trajectory sims, and structural analysis for the team.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
-          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+          "sourceSha256": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298"
         },
         {
           "id": "box-4-target",
           "path": "src/content/projects/box-4.html",
           "quote": "The goal was a medium-lift, two-stage orbital rocket (we named it \"The Crayon\") that could carry a 4,500 lb satellite payload safely into low Earth orbit.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
-          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+          "sourceSha256": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298"
         },
         {
           "id": "box-4-matlab",
           "path": "src/content/projects/box-4.html",
           "quote": "Formulated propulsion staging parameters in MATLAB to select a solid Castor-120 booster for Stage 1",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
-          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+          "sourceSha256": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298"
         },
         {
           "id": "box-4-calculator",
           "path": "src/content/projects/box-4.html",
           "quote": "A working version of the spreadsheet I used to size each bulkhead — pick a load case (or enter your own numbers) and it recomputes the applied stress live and checks it against the material's allowable stress.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
-          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+          "sourceSha256": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298"
         },
         {
           "id": "box-4-solidworks",
           "path": "src/content/projects/box-4.html",
           "quote": "SolidWorks",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-4.html",
-          "sourceSha256": "271792c46d6cf4b0e6fb8a688b6fd84c7427f0618c46939dd1afd216ca228f26"
+          "sourceSha256": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298"
         }
       ],
       "limitations": [
@@ -993,49 +993,49 @@
           "path": "src/content/projects/box-1.html",
           "quote": "CAD & Lead Assembly: Duc Le",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-controls-role",
           "path": "src/content/projects/box-1.html",
           "quote": "Controls Programmer: Ethan Tran",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-intake",
           "path": "src/content/projects/box-1.html",
           "quote": "Remodeled the initial intake to support direct ground pickups, eliminating manual loading.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-capture",
           "path": "src/content/projects/box-1.html",
           "quote": "Added a horizontal shaft bracket below the conveyor to lock the goal base at a stable angle and prevent conveyor jams.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-trials",
           "path": "src/content/projects/box-1.html",
           "quote": "We conducted 7 match trials to measure consistency. In Trial 6 , we reached peak performance, scoring 12 points with fast pickups and smooth ring loading!",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-onshape",
           "path": "src/content/projects/box-1.html",
           "quote": "Onshape",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         },
         {
           "id": "box-1-autocad",
           "path": "src/content/projects/box-1.html",
           "quote": "AutoCAD",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-1.html",
-          "sourceSha256": "e951a2066816d5b313127120adb552b0ca65c9b03119ae73c3e98be37ff479a3"
+          "sourceSha256": "21cbc08f4f966bd1f8337e347dfa1e975c5f078d43d934eddc75f3ff071e8463"
         }
       ],
       "limitations": [
@@ -1150,35 +1150,35 @@
           "path": "src/content/projects/box-5.html",
           "quote": "I built an 8-key musical keyboard on an Arduino Uno — designed the circuit, worked out the math behind it, and prototyped the electronics myself.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
-          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+          "sourceSha256": "5f00cec926458c328939e3cb9a312302db6f41b1dde7b23b82783dd41b150f82"
         },
         {
           "id": "box-5-ladder",
           "path": "src/content/projects/box-5.html",
           "quote": "Instead of burning eight digital pins polling each button separately, the resistor ladder feeds a different voltage into a single analog pin (A0) depending on which key's pressed.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
-          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+          "sourceSha256": "5f00cec926458c328939e3cb9a312302db6f41b1dde7b23b82783dd41b150f82"
         },
         {
           "id": "box-5-decoder",
           "path": "src/content/projects/box-5.html",
           "quote": "Programmed a high-performance Arduino loop utilizing customized logic brackets to map analog values (0 to 1023 resolution) to specific musical note frequencies.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
-          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+          "sourceSha256": "5f00cec926458c328939e3cb9a312302db6f41b1dde7b23b82783dd41b150f82"
         },
         {
           "id": "box-5-cpp",
           "path": "src/content/projects/box-5.html",
           "quote": "Source Code (Arduino C++)",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
-          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+          "sourceSha256": "5f00cec926458c328939e3cb9a312302db6f41b1dde7b23b82783dd41b150f82"
         },
         {
           "id": "box-5-notebook",
           "path": "src/content/projects/box-5.html",
           "quote": "Before the keyboard, four Arduino tutorials — 31 logged notebook pages — built up the exact skills the resistor ladder needed.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-5.html",
-          "sourceSha256": "1f4f42becd2f2fa6e2ef0ecfaa9bca5a46e66d91ebff2700aa39cc9b30946f34"
+          "sourceSha256": "5f00cec926458c328939e3cb9a312302db6f41b1dde7b23b82783dd41b150f82"
         }
       ],
       "limitations": [
@@ -1279,42 +1279,42 @@
           "path": "src/content/projects/box-8.html",
           "quote": "Design & Notebook: Duc Le",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         },
         {
           "id": "box-8-cad",
           "path": "src/content/projects/box-8.html",
           "quote": "Gabriel was absent and had the only copy of the CAD file, so the AutoCAD model had to be rebuilt from zero to keep the project moving.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         },
         {
           "id": "box-8-build-credit",
           "path": "src/content/projects/box-8.html",
           "quote": "Gabriel handled the physical construction of the tower",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         },
         {
           "id": "box-8-ultimate",
           "path": "src/content/projects/box-8.html",
           "quote": "The tower ultimately held 45 lbs of compressive force before failing",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         },
         {
           "id": "box-8-spec-result",
           "path": "src/content/projects/box-8.html",
           "quote": "Result: 3 of 4 specifications met (height, footprint, material); the 100 N no-bend spec was not met — first visible bending occurred at 67 N.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         },
         {
           "id": "box-8-bracing-plan",
           "path": "src/content/projects/box-8.html",
           "quote": "Diagonal bracing connecting each layer — so twisting beams put diagonals into torsion instead — is the proposed fix for a next iteration.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-8.html",
-          "sourceSha256": "dcc0ec3a619fe7369adb81eb28dba0e8b3b7143b1007c2e0f805faa0b97978b8"
+          "sourceSha256": "9af239282490a8d77230115deeb35a797a15b361f18d8b46cb30a48f1df5e53d"
         }
       ],
       "limitations": [
@@ -1422,35 +1422,35 @@
           "path": "src/content/projects/box-9.html",
           "quote": "Notebook & Build: Duc Le",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
-          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+          "sourceSha256": "eaf2615f2074c5441026919f0cadc01a93367559d579abd3d7558cdd06bacc72"
         },
         {
           "id": "box-9-partner",
           "path": "src/content/projects/box-9.html",
           "quote": "An autonomous, sensor-driven robot programmed to solve two independent challenges — warehouse line-following and sonar-guided parallel parking — with partner Sarah Lovullo.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
-          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+          "sourceSha256": "eaf2615f2074c5441026919f0cadc01a93367559d579abd3d7558cdd06bacc72"
         },
         {
           "id": "box-9-warehouse",
           "path": "src/content/projects/box-9.html",
           "quote": "For the Warehouse Challenge, the robot avoided the obstacles and finished the course in 4 of 5 runs",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
-          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+          "sourceSha256": "eaf2615f2074c5441026919f0cadc01a93367559d579abd3d7558cdd06bacc72"
         },
         {
           "id": "box-9-parking",
           "path": "src/content/projects/box-9.html",
           "quote": "Only on test 7 , after rebalancing motor C's final-turn power down to 60%, did the robot park cleanly.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
-          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+          "sourceSha256": "eaf2615f2074c5441026919f0cadc01a93367559d579abd3d7558cdd06bacc72"
         },
         {
           "id": "box-9-sonar",
           "path": "src/content/projects/box-9.html",
           "quote": "setting the sonar trigger distance to 23 cm",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-9.html",
-          "sourceSha256": "953609022abaabf5565d5115f8a60ab84199100c4c232bc037debffcb0143fbf"
+          "sourceSha256": "eaf2615f2074c5441026919f0cadc01a93367559d579abd3d7558cdd06bacc72"
         }
       ],
       "limitations": [
@@ -1566,42 +1566,42 @@
           "path": "src/content/projects/box-10.html",
           "quote": "The original boat that motivated this project was built as a class-wide team exercise; the straight-line redesign, testing, and analysis were done independently.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         },
         {
           "id": "box-10-attachment",
           "path": "src/content/projects/box-10.html",
           "quote": "The attachment is two 6\"-long paper straws (0.25\" diameter), each glued 1\" from the boat's existing center exhaust straw and angled 10° downward.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         },
         {
           "id": "box-10-jig",
           "path": "src/content/projects/box-10.html",
           "quote": "A loose wooden stick was clamped between the two new straws to hold that spacing and angle while the adhesive set, then pulled out once it dried",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         },
         {
           "id": "box-10-five-trials",
           "path": "src/content/projects/box-10.html",
           "quote": "5 Trials on the 33\" Gutter",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         },
         {
           "id": "box-10-timing",
           "path": "src/content/projects/box-10.html",
           "quote": "average run time ≈13.7s vs. a 33.07s baseline",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         },
         {
           "id": "box-10-test-method",
           "path": "src/content/projects/box-10.html",
           "quote": "Each trial primed and lit the boiler, timed the run from first movement to the end of the 33\" gutter, and measured sideways displacement from a straight line.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-10.html",
-          "sourceSha256": "35ca9c2ed9e531d2668d7c1a2df06583a36efefd5b1a70e83a28076efc6c704f"
+          "sourceSha256": "be3e9b22dd52a252f7905b74d8dbb6869889cdf25026d66e7701f0e8f862a14f"
         }
       ],
       "limitations": [
@@ -1715,42 +1715,42 @@
           "path": "src/content/projects/box-2.html",
           "quote": "Team: Marco, Duc, Connor",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         },
         {
           "id": "box-2-notebook",
           "path": "src/content/projects/box-2.html",
           "quote": "Drawn by Duc Le",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         },
         {
           "id": "box-2-final-geometry",
           "path": "src/content/projects/box-2.html",
           "quote": "The final prototype (March 16, 2023) consisted of 3 cardboard blades, 14 inches long and 3 inches wide, curved at 10°, with 0° pitch.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         },
         {
           "id": "box-2-wind-tunnel",
           "path": "src/content/projects/box-2.html",
           "quote": "Turbine faced away in the wind tunnel and run for 20 seconds; average power was determined.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         },
         {
           "id": "box-2-autocad",
           "path": "src/content/projects/box-2.html",
           "quote": "AutoCAD",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         },
         {
           "id": "box-2-shared-data",
           "path": "src/content/projects/box-2.html",
           "quote": "Reference data shared across all teams in Block 1 and Block 2 of the KidWind wind turbine challenge, for comparison against The Electrifying Tempest's own findings.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-2.html",
-          "sourceSha256": "fd1b388fa75ee5c7274389d930198b0966930911e0a586f0e3cd51f912f3385c"
+          "sourceSha256": "40b5e5899551923a83e1327b4f1b6516b8aad17e3788c411473b15b1330b7d7b"
         }
       ],
       "limitations": [

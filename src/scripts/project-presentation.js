@@ -17,6 +17,7 @@
 
   function enhanceSkillLogos(root) {
     root.querySelectorAll('.project-card-skills span, .case-tools span, .legacy-case-study span').forEach(tag => {
+      if (tag.classList.contains('project-display-tag')) return;
       if (tag.querySelector('img') || tag.children.length) return;
       const label = tag.textContent.trim().toLowerCase();
       const file = /^(3d printing|fdm printing|design for printing|printed-part design)$/.test(label) ? 'bambu-logo.png' :
@@ -50,7 +51,7 @@
 
       const sections = Array.from(body.children);
       const classes = ['', 'project-card-badges', 'project-card-meta',
-        'project-card-description', 'project-card-skills', 'project-card-link'];
+        'project-card-description', 'project-card-skills'];
       sections.forEach((section, index) => {
         if (classes[index]) section.classList.add(classes[index]);
       });
@@ -65,9 +66,6 @@
           badges.children[1].remove();
         }
       }
-
-      const linkLabel = sections[5]?.querySelector('span');
-      if (linkLabel) linkLabel.textContent = 'View project';
 
       const image = cover.querySelector('img');
       if (image) {

@@ -146,6 +146,8 @@
         const content = await projectContent.get(projectId);
         if (revision !== detailRevision) return;
         body.innerHTML = content;
+        const tagSlot = body.querySelector('[data-project-tags]');
+        if (tagSlot) tagSlot.innerHTML = buildProjectTagsHTML(item);
         if (projectId !== 'box-6') {
           const context = document.createElement('p');
           context.className = 'project-stage-context';
@@ -187,11 +189,7 @@
     const TIMELINE_WINDOW = 3;
     let timelineIndex = 0;
 
-    // ======================== Home "All Projects" Stacked List ========================
-    // Renders every entry in TIMELINE_ITEMS as one big vertical card — title,
-    // media, description, tech stack, link — instead of a grid of small
-    // previews. Generated project facts keep the card summaries in sync
-    // with the timeline carousel and the project detail pages automatically.
+    // Shared cards for the home selection and the project archive.
     function escapeHtml(str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -221,16 +219,27 @@
     // real, recognizable software/hardware logo get an icon — generic terms
     // (e.g. "Optics", "Load Testing") stay text-only rather than guessing.
     const TAG_ICONS = {
-      'Embedded C++': 'src/assets/images/logos/cpp_logo.png',
-      'C++': 'src/assets/images/logos/cpp_logo.png',
-      'C++ Autonomy': 'src/assets/images/logos/cpp_logo.png',
-      'SolidWorks': 'src/assets/images/logos/solidworks_icon.png',
-      'MATLAB': 'src/assets/images/logos/matlab_logo.png',
-      'Onshape CAD': 'src/assets/images/logos/onshape_logo.png',
-      'Onshape': 'src/assets/images/logos/onshape_logo.png',
-      'AutoCAD': 'src/assets/images/logos/autocad_logo.png',
-      'Arduino': 'src/assets/images/logos/arduino-icon.png',
+      'C++': 'cpp-logo-icon-32.webp',
+      'SolidWorks': 'solidworks-icon-icon-32.webp',
+      'MATLAB': 'matlab-logo-icon-32.webp',
+      'MATLAB Modeling & Simulation': 'matlab-logo-icon-32.webp',
+      'Onshape': 'onshape-logo-icon-32.webp',
+      'Onshape FEA': 'onshape-logo-icon-32.webp',
+      'AutoCAD': 'autocad-logo-icon-32.webp',
+      'Arduino': 'arduino-icon-icon-32.webp',
     };
+
+    // The same labels, order and markup are used on cards and in project headers.
+    // Tags describe project topics; personal contributions remain in the write-up.
+    function buildProjectTagsHTML(item) {
+      return item.displayTags.map(tag => {
+        const icon = TAG_ICONS[tag];
+        const iconHtml = icon
+          ? `<img loading="lazy" decoding="async" src="src/assets/images/optimized/${icon}" alt="" class="skill-logo" onerror="this.remove()" />`
+          : '';
+        return `<span class="project-display-tag">${iconHtml}${escapeHtml(tag)}</span>`;
+      }).join('');
+    }
 
     // Filter value (matches the filter button labels exactly) -> the shorter
     // singular label shown on each card's small badge chip.
@@ -248,13 +257,7 @@
       const filterCategory = item.category || 'PERSONAL';
       const category = CATEGORY_BADGE_LABELS[filterCategory] || filterCategory;
       const attrs = extraAttrs ? ` project-card" data-category="${filterCategory}" data-stage="${item.stage}` : '';
-      const tagsHtml = (item.tags || []).map(tag => {
-        const icon = TAG_ICONS[tag];
-        const iconHtml = icon
-          ? `<img loading="lazy" decoding="async" src="${icon}" alt="" class="w-3 h-3 object-contain" onerror="this.remove()" />`
-          : '';
-        return `<span class="text-[10px] font-mono px-2 py-1 rounded-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 inline-flex items-center gap-1.5">${iconHtml}${escapeHtml(tag)}</span>`;
-      }).join('');
+      const tagsHtml = buildProjectTagsHTML(item);
       return `
       <div onclick="showProjectDetail('${item.id}')" class="bg-white dark:bg-neutral-900 border border-slate-300 dark:border-slate-700 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:border-rose-400/50 dark:hover:border-rose-900/50 transition-all duration-300 cursor-pointer group flex flex-col h-full${attrs}">
         <div class="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-900">
@@ -285,12 +288,7 @@
           </div>
           <div class="text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400 space-y-1.5 flex-1">${formatCardDescription(item.desc)}</div>
           <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
-            <p class="text-[9px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1.5">Tech Stack</p>
-            <div class="flex flex-wrap gap-1.5">${tagsHtml}</div>
-          </div>
-          <div class="pt-1 flex items-center gap-1.5 text-xs font-mono font-bold text-rose-500 dark:text-rose-400">
-            <span>Read More</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            <div class="project-display-tags" data-project-tags="${item.id}" aria-label="Project tools and topics">${tagsHtml}</div>
           </div>
         </div>
       </div>`;

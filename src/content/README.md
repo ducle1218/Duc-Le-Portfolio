@@ -2,7 +2,11 @@
 
 `project-facts.json` is the structured source for cards, spotlight summaries,
 and the public `data/portfolio.json` feed. `project-presentation.json` holds image
-metadata. `profile-facts.json` contains existing public profile statements.
+metadata. Edit the labels in the `data-project-tags` row of the project HTML.
+The build uses those labels for the matching card, so changes appear in both views.
+These labels describe project topics. Individually attributed tool use is
+recorded in `project-facts.json`.
+`profile-facts.json` contains existing public profile statements.
 `evidence-lock.json` detects unreviewed source changes. See
 `../../APPLICATION_DATA.md` for the editing and review workflow.
 

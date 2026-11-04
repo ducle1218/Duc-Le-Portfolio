@@ -182,6 +182,34 @@
   gap: 0.4rem;
 }
 
+.project-display-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.project-display-tags .project-display-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--project-line);
+  border-radius: 2px;
+  background: var(--project-soft);
+  color: var(--project-ink);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.project-display-tags .skill-logo {
+  width: 0.8rem;
+  height: 0.8rem;
+  object-fit: contain;
+  flex: none;
+}
+
 .portfolio-card .project-card-skills span {
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--project-line);

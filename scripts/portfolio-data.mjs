@@ -56,6 +56,11 @@ export async function loadRecords(){
     const text=await read(sourcePath);hashes[sourcePath]=digest(stableText(text));
     for(const e of project.evidence)assert(plain(text).includes(plain(e.quote)),'Evidence quote no longer matches: '+project.id+'/'+e.id);
     const display=presentation[project.id];assert(display,'Missing presentation metadata '+project.id);
+    const rows = [...text.matchAll(/<div\b[^>]*\bdata-project-tags="([^"]+)"[^>]*>([\s\S]*?)<\/div>/g)];
+    assert(rows.length === 1 && rows[0][1] === project.id, 'Expected one tools and topics row for '+project.id);
+    display.displayTags = [...rows[0][2].matchAll(/<span\b[^>]*>([\s\S]*?)<\/span>/g)].map(match => plain(match[1]));
+    validate(display.displayTags,list(string,1),project.id+'.displayTags');
+    assert.equal(new Set(display.displayTags).size,display.displayTags.length,'Duplicate display tags: '+project.id);
     for(const image of [display.image,...display.imageSet.split(',').map(v=>v.trim().split(' ')[0])]){
       assert(/^src\/assets\/images\/[\w./-]+$/.test(image)&&!image.includes('..'),'Invalid image path');await stat(new URL(image,root));
     }
@@ -78,7 +83,8 @@ export function catalogFor(records){return records.facts.projects.map(project=>{
   const display=records.presentation[project.id];
   return {id:project.id,stage:project.stage,title:project.title,subtitle:project.completionState.replace(/-/g,' '),category:project.category,dateLabel:project.dateLabel,location:project.location,
     icon:display.icon,iconImage:display.iconImage,image:display.image,imageSet:display.imageSet,imageWidth:display.imageWidth,imageHeight:display.imageHeight,imageFit:display.imageFit,
-    tags:project.tools.slice(0,3).map(t=>t.name),
+    // Presentation topics are deliberately separate from sourced personal tool usage.
+    displayTags:display.displayTags,
     desc:escape(project.summary)+'\n'+project.claims.slice(0,3).map(c=>'• <strong>'+escape(c.owner==='team'?'Team '+labels[c.state].toLowerCase():labels[c.state])+':</strong> '+escape(c.text)).join('\n')};});}
 export const spotlightIds=['box-12','box-7','box-11','box-6'];
 export function spotlightFor(records){return spotlightIds.map(id=>{const project=records.facts.projects.find(p=>p.id===id),display=records.presentation[id];return [id,project.title,project.summary,display.spotlightTag,display.spotlightImage];});}
@@ -119,7 +125,7 @@ export const feedSchema = {$schema:'https://json-schema.org/draft/2020-12/schema
 export async function writeArtifacts(records){
   const {feed,resume}=feedFor(records);validate(feed,feedSchema);
   const outputs={'data/portfolio.json':json(feed),'data/portfolio.md':markdownFor(feed),'data/resume-manifest.json':json(resume),'data/portfolio.schema.json':json(feedSchema),'data/project-source.schema.json':json(sourceSchema),
-    'src/scripts/project-catalog.generated.js':'// Generated from src/content/project-facts.json. Do not edit.\nconst TIMELINE_ITEMS = '+JSON.stringify(catalogFor(records))+';\nconst SPOTLIGHT_PROJECTS = '+JSON.stringify(spotlightFor(records))+';\n'};
+    'src/scripts/project-catalog.generated.js':'// Generated from project facts, images, and detail-page tools and topics. Do not edit.\nconst TIMELINE_ITEMS = '+JSON.stringify(catalogFor(records))+';\nconst SPOTLIGHT_PROJECTS = '+JSON.stringify(spotlightFor(records))+';\n'};
   await mkdir(new URL('data/',root),{recursive:true});
   for(const [path,value] of Object.entries(outputs))await writeFile(new URL(path,root),value);
   // The first visible slide must use the same facts before any interaction.

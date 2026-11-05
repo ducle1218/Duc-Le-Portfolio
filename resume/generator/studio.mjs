@@ -1,5 +1,6 @@
-import {selectWording,composePdf} from './engine.mjs';
+import {composePdf} from './engine.mjs';
 import {validateJob,filename} from './job-core.mjs';
+import {selectProjects,projectSlots} from './project-selection.mjs';
 const $=id=>document.getElementById(id);
 const status=text=>{$('status').textContent=text;};
 const loaded=new Map();
@@ -48,7 +49,9 @@ $('generate').onclick=()=>generateResume();
 export async function buildResume(text){
   const [manifest,feed]=await Promise.all([fetch('./assets/manifest.json').then(r=>{if(!r.ok)throw new Error('Resume template unavailable.');return r.json();}),fetch('../../data/portfolio.json').then(r=>{if(!r.ok)throw new Error('Portfolio data unavailable.');return r.json();}),script('./pdf-lib.min.js')]);
   if(manifest.baselineSha256!==feed.resume.sha256)throw new Error('Your resume was updated. The generator template needs to be refreshed before exporting.');
-  const selected=selectWording(manifest,text);
+  const library=await fetch('./assets/projects.json').then(r=>{if(!r.ok)throw new Error('Project library unavailable.');return r.json();});
+  if(library.baselineSha256!==feed.resume.sha256)throw new Error('The project template needs updating for your new resume.');
+  const selected=projectSlots(selectProjects(library,text));
   const claims=new Map(feed.projects.flatMap(p=>p.claims.map(c=>[c.id,c])));
   for(const slot of selected)for(const source of slot.choice?.sources||[]){const c=claims.get(source.id);if(!c||['text','owner','state'].some(k=>c[k]!==source[k]))throw new Error('A source project changed. The generator wording needs review before exporting.');}
   const output=await composePdf(PDFLib.PDFDocument,selected,bytes);
@@ -64,13 +67,13 @@ async function generateResume(){
     const {output,selected,edits}=await buildResume(text);
     pdfURL=URL.createObjectURL(new Blob([output],{type:'application/pdf'}));$('download').href=pdfURL;
     $('download').download=currentJob?filename(currentJob):'Duc_Le_Tailored_Resume.pdf';
-    $('count').textContent=edits.length+' wording updates';$('summary').textContent='Review '+edits.length+' wording changes';$('changes').replaceChildren();
-    for(const edit of edits){const article=document.createElement('article');for(const [label,text,cls] of [['ORIGINAL',edit.before,'before'],['TAILORED',edit.choice.text,'after']]){const small=document.createElement('small');small.textContent=label;const p=document.createElement('p');p.textContent=text;p.className=cls;article.append(small,p);}$('changes').append(article);}
+    $('count').textContent=selected.length+' selected projects';$('summary').textContent='Why these projects?';$('changes').replaceChildren();
+    for(const edit of edits){const article=document.createElement('article');for(const [label,text,cls] of [[edit.title,edit.reason,'reason'],['RESUME WORDING',edit.choice.text,'after']]){const small=document.createElement('small');small.textContent=label;const p=document.createElement('p');p.textContent=text;p.className=cls;article.append(small,p);}$('changes').append(article);}
     $('empty').hidden=true;$('result').hidden=false;
-    status(edits.length?'Your PDF is ready. Review the changes before using it.':'No supported wording changes matched. Your original wording is ready to download.');
+    status('Your PDF is ready. Review the selected projects and wording before using it.');
     try{
       const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file;});
-      const images=await Promise.all(['base.png',...selected.map(s=>s.file.replace('.pdf','.png'))].map(loadImage));
+      const images=await Promise.all(['project-base.png',...selected.map(s=>s.file.replace('.pdf','.png'))].map(loadImage));
       const canvas=$('preview');canvas.width=1224;canvas.height=1584;const context=canvas.getContext('2d');context.drawImage(images[0],0,0);
       selected.forEach((slot,i)=>{const [x0,y0]=slot.rect;context.drawImage(images[i+1],Math.floor(x0*2),Math.floor(y0*2));});
     }catch(error){console.error('Resume preview failed',error);status('PDF ready to download. The on-page preview could not load.');}

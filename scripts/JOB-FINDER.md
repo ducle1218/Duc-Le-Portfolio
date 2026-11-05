@@ -97,3 +97,27 @@ within 36 hours is stale; only explicit closure or passed deadlines mark closed.
 Reader tests use synthetic job-page fixtures to verify related-job exclusion,
 JSON-LD selection, salary units and access-failure handling. Ranking tests cover
 unknown evidence, repeated keywords, stale/closed order and rank provenance.
+
+
+## Project selection and online library
+
+The generator ranks all 12 reviewed portfolio projects by distinct job-topic
+matches and selects five. Specific topics have more weight than generic CAD,
+assembly, and testing terms. If nothing matches, it uses the original five.
+The review panel explains the matching topics. This is deterministic selection,
+not a freeform language model; bullets are reviewed against portfolio claims.
+Project blocks keep the canonical resume fonts and page layout. Education,
+contact details, skills, and honors remain from the canonical PDF. Regenerate
+blocks with build-project-library.py after a reviewed content/template update.
+A resume hash or source-claim mismatch prevents export until reviewed.
+
+The optional Cloudflare Worker/D1 library is configured with the public endpoint
+in cloud-config.json. Its private key is entered at runtime and kept only in
+memory. Unlocking loads saved jobs and enables automatic saving of new imports;
+clearing browser data does not delete database records. Never put keys in this
+repository. The backend source is maintained outside this public site checkout.
+
+Employer-feed filtering and wider job-board search are separate operations.
+Wider search requires a server-side SerpApi key and uses Google Jobs results;
+LinkedIn, Indeed, and ZipRecruiter coverage varies. It does not directly search
+all listings on those sites. The backend caps searches at 200 per month.

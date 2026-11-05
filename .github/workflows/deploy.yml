@@ -45,6 +45,7 @@ jobs:
           node scripts/check-resume-generator.mjs
           node scripts/check-job-reader.mjs
           node scripts/check-job-insights.mjs
+          node scripts/check-project-selection.mjs
           python scripts/check-job-collector.py
 
       - name: Refresh public employer internship index

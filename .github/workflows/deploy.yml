@@ -1,6 +1,9 @@
 name: Build and deploy site
 
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 7,19 * * *'
   push:
     branches: [main]   # change this if your default branch is called something else (e.g. master)
 
@@ -40,6 +43,12 @@ jobs:
           node scripts/check-spotlight.mjs
           node scripts/check-portfolio-data.mjs
           node scripts/check-resume-generator.mjs
+          node scripts/check-job-reader.mjs
+          python scripts/check-job-collector.py
+
+      - name: Refresh public employer internship index
+        timeout-minutes: 12
+        run: python scripts/collect-jobs.py
 
       - name: Package current public portfolio
         run: node scripts/prepare-pages.mjs

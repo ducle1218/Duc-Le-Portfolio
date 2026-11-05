@@ -39,6 +39,7 @@ jobs:
           node scripts/check-loading.mjs
           node scripts/check-spotlight.mjs
           node scripts/check-portfolio-data.mjs
+          node scripts/check-resume-generator.mjs
 
       - name: Package current public portfolio
         run: node scripts/prepare-pages.mjs

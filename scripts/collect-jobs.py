@@ -85,6 +85,8 @@ def normalize(item, source, checked_at):
         'updatedAt': item.get('updated_at', '') if greenhouse else '',
         'checkedAt': checked_at, 'remote': bool(re.search(r'\bremote\b', location, re.I)),
         'source': source['provider'], 'board': source['board'],
+        'salary': None if greenhouse else item.get('salaryRange'),
+        'employmentType': '' if greenhouse else (item.get('categories') or {}).get('commitment', ''),
     }
 
 

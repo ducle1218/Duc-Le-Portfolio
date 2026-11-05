@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head><base href="../resume/generator/">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+  <title>Resume Studio — Duc Le</title>
+  <script>try{document.documentElement.classList.toggle('dark',localStorage.getItem('portfolio-theme-v2')!=='light')}catch(e){}</script>
+  <link rel="stylesheet" href="../../src/styles/fonts.css"><link rel="stylesheet" href="studio.css">
+  <script type="module" src="studio.mjs"></script>
+</head>
+<body>
+  <header><a class="brand" href="../../">Duc Le<small>Mechanical engineering</small></a><div class="nav-actions"><a href="../../">← Portfolio</a><button id="theme" type="button">Light mode ☀</button></div></header>
+  <main>
+    <div class="intro"><p class="eyebrow">APPLICATION WORKSPACE / 01</p><h1>Your experience.<br><span>A sharper fit.</span></h1><p>Turn a job description into a tailored resume, using the experience documented in your portfolio.</p></div>
+    <div class="workspace">
+      <section class="panel"><div class="panel-heading"><span class="eyebrow">01 / THE OPPORTUNITY</span><span class="tag">Text or screenshot</span></div>
+        <label id="drop" class="drop" for="images"><span class="upload-icon">↥</span><strong>Add a job screenshot</strong><span>Choose images, drop them here, or paste from your clipboard.</span><span class="small">PNG, JPG or WebP · up to 5 images</span><input id="images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+        <div id="thumbnails" class="thumbnails"></div>
+        <label for="description">Job description</label><textarea id="description" maxlength="65000" rows="12" placeholder="Paste the responsibilities and qualifications here…"></textarea>
+        <p class="hint">Screenshot text appears here for you to check and edit.</p>
+        <button id="generate" class="primary" type="button">Tailor my resume <span>↗</span></button>
+        <p id="status" role="status" aria-live="polite">Ready when you are.</p>
+      </section>
+      <section class="panel output"><div class="panel-heading"><span class="eyebrow">02 / YOUR RESUME</span><span id="count" class="tag">Original template</span></div>
+        <div id="empty"><div class="paper-icon"><i></i><i></i><i></i><i></i></div><h2>Same resume.<br>More relevant wording.</h2><p>Your fonts, layout, and project history stay in place. The generator selects supported wording that fits the role.</p></div>
+        <div id="result" hidden><div class="preview"><canvas id="preview" aria-label="Generated resume preview"></canvas></div><a id="download" class="primary" download="Duc_Le_Tailored_Resume.pdf">Download PDF <span>↓</span></a><details><summary id="summary">Review wording changes</summary><div id="changes"></div></details></div>
+      </section>
+    </div>
+    <footer><span>Prepared from your documented experience.</span><span>Images and job text are processed in this browser.</span></footer>
+  </main>
+</body></html>

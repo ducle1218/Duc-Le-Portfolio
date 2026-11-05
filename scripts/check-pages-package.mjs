@@ -25,6 +25,7 @@ export const RESUME_PATH = 'src/assets/resume/Duc_Le_Resume.pdf';
 export const REQUIRED_FILES = Object.freeze([
   'index.html',
   'resume/generator/index.html',
+  'generator/index.html',
   'resume/generator/assets/manifest.json',
   'resume/generator/assets/base.pdf',
   'data/portfolio.json',
@@ -86,7 +87,7 @@ export async function checkPagesPackage() {
   assert(info.isDirectory() && !info.isSymbolicLink(), '_site must be a real directory inside the site root');
   assert.equal(await realpath(destination), destination, '_site must not resolve outside its fixed location');
   const top = (await readdir(destination)).sort();
-  assert.deepEqual(top, ['data', 'index.html', 'resume', 'src'], 'Only index.html, data/, resume/, and src/ may be published');
+  assert.deepEqual(top, ['data', 'generator', 'index.html', 'resume', 'src'], 'Only index.html, data/, generator/, resume/, and src/ may be published');
 
   await checkRequiredInputs(destination);
   const files = await packageFiles(destination);

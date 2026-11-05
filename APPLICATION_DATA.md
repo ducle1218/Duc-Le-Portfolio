@@ -2,7 +2,7 @@
 
 ## Resume Studio
 
-[Open Resume Studio](https://ducle1218.github.io/Duc-Le-Portfolio/resume/generator/) to paste a job description or add screenshots, review tailored wording, and download a PDF in the original resume format. It follows the portfolio's dark/light theme.
+[Open Resume Studio](https://ducle1218.github.io/Duc-Le-Portfolio/generator/) to paste a job description or add screenshots, review tailored wording, and download a PDF in the original resume format. It follows the portfolio's dark/light theme.
 
 The page is unlisted from the main navigation and marked noindex. Anyone with the link can open it. Job text and screenshots are processed in the browser and are not saved on the website. Screenshot recognition loads Tesseract.js and language files on demand. This tool selects reviewed, evidence-backed wording. It does not invent qualifications.
 

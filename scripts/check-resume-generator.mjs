@@ -6,6 +6,8 @@ const require=createRequire(import.meta.url);
 const {PDFDocument}=require('../resume/generator/pdf-lib.min.js');
 const root=new URL('../resume/generator/assets/',import.meta.url);
 const manifest=JSON.parse(await readFile(new URL('manifest.json',root)));
+const html=await readFile(new URL('../resume/generator/index.html',import.meta.url),'utf8');
+assert.equal(await readFile(new URL('../generator/index.html',import.meta.url),'utf8'),html.replace('<head>','<head><base href="../resume/generator/">'));
 const feed=JSON.parse(await readFile(new URL('../data/portfolio.json',import.meta.url)));
 assert.equal(manifest.baselineSha256,feed.resume.sha256);
 const claims=new Map(feed.projects.flatMap(p=>p.claims.map(c=>[c.id,c])));

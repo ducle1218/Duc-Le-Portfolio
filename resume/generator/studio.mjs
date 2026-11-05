@@ -62,7 +62,7 @@ $('generate').onclick=async()=>{
     try{
       const pdfjs=await import('../../src/vendor/pdfjs/pdf.min.mjs');pdfjs.GlobalWorkerOptions.workerSrc='../../src/vendor/pdfjs/pdf.worker.min.mjs';
       const root=new URL('../../src/vendor/pdfjs/',location.href).href;
-      const task=pdfjs.getDocument({data:output.slice(),wasmUrl:root+'wasm/',cMapUrl:root+'cmaps/',cMapPacked:true,standardFontDataUrl:root+'standard_fonts/'});const pdf=await task.promise;const page=await pdf.getPage(1);const viewport=page.getViewport({scale:1.5});const canvas=$('preview');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;await task.destroy();
+      const task=pdfjs.getDocument({data:output.slice(),wasmUrl:root+'wasm/',cMapUrl:root+'cmaps/',cMapPacked:true,standardFontDataUrl:root+'standard_fonts/'});const pdf=await task.promise;const page=await pdf.getPage(1);const viewport=page.getViewport({scale:1.5});const canvas=$('preview');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;void task.destroy().catch(()=>{});
     }catch(error){console.error('Resume preview failed',error);status('PDF ready to download. The on-page preview could not load.');}
   }catch(e){clearResult();status(e.message||'Could not generate the resume. Please try again.');}
   finally{setBusy(false);}

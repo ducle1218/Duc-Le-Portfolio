@@ -1,0 +1,187 @@
+{
+  "baselineSha256": "a1827a739087d4f40bfe0428eb67362d81a90eddbafbecbe282676cb4dd3c2fa",
+  "templateSha256": "7955a6d7c0e53b70d2202e9050a7c62f9237b13af04ea88ec01b33abe46b5807",
+  "slots": [
+    {
+      "id": "2-0",
+      "before": "First-year mechanical engineering student at Rutgers with hands-on experience in CAD, FEA, and competition robotics.",
+      "rect": [
+        78.86399841308594,
+        89.18999938964843,
+        562,
+        99.07000274658203
+      ],
+      "variants": [
+        {
+          "text": "First-year mechanical engineering student at Rutgers with experience in SolidWorks, Onshape, and robot assembly.",
+          "topics": [
+            "SolidWorks",
+            "assembly"
+          ],
+          "file": "2-0-0.pdf",
+          "sources": []
+        },
+        {
+          "text": "First-year mechanical engineering student at Rutgers with experience in CAD, preliminary FEA, and mechanism design.",
+          "topics": [
+            "FEA",
+            "structures",
+            "mechanisms"
+          ],
+          "file": "2-0-1.pdf",
+          "sources": []
+        }
+      ]
+    },
+    {
+      "id": "18-0",
+      "before": "Leading mechanical design in Onshape for a folding four-legged robot; extended the chassis 160 → 225 mm and shortened the upper legs 143 → 135 mm to package the servos",
+      "rect": [
+        66.26399993896484,
+        383.2200134277344,
+        562,
+        405.7
+      ],
+      "variants": [
+        {
+          "text": "Revised the robot’s Onshape CAD to fit the servos, extending the chassis from 160 to 225 mm and shortening the upper leg links from 143 to 135 mm",
+          "topics": [
+            "CAD",
+            "Onshape",
+            "assembly"
+          ],
+          "file": "18-0-2.pdf",
+          "sources": [
+            {
+              "id": "box-12-cad-revisions",
+              "text": "Extended the chassis from 160 to 225 mm and shortened the upper leg link from 143 to 135 mm in CAD.",
+              "owner": "individual",
+              "state": "modeled"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20-0",
+      "before": "Assembled four legs with one actuated; walking control is in development with the team’s lead programmer",
+      "rect": [
+        66.26399993896484,
+        422.7200134277344,
+        562,
+        433.0800048828125
+      ],
+      "variants": [
+        {
+          "text": "Our team assembled four legs and actuated one. Walking control is in development with the lead programmer",
+          "topics": [
+            "collaborative",
+            "assembly"
+          ],
+          "file": "20-0-3.pdf",
+          "sources": [
+            {
+              "id": "box-12-assembly-progress",
+              "text": "The collaborative build record documents four legs attached and one leg actuated.",
+              "owner": "team",
+              "state": "built"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "22-0",
+      "before": "Led CAD design in Onshape and AutoCAD for a 4-person team, building a competition robot from scratch that solved prior teams' failures in weight, navigation drift, and documentation",
+      "rect": [
+        66.26399993896484,
+        449.8400085449219,
+        562,
+        472.3199951171875
+      ],
+      "variants": [
+        {
+          "text": "Led chassis and intake design in Onshape for a four-person VEX team and developed the pneumatic tongue used in the competition robot",
+          "topics": [
+            "Onshape",
+            "CAD",
+            "mechanical design"
+          ],
+          "file": "22-0-4.pdf",
+          "sources": [
+            {
+              "id": "box-6-mechanical-cad",
+              "text": "Led chassis and intake development in Onshape.",
+              "owner": "individual",
+              "state": "modeled"
+            },
+            {
+              "id": "box-6-integration",
+              "text": "Developed the pneumatic tongue and redesigned sensor mounts to integrate tracking hardware within the robot envelope.",
+              "owner": "individual",
+              "state": "built"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "24-0",
+      "before": "Won Judge's Award for engineering process and documentation; placed 3rd at SkillsUSA",
+      "rect": [
+        66.26399993896484,
+        489.3199890136719,
+        562,
+        499.67998046875
+      ],
+      "variants": [
+        {
+          "text": "Our team earned the Judge’s Award for its engineering process and documentation",
+          "topics": [
+            "documentation",
+            "assembly",
+            "team"
+          ],
+          "file": "24-0-5.pdf",
+          "sources": [
+            {
+              "id": "box-6-team-award",
+              "text": "The team earned the Judge’s Award and documented the robot in a CAD assembly and engineering notebook.",
+              "owner": "team",
+              "state": "documented"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "27-0",
+      "before": "Ran structural calculations for max dynamic pressure, sizing a 1/16-inch Aluminum 6063-T5 skin and titanium matrix composite bulkheads, and built a spreadsheet to check applied stress against allowable",
+      "rect": [
+        66.26399993896484,
+        530.2400634765625,
+        562,
+        552.72001953125
+      ],
+      "variants": [
+        {
+          "text": "Built a spreadsheet to compare bulkhead stress with material limits and sized the 1/16-inch Aluminum 6063-T5 skin for maximum dynamic pressure",
+          "topics": [
+            "Excel",
+            "spreadsheet",
+            "structural analysis"
+          ],
+          "file": "27-0-6.pdf",
+          "sources": [
+            {
+              "id": "box-4-bulkheads",
+              "text": "Developed a bulkhead-sizing spreadsheet that compares calculated stress with material allowable stress.",
+              "owner": "individual",
+              "state": "modeled"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

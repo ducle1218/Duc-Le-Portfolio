@@ -1,0 +1,19 @@
+{
+  "list":"Fortune 500 US revenue ranking",
+  "year":2026,
+  "checkedOn":"2026-11-05",
+  "coverage":"Selected verified entries, not a complete Fortune 500 database. Missing means not checked, not low prestige. No parent-company rank is inferred.",
+  "companies":[
+    {"name":"Amazon","rank":1,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"Walmart","rank":2,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"UnitedHealth Group","rank":3,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"Apple","rank":4,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"Alphabet","rank":5,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"NVIDIA","rank":16,"source":"https://fortunemedia.mediaroom.com/2026-06-03-Amazon-Claims-No-1-Spot-on-the-Fortune-500"},
+    {"name":"Boeing","rank":47,"source":"https://www.fortunechina.com/fortune500/c/2026-06/03/content_474031.htm"},
+    {"name":"RTX","rank":49,"source":"https://www.fortunechina.com/fortune500/c/2026-06/03/content_474031.htm"},
+    {"name":"Lockheed Martin","rank":61,"source":"https://www.fortunechina.com/fortune500/c/2026-06/03/content_474031.htm"},
+    {"name":"Northrop Grumman","rank":112,"source":"https://www.fortunechina.com/fortune500/c/2026-06/03/content_474031.htm"},
+    {"name":"EQT","aliases":["EQT Corporation"],"rank":458,"source":"https://fortune.com/company/eqt/"}
+  ]
+}

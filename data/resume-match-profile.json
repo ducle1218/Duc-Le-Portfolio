@@ -1,0 +1,22 @@
+{
+  "resumeSha256":"a1827a739087d4f40bfe0428eb67362d81a90eddbafbecbe282676cb4dd3c2fa",
+  "reviewedOn":"2026-11-05",
+  "education":"First-year B.S. Mechanical Engineering student; expected May 2030; college GPA not provided",
+  "skills":[
+    {"name":"CAD","evidence":"CAD & Analysis: Onshape (FEA), SolidWorks, AutoCAD"},
+    {"name":"SolidWorks","evidence":"CAD & Analysis: Onshape (FEA), SolidWorks, AutoCAD"},
+    {"name":"Onshape","evidence":"CAD & Analysis: Onshape (FEA), SolidWorks, AutoCAD"},
+    {"name":"AutoCAD","evidence":"CAD & Analysis: Onshape (FEA), SolidWorks, AutoCAD"},
+    {"name":"FEA","evidence":"Running preliminary FEA on the arms (~23 psi at 0.28 lbf)","qualifier":"Preliminary project analysis; not professional expertise"},
+    {"name":"MATLAB","evidence":"Programming & Tools: C++, Python, MATLAB, Excel / Google Sheets"},
+    {"name":"Python","evidence":"Programming & Tools: C++, Python, MATLAB, Excel / Google Sheets"},
+    {"name":"C++","evidence":"Programming & Tools: C++, Python, MATLAB, Excel / Google Sheets"},
+    {"name":"Excel","evidence":"Programming & Tools: C++, Python, MATLAB, Excel / Google Sheets"},
+    {"name":"3D printing","evidence":"Design & Fabrication: Mechanical Design, 3D Printing (FDM), Reverse Engineering"},
+    {"name":"Mechanical design","evidence":"Leading mechanical design in Onshape for a folding four-legged robot"},
+    {"name":"Assembly","evidence":"Iterated locating slots, servo-axis alignment, and mirrored printed supports for assembly"},
+    {"name":"Structural analysis","evidence":"Ran structural calculations for max dynamic pressure","qualifier":"Academic concept study"},
+    {"name":"Documentation","evidence":"engineering process and documentation","qualifier":"Project documentation"}
+  ],
+  "notCredited":["GD&T drawing is planned, not completed","Citizenship and work authorization are unknown","No professional employment tenure is asserted"]
+}

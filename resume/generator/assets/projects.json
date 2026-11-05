@@ -1,0 +1,457 @@
+{
+  "baselineSha256": "a1827a739087d4f40bfe0428eb67362d81a90eddbafbecbe282676cb4dd3c2fa",
+  "projects": [
+    {
+      "id": "box-12",
+      "title": "Quadruped Robot",
+      "topics": [
+        "robotics",
+        "mechanisms",
+        "servo",
+        "assembly",
+        "3D printing",
+        "Onshape"
+      ],
+      "bullets": [
+        "Revised the robot chassis from 160 to 225 mm and shortened the upper leg links from 143 to 135 mm to fit the servos.",
+        "The team assembled four legs and actuated one; walking control remains in development."
+      ],
+      "file": "project-box-12.pdf",
+      "sources": [
+        {
+          "id": "box-12-cad-revisions",
+          "text": "Extended the chassis from 160 to 225 mm and shortened the upper leg link from 143 to 135 mm in CAD.",
+          "owner": "individual",
+          "state": "modeled"
+        },
+        {
+          "id": "box-12-assembly-progress",
+          "text": "The collaborative build record documents four legs attached and one leg actuated.",
+          "owner": "team",
+          "state": "built"
+        },
+        {
+          "id": "box-12-folding-next",
+          "text": "The CAD packages all four legs below the body; physical folding validation is next.",
+          "owner": "unclear",
+          "state": "planned"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-12"
+    },
+    {
+      "id": "box-7",
+      "title": "Volumetric Display",
+      "topics": [
+        "rotating machinery",
+        "motor",
+        "shaft",
+        "SolidWorks",
+        "3D printing",
+        "FEA"
+      ],
+      "bullets": [
+        "The revised CAD replaces a broad rotating wall with 20 radial supports.",
+        "Preliminary arm analysis showed about 23 psi at a modeled 0.28 lbf load; this is not a validated operating limit."
+      ],
+      "file": "project-box-7.pdf",
+      "sources": [
+        {
+          "id": "box-7-radial-supports",
+          "text": "Replaced the broad rotating wall with twenty radial supports in the revised CAD model.",
+          "owner": "unclear",
+          "state": "modeled"
+        },
+        {
+          "id": "box-7-arm-analysis",
+          "text": "A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load.",
+          "owner": "unclear",
+          "state": "simulated"
+        },
+        {
+          "id": "box-7-printable-shaft",
+          "text": "Split the center shaft into printable sections for the Prusa Mini build envelope.",
+          "owner": "unclear",
+          "state": "modeled"
+        },
+        {
+          "id": "box-7-shaft-input",
+          "text": "The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input.",
+          "owner": "unclear",
+          "state": "simulated"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-7"
+    },
+    {
+      "id": "box-11",
+      "title": "FEA & GD&T",
+      "topics": [
+        "FEA",
+        "finite element analysis",
+        "stress analysis",
+        "structural analysis",
+        "Onshape"
+      ],
+      "bullets": [
+        "The preliminary assembly model applies separate -200 lbf Y-direction loads to two aligner plates.",
+        "The study examines stress around holes, cutout corners, and spacers; model validation and toleranced drawings are next."
+      ],
+      "file": "project-box-11.pdf",
+      "sources": [
+        {
+          "id": "box-11-force-definitions",
+          "text": "Modeled separate −200 lbf Y-direction force inputs on the two selected plates.",
+          "owner": "unclear",
+          "state": "simulated"
+        },
+        {
+          "id": "box-11-load-path",
+          "text": "Examined stress-contour variation around holes, cutout corners, and spacer interfaces.",
+          "owner": "unclear",
+          "state": "simulated"
+        },
+        {
+          "id": "box-11-validation-next",
+          "text": "Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing.",
+          "owner": "unclear",
+          "state": "planned"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-11"
+    },
+    {
+      "id": "box-3",
+      "title": "SolidWorks CAD to Manufacturing Readiness",
+      "topics": [
+        "SolidWorks",
+        "parametric",
+        "manufacturing",
+        "CAD"
+      ],
+      "bullets": [
+        "Practiced parametric CAD using the official SolidWorks CSWA problem set.",
+        "Next steps are to develop selected parts into GD&T drawings and review their manufacturability and assembly."
+      ],
+      "file": "project-box-3.pdf",
+      "sources": [
+        {
+          "id": "box-3-cad-practice",
+          "text": "Working through the official SolidWorks CSWA practice problem set to develop CAD fluency.",
+          "owner": "individual",
+          "state": "modeled"
+        },
+        {
+          "id": "box-3-drawing-next",
+          "text": "Extending selected practice parts toward GD&T drawings and DFM/DFA reviews.",
+          "owner": "individual",
+          "state": "planned"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-3"
+    },
+    {
+      "id": "box-6",
+      "title": "Sprocket · VEX Pushback",
+      "topics": [
+        "robotics",
+        "pneumatics",
+        "sensor integration",
+        "Onshape",
+        "mechanical design"
+      ],
+      "bullets": [
+        "Led chassis and intake design in Onshape.",
+        "Built the pneumatic tongue and redesigned sensor mounts to fit tracking hardware within the robot envelope."
+      ],
+      "file": "project-box-6.pdf",
+      "sources": [
+        {
+          "id": "box-6-mechanical-cad",
+          "text": "Led chassis and intake development in Onshape.",
+          "owner": "individual",
+          "state": "modeled"
+        },
+        {
+          "id": "box-6-integration",
+          "text": "Developed the pneumatic tongue and redesigned sensor mounts to integrate tracking hardware within the robot envelope.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-6-skills-result",
+          "text": "The team’s final recorded trial scored 60 points: 45 driver and 15 autonomous, above its 50-point target.",
+          "owner": "team",
+          "state": "tested"
+        },
+        {
+          "id": "box-6-team-award",
+          "text": "The team earned the Judge’s Award and documented the robot in a CAD assembly and engineering notebook.",
+          "owner": "team",
+          "state": "documented"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-6"
+    },
+    {
+      "id": "box-4",
+      "title": "Launch Vehicle Project",
+      "topics": [
+        "aerospace",
+        "MATLAB",
+        "structures",
+        "structural analysis",
+        "trajectory",
+        "SolidWorks"
+      ],
+      "bullets": [
+        "Led core calculations, trajectory simulation, and structural analysis for a student launch-vehicle concept.",
+        "Used MATLAB to develop staging parameters for a target payload of 4,500 lb; the vehicle remained a concept."
+      ],
+      "file": "project-box-4.pdf",
+      "sources": [
+        {
+          "id": "box-4-concept-design",
+          "text": "Led the concept’s core calculations, trajectory simulations, and structural analysis for the student team.",
+          "owner": "individual",
+          "state": "modeled"
+        },
+        {
+          "id": "box-4-staging",
+          "text": "Used MATLAB to develop staging parameters for a concept targeting a 4,500 lb satellite payload.",
+          "owner": "individual",
+          "state": "simulated"
+        },
+        {
+          "id": "box-4-bulkheads",
+          "text": "Developed a bulkhead-sizing spreadsheet that compares calculated stress with material allowable stress.",
+          "owner": "individual",
+          "state": "modeled"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-4"
+    },
+    {
+      "id": "box-1",
+      "title": "High Stakes Competition Robot Build",
+      "topics": [
+        "robotics",
+        "assembly",
+        "AutoCAD",
+        "mechanical design"
+      ],
+      "bullets": [
+        "Contributed CAD and led assembly of the team’s competition robot.",
+        "The team revised ground pickup and added a conveyor bracket to stabilize mobile-goal capture."
+      ],
+      "file": "project-box-1.pdf",
+      "sources": [
+        {
+          "id": "box-1-assembly-role",
+          "text": "Contributed CAD and led assembly for the team’s competition robot.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-1-mechanisms",
+          "text": "The team revised ground pickup and added a bracket below the conveyor to stabilize mobile-goal capture.",
+          "owner": "team",
+          "state": "built"
+        },
+        {
+          "id": "box-1-match-trials",
+          "text": "Across seven match trials, the team’s highest recorded result was 12 points in Trial 6.",
+          "owner": "team",
+          "state": "tested"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-1"
+    },
+    {
+      "id": "box-5",
+      "title": "Arduino Electronics",
+      "topics": [
+        "Arduino",
+        "electronics",
+        "circuit",
+        "analog",
+        "embedded",
+        "breadboard"
+      ],
+      "bullets": [
+        "Designed and built an eight-key musical keyboard prototype on an Arduino Uno.",
+        "Used a resistor ladder on analog pin A0 to distinguish key presses and map voltage ranges to tones."
+      ],
+      "file": "project-box-5.pdf",
+      "sources": [
+        {
+          "id": "box-5-keyboard",
+          "text": "Designed and prototyped an eight-key musical keyboard on an Arduino Uno.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-5-analog-input",
+          "text": "Used a resistor ladder to read the keyboard through analog input A0 and map voltage ranges to tones.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-5-tutorial-record",
+          "text": "The project documents four preparatory Arduino tutorials across 31 notebook pages.",
+          "owner": "unclear",
+          "state": "documented"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-5"
+    },
+    {
+      "id": "box-8",
+      "title": "Tower Design Project",
+      "topics": [
+        "civil",
+        "structural",
+        "structures",
+        "load testing",
+        "AutoCAD"
+      ],
+      "bullets": [
+        "Handled design and notebook work, rebuilding the AutoCAD model when the original file was unavailable.",
+        "The team’s tower held 45 lb before failure, but bending at 67 N left the stated 100 N criterion unmet."
+      ],
+      "file": "project-box-8.pdf",
+      "sources": [
+        {
+          "id": "box-8-drawing-role",
+          "text": "Handled design and notebook work and rebuilt the AutoCAD model when the original file was unavailable.",
+          "owner": "individual",
+          "state": "documented"
+        },
+        {
+          "id": "box-8-load-test",
+          "text": "The team’s tower held 45 lb before failure, while visible bending at 67 N left the stated 100 N criterion unmet.",
+          "owner": "team",
+          "state": "tested"
+        },
+        {
+          "id": "box-8-bracing-next",
+          "text": "Proposed diagonal bracing between layers to address twisting in a next iteration.",
+          "owner": "unclear",
+          "state": "planned"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-8"
+    },
+    {
+      "id": "box-9",
+      "title": "Sensor Challenge",
+      "topics": [
+        "sensors",
+        "sonar",
+        "navigation",
+        "robotics",
+        "testing"
+      ],
+      "bullets": [
+        "Contributed build work and notebook documentation to two sensor-guided robot challenges.",
+        "The team robot avoided obstacles and completed the warehouse course in four of five recorded runs."
+      ],
+      "file": "project-box-9.pdf",
+      "sources": [
+        {
+          "id": "box-9-build-role",
+          "text": "Contributed notebook and build work to the two sensor-guided robot challenges.",
+          "owner": "individual",
+          "state": "documented"
+        },
+        {
+          "id": "box-9-warehouse-results",
+          "text": "The team robot avoided obstacles and finished the warehouse course in four of five runs.",
+          "owner": "team",
+          "state": "tested"
+        },
+        {
+          "id": "box-9-parking-result",
+          "text": "After motor-power tuning, the robot completed a clean parallel park on the seventh trial.",
+          "owner": "team",
+          "state": "tested"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-9"
+    },
+    {
+      "id": "box-10",
+      "title": "Putt-Putt Boat: Straight-Line Redesign",
+      "topics": [
+        "prototyping",
+        "fabrication",
+        "fixture",
+        "jig",
+        "testing"
+      ],
+      "bullets": [
+        "Added twin paper-straw exhaust extensions to a class-built boat to improve straight-line travel.",
+        "Used a removable wooden spacer to hold the exhaust spacing and angle while the adhesive set."
+      ],
+      "file": "project-box-10.pdf",
+      "sources": [
+        {
+          "id": "box-10-twin-straws",
+          "text": "Independently added twin paper-straw exhaust extensions to a class-built boat for straighter travel.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-10-assembly-jig",
+          "text": "Used a removable wooden spacer to hold straw spacing and angle while the adhesive set.",
+          "owner": "individual",
+          "state": "built"
+        },
+        {
+          "id": "box-10-gutter-tests",
+          "text": "Five trials over a 33-inch course averaged about 13.7 seconds, compared with the recorded 33.07-second baseline.",
+          "owner": "individual",
+          "state": "tested"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-10"
+    },
+    {
+      "id": "box-2",
+      "title": "Wind Turbine Competition",
+      "topics": [
+        "wind",
+        "turbine",
+        "energy",
+        "aerodynamics",
+        "AutoCAD"
+      ],
+      "bullets": [
+        "Produced notebook drawings to document the team’s blade-development process.",
+        "The March 16 prototype used three cardboard blades, each 14 inches long and 3 inches wide."
+      ],
+      "file": "project-box-2.pdf",
+      "sources": [
+        {
+          "id": "box-2-notebook-drawings",
+          "text": "Produced notebook drawings documenting the blade development process.",
+          "owner": "individual",
+          "state": "documented"
+        },
+        {
+          "id": "box-2-blade-prototype",
+          "text": "The March 16 team prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
+          "owner": "team",
+          "state": "built"
+        },
+        {
+          "id": "box-2-wind-tunnel-trial",
+          "text": "Tested that prototype facing backward in a wind tunnel for 20 seconds.",
+          "owner": "team",
+          "state": "tested"
+        }
+      ],
+      "url": "https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-2"
+    }
+  ]
+}

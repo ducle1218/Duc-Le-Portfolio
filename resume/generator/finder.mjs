@@ -3,6 +3,7 @@ import {importJob} from './job-api.mjs';
 import {buildResume,lockStudio,previewJob} from './studio.mjs';
 import {makeZip} from './zip.mjs';
 import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs';
+import {setupCloud,connected,saveJobs,searchOnline} from './cloud.mjs';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -20,7 +21,7 @@ function showJobs(){
  const classified=all.filter(job=>!isImported||imported.has(job.url)).map(job=>({job,...(isImported?{status:'ready'}:filterJob(job,filters)),fresh:freshness(job),fit:matchResume(job,profile),company:companyDetails(job,registry,filters.priorities),pay:payDetails(job)})).filter(entry=>$('show-closed').checked||!entry.fresh.closed);
  const ready=classified.filter(j=>j.status==='ready'),review=classified.filter(j=>j.status==='review');
  visible=sortJobs([...ready,...($('show-review').checked?review:[])],$('sort-jobs').value);
- $('match-count').textContent=ready.length+(isImported?' imported jobs':' matches')+(review.length?' · '+review.length+' need a check':'');
+ $('match-count').textContent=ready.length+(isImported?' saved / imported jobs':' matches')+(review.length?' · '+review.length+' need a check':'');
  $('sort-note').textContent=$('sort-jobs').value==='newest'?'Newest publication dates first; closed postings stay last.':$('sort-jobs').value==='match'?'Freshness first, then documented skill overlap.':'Freshness first, then your favorites and verified Fortune 500 rank.';
  $('jobs').replaceChildren();
  if(!visible.length)$('jobs').append(node('p',all.length?'No matches in the connected feeds. Try broader keywords or locations, or import a posting below.':'No postings loaded yet. You can still paste a job description below.','muted'));
@@ -85,9 +86,9 @@ $('import-links').onclick=async()=>{
  lock(true);const errors=[];let added=0;
  try{for(const [i,url] of [...new Set(urls)].entries()){
   $('import-status').textContent='Reading link '+(i+1)+' of '+new Set(urls).size+'…';
-  try{const job=await importJob(url,all);if(!all.some(j=>canonical(j.url)===canonical(job.url))){all.push({...job,url:canonical(job.url)});}imported.add(canonical(job.url));added++;}
+  try{const job=await importJob(url,all);if(!all.some(j=>canonical(j.url)===canonical(job.url))){all.push({...job,url:canonical(job.url)});}imported.add(canonical(job.url));added++;if(connected()){try{await saveJobs([job]);}catch(error){errors.push('Imported, but not saved online: '+job.title+' — '+error.message);}}}
   catch(error){errors.push(url+' — '+error.message);}
- }}finally{lock(false);if(added)$('result-scope').value='imported';showJobs();$('import-status').textContent=added+' postings ready in Imported links.'+(errors.length?'\n'+errors.join('\n'):'');}
+ }}finally{lock(false);if(added)$('result-scope').value='imported';showJobs();$('import-status').textContent=added+' postings ready in Saved / imported.'+(!connected()?' Session only: unlock the online library to save them.':'')+(errors.length?'\n'+errors.join('\n'):'');}
 };
 $('cancel-batch').onclick=()=>{cancelled=true;$('cancel-batch').disabled=true;$('batch-status').textContent='Stopping after the current PDF…';};
 $('batch').onclick=async()=>{
@@ -101,7 +102,7 @@ $('batch').onclick=async()=>{
    if(cancelled)break;$('batch-status').textContent='Preparing '+(i+1)+' of '+jobs.length+' · '+job.company+' — '+job.title;
    try{
     const result=await buildResume(job.description),name=filename(job);files.push({name,data:result.output});
-    report.push({company:job.company,title:job.title,location:job.location,url:job.url,checkedAt:job.checkedAt,filename:name,baselineSha256:result.baselineSha256,status:result.edits.length?'review wording changes':'original wording — no supported match',changes:result.edits.map(s=>({before:s.before,after:s.choice.text,sources:s.choice.sources}))});
+    report.push({company:job.company,title:job.title,location:job.location,url:job.url,checkedAt:job.checkedAt,filename:name,baselineSha256:result.baselineSha256,status:'review selected projects and wording',changes:result.edits.map(s=>({projectId:s.id,title:s.title,reason:s.reason,before:s.before,after:s.choice.text,sources:s.choice.sources}))});
    }catch(error){report.push({company:job.company,title:job.title,url:job.url,error:error.message});}
    await new Promise(resolve=>setTimeout(resolve,0));
   }
@@ -114,3 +115,7 @@ $('batch').onclick=async()=>{
  finally{lockStudio(false);lock(false);$('cancel-batch').hidden=true;}
 };
 await load();
+const mergeJobs=jobs=>{for(const job of jobs){try{const valid=validateJob(job),entry={...job,...valid},existing=all.findIndex(j=>j.url===valid.url);if(existing<0)all.push(entry);else all[existing]=entry;imported.add(valid.url);}catch{}}if(jobs.length)$('result-scope').value='imported';showJobs();};
+await setupCloud(mergeJobs);
+$('cloud-save-current').onclick=async()=>{const jobs=all.filter(j=>imported.has(j.url));try{for(let i=0;i<jobs.length;i+=20)await saveJobs(jobs.slice(i,i+20));$('cloud-status').textContent=jobs.length+' imported jobs saved online.';}catch(error){$('cloud-status').textContent=error.message;}};
+$('online-search').onclick=async()=>{if(running)return;lock(true);$('cloud-status').textContent='Searching job boards…';try{const result=await searchOnline(readFilters());mergeJobs(result.jobs);for(let i=0;i<result.jobs.length;i+=20)await saveJobs(result.jobs.slice(i,i+20));$('cloud-status').textContent=result.jobs.length+' search results saved online. '+result.coverage;}catch(error){$('cloud-status').textContent=error.message;}finally{lock(false);}};

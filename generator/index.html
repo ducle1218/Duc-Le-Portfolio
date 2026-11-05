@@ -7,13 +7,39 @@
   <script>try{document.documentElement.classList.toggle('dark',localStorage.getItem('portfolio-theme-v2')!=='light')}catch(e){}</script>
   <link rel="stylesheet" href="../../src/styles/fonts.css"><link rel="stylesheet" href="studio.css">
   <script type="module" src="studio.mjs"></script>
+  <script type="module" src="finder.mjs"></script>
 </head>
 <body>
   <header><a class="brand" href="../../">Duc Le<small>Mechanical engineering</small></a><div class="nav-actions"><a href="../../">← Portfolio</a><button id="theme" type="button">Light mode ☀</button></div></header>
   <main>
-    <div class="intro"><p class="eyebrow">APPLICATION WORKSPACE / 01</p><h1>Your experience.<br><span>A sharper fit.</span></h1><p>Turn a job description into a tailored resume, using the experience documented in your portfolio.</p></div>
+    <div class="intro"><p class="eyebrow">APPLICATION WORKSPACE / 01</p><h1>Your experience.<br><span>A sharper fit.</span></h1><p>Find an opportunity. Build a resume around the experience you actually have.</p></div>
+    <section class="panel finder" aria-labelledby="finder-heading">
+      <div class="finder-heading"><div><p class="eyebrow">DISCOVER / FILTER / PREPARE</p><h2 id="finder-heading">A little closer to your next role.</h2><p class="muted">Engineering internships from connected employer job boards. No extension needed.</p></div><span class="tag">Employer feeds · Free</span></div>
+      <form id="filters">
+        <div class="filter-grid">
+          <label>Role keywords <input id="roles" name="include" placeholder="mechanical, CAD, robotics"></label>
+          <label>Locations <input id="locations" name="locations" placeholder="New Jersey, New York, Pennsylvania"></label>
+        </div>
+        <div class="filter-options"><label><input id="remote" type="checkbox" name="remote"> Include US remote</label><label><input id="show-review" type="checkbox"> Show uncertain locations or dates</label></div>
+        <details class="more-filters"><summary>More filters & exclusions</summary><div class="filter-grid">
+          <label>Exclude title keywords <input id="exclude" name="exclude"></label>
+          <label>Exclude companies <input id="companies" name="companies" placeholder="Company names, separated by commas"></label>
+          <label>Exclude description keywords <input id="terms" name="terms" placeholder="e.g. PhD, unpaid"></label>
+          <label>Original posting date <select id="days" name="days"><option value="0">Any date, including unknown</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+        </div><p class="hint">Separate keywords and locations with commas. Roles match titles; exclusions match the indicated field. If the source does not provide a publication date, the posting needs a date check when you use an age filter.</p></details>
+        <div class="search-actions"><button class="primary" type="submit">Find matching internships <span>↗</span></button><button id="reset-filters" class="quiet" type="button">Reset filters</button></div>
+      </form>
+      <p id="feed-status" class="hint" role="status">Loading employer index…</p>
+      <details id="source-details"><summary>Coverage & refresh status</summary><p class="hint">The hosted collector checks these employer APIs twice daily. This is a curated index, not a search of all LinkedIn or every employer. Postings may close between checks. Open the source to verify requirements.</p><div id="sources" class="source-grid"></div></details>
+      <details class="link-import"><summary>Already have job links? Import one or a batch</summary><label for="job-links">One job link per line</label><textarea id="job-links" rows="3" placeholder="https://job-boards.greenhouse.io/company/jobs/123…"></textarea><p class="hint">Greenhouse and Lever links can be read directly. For LinkedIn or other sites outside the index, use a screenshot or paste the description below.</p><button id="import-links" class="quiet" type="button">Read links</button><p id="import-status" class="hint" role="status"></p></details>
+      <div class="results-heading"><h3 id="match-count">Your matches</h3><button id="select-matches" class="quiet" type="button">Select up to 15 matches</button></div>
+      <div id="jobs" class="job-list"><p class="muted">Your matches will appear here.</p></div>
+      <div class="batch-bar"><div><strong id="selection-count">0 selected</strong><p class="hint">One PDF per posting, in a single ZIP. Includes sources and a wording-change report.</p></div><div class="batch-actions"><button id="batch" class="primary" type="button" disabled>Generate selected <span>↓</span></button><button id="cancel-batch" class="quiet" type="button" hidden>Stop after current PDF</button><a id="batch-download" class="quiet" hidden download>Download ZIP again ↓</a></div></div>
+      <p id="batch-status" class="hint" role="status" aria-live="polite"></p>
+    </section>
     <div class="workspace">
       <section class="panel"><div class="panel-heading"><span class="eyebrow">01 / THE OPPORTUNITY</span><span class="tag">Text or screenshot</span></div>
+        <div id="job-details" class="job-details" hidden><strong id="job-title"></strong><p id="job-company"></p><a id="job-source" target="_blank" rel="noreferrer">Open source posting ↗</a><button id="new-draft" class="quiet" type="button">New manual draft</button></div>
         <label id="drop" class="drop" for="images"><span class="upload-icon">↥</span><strong>Add a job screenshot</strong><span>Choose images, drop them here, or paste from your clipboard.</span><span class="small">PNG, JPG or WebP · up to 5 images</span><input id="images" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
         <div id="thumbnails" class="thumbnails"></div>
         <label for="description">Job description</label><textarea id="description" maxlength="65000" rows="12" placeholder="Paste the responsibilities and qualifications here…"></textarea>

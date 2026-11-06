@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
-import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,readdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {searchQueries} from '../resume/generator/cloud.mjs';
 import {selectProjects,projectSlots,projectFooterRect} from '../resume/generator/project-selection.mjs';
 import {composePdf} from '../resume/generator/engine.mjs';
+const studioRoot=new URL('../resume/generator/',import.meta.url);
+const studioHtml=await readFile(new URL('index.html',studioRoot),'utf8'),release=studioHtml.match(/studio\.mjs\?v=([^"]+)/)?.[1];
+assert(release,'Generator entry modules must be versioned');
+assert(studioHtml.includes('finder.mjs?v='+release));
+for(const file of (await readdir(studioRoot)).filter(f=>f.endsWith('.mjs'))){const code=await readFile(new URL(file,studioRoot),'utf8');for(const match of code.matchAll(/from\s*['"](\.\/[^'"]+\.mjs(?:\?[^'"]*)?)['"]/g))assert(match[1].endsWith('?v='+release),'Module graph version mismatch: '+file+' -> '+match[1]);}
 const root=new URL('../resume/generator/assets/',import.meta.url),library=JSON.parse(await readFile(new URL('projects.json',root)));
 const feed=JSON.parse(await readFile(new URL('../data/portfolio.json',import.meta.url)));
 assert.deepEqual(searchQueries({include:'mechanical, CAD, robotics, engineering',locations:'New Jersey, New York, Pennsylvania',remote:true}),['engineering internship New Jersey','engineering internship New York','engineering internship Pennsylvania','engineering internship remote United States']);

@@ -1,9 +1,9 @@
-import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs';
-import {importJob} from './job-api.mjs';
-import {buildResume,lockStudio,previewJob} from './studio.mjs';
-import {makeZip} from './zip.mjs';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs';
-import {setupCloud,connected,saveJobs,searchOnline} from './cloud.mjs';
+import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261105.4';
+import {importJob} from './job-api.mjs?v=20261105.4';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261105.4';
+import {makeZip} from './zip.mjs?v=20261105.4';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261105.4';
+import {setupCloud,connected,saveJobs,searchOnline} from './cloud.mjs?v=20261105.4';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

@@ -1,12 +1,12 @@
-import {composePdf} from './engine.mjs';
-import {validateJob,filename} from './job-core.mjs';
-import {selectProjects,projectSlots,projectFooterRect} from './project-selection.mjs';
+import {composePdf} from './engine.mjs?v=20261105.4';
+import {validateJob,filename} from './job-core.mjs?v=20261105.4';
+import {selectProjects,projectSlots,projectFooterRect} from './project-selection.mjs?v=20261105.4';
 const $=id=>document.getElementById(id);
 const status=text=>{$('status').textContent=text;};
 const loaded=new Map();
 function script(url){if(!loaded.has(url))loaded.set(url,new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=()=>{loaded.delete(url);s.remove();reject(new Error('A required library could not load. Check your connection and try again.'));};document.head.append(s);}));return loaded.get(url);}
 const assetCache=new Map();
-async function bytes(file){if(!assetCache.has(file)){const r=await fetch('./assets/'+file);if(!r.ok)throw new Error('Resume assets could not load. Refresh and try again.');assetCache.set(file,await r.arrayBuffer());}return assetCache.get(file);}
+async function bytes(file){if(!assetCache.has(file)){const r=await fetch('./assets/'+file,{cache:'no-cache'});if(!r.ok)throw new Error('Resume assets could not load. Refresh and try again.');assetCache.set(file,await r.arrayBuffer());}return assetCache.get(file);}
 let busy=false,pdfURL=null;
 let currentJob=null;
 function setBusy(value){busy=value;$('generate').disabled=value;$('images').disabled=value;$('description').disabled=value;}
@@ -47,9 +47,9 @@ document.addEventListener('paste',e=>{const files=[...(e.clipboardData?.files||[
 for(const name of ['dragover','dragleave','drop'])$('drop').addEventListener(name,e=>{e.preventDefault();$('drop').classList.toggle('drag',name==='dragover');if(name==='drop')recognize(e.dataTransfer.files);});
 $('generate').onclick=()=>generateResume();
 export async function buildResume(text){
-  const [manifest,feed]=await Promise.all([fetch('./assets/manifest.json').then(r=>{if(!r.ok)throw new Error('Resume template unavailable.');return r.json();}),fetch('../../data/portfolio.json').then(r=>{if(!r.ok)throw new Error('Portfolio data unavailable.');return r.json();}),script('./pdf-lib.min.js')]);
+  const [manifest,feed]=await Promise.all([fetch('./assets/manifest.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('Resume template unavailable.');return r.json();}),fetch('../../data/portfolio.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('Portfolio data unavailable.');return r.json();}),script('./pdf-lib.min.js')]);
   if(manifest.baselineSha256!==feed.resume.sha256)throw new Error('Your resume was updated. The generator template needs to be refreshed before exporting.');
-  const library=await fetch('./assets/projects.json').then(r=>{if(!r.ok)throw new Error('Project library unavailable.');return r.json();});
+  const library=await fetch('./assets/projects.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('Project library unavailable.');return r.json();});
   if(library.baselineSha256!==feed.resume.sha256)throw new Error('The project template needs updating for your new resume.');
   const selected=projectSlots(selectProjects(library,text));
   const claims=new Map(feed.projects.flatMap(p=>p.claims.map(c=>[c.id,c])));
@@ -72,7 +72,7 @@ async function generateResume(){
     $('empty').hidden=true;$('result').hidden=false;
     status('Your PDF is ready. Review the selected projects and wording before using it.');
     try{
-      const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file;});
+      const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file+'?v=20261105.4';});
       const images=await Promise.all(['project-base.png',...selected.map(s=>s.file.replace('.pdf','.png')),'project-footer.png'].map(loadImage));
       const canvas=$('preview');canvas.width=1224;canvas.height=1584;const context=canvas.getContext('2d');context.drawImage(images[0],0,0);
       selected.forEach((slot,i)=>{const [x0,y0]=slot.rect;context.drawImage(images[i+1],Math.floor(x0*2),Math.floor(y0*2));});

@@ -13,9 +13,11 @@
         "Onshape"
       ],
       "bullets": [
-        "Revised the robot chassis from 160 to 225 mm and shortened the upper leg links from 143 to 135 mm to fit the servos.",
-        "The team assembled four legs and actuated one; walking control remains in development."
+        "Extended the robot chassis from 160 to 225 mm in CAD to improve mechanism packaging.",
+        "Shortened upper leg links from 143 to 135 mm so the legs fit without further lengthening the body.",
+        "The team attached four legs and actuated one; walking control remains in development."
       ],
+      "height": 57,
       "file": "project-box-12.pdf",
       "sources": [
         {
@@ -52,8 +54,10 @@
       ],
       "bullets": [
         "The revised CAD replaces a broad rotating wall with 20 radial supports.",
-        "Preliminary arm analysis showed about 23 psi at a modeled 0.28 lbf load; this is not a validated operating limit."
+        "The center shaft was divided into printable sections for the Prusa Mini build envelope.",
+        "Preliminary arm analysis reported about 23 psi at a modeled 0.28 lbf load, not a verified load rating."
       ],
+      "height": 57,
       "file": "project-box-7.pdf",
       "sources": [
         {
@@ -94,9 +98,11 @@
         "Onshape"
       ],
       "bullets": [
-        "The preliminary assembly model applies separate -200 lbf Y-direction loads to two aligner plates.",
-        "The study examines stress around holes, cutout corners, and spacers; model validation and toleranced drawings are next."
+        "The preliminary assembly study applies separate -200 lbf Y-direction loads to two aligner plates.",
+        "Stress contours show local variation around holes, cutout corners, and spacer interfaces.",
+        "Model-warning resolution, mesh-sensitivity checks, and toleranced drawings remain in progress."
       ],
+      "height": 57,
       "file": "project-box-11.pdf",
       "sources": [
         {
@@ -130,9 +136,10 @@
         "CAD"
       ],
       "bullets": [
-        "Practiced parametric CAD using the official SolidWorks CSWA problem set.",
-        "Next steps are to develop selected parts into GD&T drawings and review their manufacturability and assembly."
+        "Practiced parametric CAD with the official SolidWorks CSWA problem set and reference drawings.",
+        "Further work will extend selected parts into GD&T drawings and manufacturing and assembly reviews."
       ],
+      "height": 43,
       "file": "project-box-3.pdf",
       "sources": [
         {
@@ -161,9 +168,11 @@
         "mechanical design"
       ],
       "bullets": [
-        "Led chassis and intake design in Onshape.",
-        "Built the pneumatic tongue and redesigned sensor mounts to fit tracking hardware within the robot envelope."
+        "Led chassis and intake design in Onshape and developed the pneumatic tongue mechanism.",
+        "Redesigned sensor mounts to package tracking hardware within the robot envelope.",
+        "The team’s final skills trial scored 60 points (45 driver, 15 autonomous), above its 50-point target."
       ],
+      "height": 57,
       "file": "project-box-6.pdf",
       "sources": [
         {
@@ -205,9 +214,11 @@
         "SolidWorks"
       ],
       "bullets": [
-        "Led core calculations, trajectory simulation, and structural analysis for a student launch-vehicle concept.",
-        "Used MATLAB to develop staging parameters for a target payload of 4,500 lb; the vehicle remained a concept."
+        "Led core calculations, trajectory simulations, and structural analysis for a student rocket concept.",
+        "Used MATLAB to develop staging parameters for a target satellite payload of 4,500 lb.",
+        "Built a bulkhead-sizing spreadsheet to compare calculated stress with material allowable stress."
       ],
+      "height": 57,
       "file": "project-box-4.pdf",
       "sources": [
         {
@@ -242,8 +253,10 @@
       ],
       "bullets": [
         "Contributed CAD and led assembly of the team’s competition robot.",
-        "The team revised ground pickup and added a conveyor bracket to stabilize mobile-goal capture."
+        "The team revised ground pickup and added a conveyor bracket to stabilize mobile-goal capture.",
+        "Across seven match trials, the team’s best recorded score was 12 points in Trial 6."
       ],
+      "height": 57,
       "file": "project-box-1.pdf",
       "sources": [
         {
@@ -280,8 +293,10 @@
       ],
       "bullets": [
         "Designed and built an eight-key musical keyboard prototype on an Arduino Uno.",
-        "Used a resistor ladder on analog pin A0 to distinguish key presses and map voltage ranges to tones."
+        "Used a resistor ladder to distinguish eight key inputs through a single analog pin, A0.",
+        "Mapped analog voltage ranges to musical tones in the keyboard’s Arduino program."
       ],
+      "height": 57,
       "file": "project-box-5.pdf",
       "sources": [
         {
@@ -316,9 +331,11 @@
         "AutoCAD"
       ],
       "bullets": [
-        "Handled design and notebook work, rebuilding the AutoCAD model when the original file was unavailable.",
-        "The team’s tower held 45 lb before failure, but bending at 67 N left the stated 100 N criterion unmet."
+        "Handled design and notebook work, rebuilding the AutoCAD model when its original file was unavailable.",
+        "The team’s tower held 45 lb before failure; bending at 67 N left the 100 N no-bend criterion unmet.",
+        "Diagonal bracing between layers was proposed for the next iteration to address twisting."
       ],
+      "height": 57,
       "file": "project-box-8.pdf",
       "sources": [
         {
@@ -353,9 +370,11 @@
         "testing"
       ],
       "bullets": [
-        "Contributed build work and notebook documentation to two sensor-guided robot challenges.",
-        "The team robot avoided obstacles and completed the warehouse course in four of five recorded runs."
+        "Contributed notebook and build work to line-following and sonar-guided parking challenges.",
+        "The team robot avoided obstacles and finished the warehouse course in four of five recorded runs.",
+        "After motor-power tuning, the team achieved a clean parallel park on the seventh trial."
       ],
+      "height": 57,
       "file": "project-box-9.pdf",
       "sources": [
         {
@@ -390,9 +409,11 @@
         "testing"
       ],
       "bullets": [
-        "Added twin paper-straw exhaust extensions to a class-built boat to improve straight-line travel.",
-        "Used a removable wooden spacer to hold the exhaust spacing and angle while the adhesive set."
+        "Independently added twin exhaust extensions to a class-built boat for straighter travel.",
+        "Used a removable wooden spacer to hold exhaust spacing and angle while the adhesive set.",
+        "Five 33-inch gutter trials averaged about 13.7 s, versus a recorded 33.07 s baseline."
       ],
+      "height": 57,
       "file": "project-box-10.pdf",
       "sources": [
         {
@@ -427,9 +448,11 @@
         "AutoCAD"
       ],
       "bullets": [
-        "Produced notebook drawings to document the team’s blade-development process.",
-        "The March 16 prototype used three cardboard blades, each 14 inches long and 3 inches wide."
+        "Produced notebook drawings documenting the team’s blade-development process.",
+        "The March 16 team prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
+        "The team tested that prototype facing backward in a wind tunnel for 20 seconds."
       ],
+      "height": 57,
       "file": "project-box-2.pdf",
       "sources": [
         {

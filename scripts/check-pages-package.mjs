@@ -33,6 +33,8 @@ export const REQUIRED_FILES = Object.freeze([
   'resume/generator/assets/projects.json',
   'resume/generator/assets/project-base.pdf',
   'resume/generator/assets/project-base.png',
+  'resume/generator/assets/project-footer.pdf',
+  'resume/generator/assets/project-footer.png',
   ...Array.from({length:12},(_,i)=>['pdf','png'].map(ext=>`resume/generator/assets/project-box-${i+1}.${ext}`)).flat(),
   'resume/generator/job-core.mjs',
   'resume/generator/job-api.mjs',

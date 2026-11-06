@@ -1,6 +1,6 @@
 import {composePdf} from './engine.mjs';
 import {validateJob,filename} from './job-core.mjs';
-import {selectProjects,projectSlots} from './project-selection.mjs';
+import {selectProjects,projectSlots,projectFooterRect} from './project-selection.mjs';
 const $=id=>document.getElementById(id);
 const status=text=>{$('status').textContent=text;};
 const loaded=new Map();
@@ -73,9 +73,10 @@ async function generateResume(){
     status('Your PDF is ready. Review the selected projects and wording before using it.');
     try{
       const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file;});
-      const images=await Promise.all(['project-base.png',...selected.map(s=>s.file.replace('.pdf','.png'))].map(loadImage));
+      const images=await Promise.all(['project-base.png',...selected.map(s=>s.file.replace('.pdf','.png')),'project-footer.png'].map(loadImage));
       const canvas=$('preview');canvas.width=1224;canvas.height=1584;const context=canvas.getContext('2d');context.drawImage(images[0],0,0);
       selected.forEach((slot,i)=>{const [x0,y0]=slot.rect;context.drawImage(images[i+1],Math.floor(x0*2),Math.floor(y0*2));});
+      const [footerX,footerY]=projectFooterRect(selected);context.drawImage(images.at(-1),footerX*2,footerY*2);
     }catch(error){console.error('Resume preview failed',error);status('PDF ready to download. The on-page preview could not load.');}
   }catch(e){clearResult();status(e.message||'Could not generate the resume. Please try again.');}
   finally{setBusy(false);}

@@ -6,7 +6,14 @@ export async function cloudRequest(path,method='GET',data){
  const result=await response.json();if(!response.ok)throw new Error(result.error||'Online library unavailable.');return result;
 }
 export async function saveJobs(jobs){return cloudRequest('/jobs','PUT',{jobs});}
-export async function searchOnline(filters){return cloudRequest('/search','POST',{q:[filters.include.replaceAll(',',' OR '),'internship',filters.locations,filters.remote?'or US remote':''].filter(Boolean).join(' ')});}
+export function searchQueries(filters){
+ const terms=String(filters.include||'engineering').split(',').map(s=>s.trim()).filter(Boolean),role=terms.length>3?'engineering':terms.join(' OR ')||'engineering';
+ const locations=String(filters.locations||'United States').split(',').map(s=>s.trim()).filter(Boolean).slice(0,filters.remote?3:4);
+ const queries=locations.map(location=>role+' internship '+location);
+ if(filters.remote)queries.push(role+' internship remote United States');
+ return queries.length?queries:[role+' internship United States'];
+}
+export async function searchOnline(filters){return cloudRequest('/search','POST',{queries:searchQueries(filters)});}
 export async function setupCloud(onLoad){
  const status=document.getElementById('cloud-status'),unlock=document.getElementById('cloud-unlock');
  try{const config=await fetch('./cloud-config.json',{cache:'no-cache'}).then(r=>r.json());const url=new URL(config.endpoint);if(url.protocol!=='https:'||!url.hostname.endsWith('.workers.dev'))throw new Error();endpoint=url.origin;}catch{status.textContent='Online library setup is pending. Current imports are session-only.';unlock.disabled=true;return;}

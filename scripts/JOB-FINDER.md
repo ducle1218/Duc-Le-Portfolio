@@ -121,3 +121,5 @@ Employer-feed filtering and wider job-board search are separate operations.
 Wider search requires a server-side SerpApi key and uses Google Jobs results;
 LinkedIn, Indeed, and ZipRecruiter coverage varies. It does not directly search
 all listings on those sites. The backend caps searches at 200 per month.
+
+The default wider search uses separate NJ, NY, PA and US-remote queries (four provider calls). Focused role filters remain in the query; long keyword lists use engineering and the local filters refine returned titles.

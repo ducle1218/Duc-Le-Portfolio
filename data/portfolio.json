@@ -1,9 +1,9 @@
 {
   "$schema": "https://ducle1218.github.io/Duc-Le-Portfolio/data/portfolio.schema.json",
   "schemaVersion": "1.0.0",
-  "snapshotId": "1d0a40e1247b13c46f4816423fe0d904b1be9dfb4574553b82090c1583c509c3",
+  "snapshotId": "8eb317e2ba5446d84faddbfb1b1b5366fa8f43ffd7ce5e70e0b6b558771dfd1a",
   "siteUrl": "https://ducle1218.github.io/Duc-Le-Portfolio/",
-  "sourceReviewedOn": "2026-10-30",
+  "sourceReviewedOn": "2026-11-05",
   "verification": {
     "level": "published-source-consistency-only",
     "independentlyVerified": false,
@@ -235,9 +235,11 @@
       "summary": "Mechanical CAD and preliminary structural studies for a swept-volume display.",
       "completionState": "cad-and-preliminary-analysis",
       "ownership": {
-        "individual": [],
+        "individual": [
+          "My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here."
+        ],
         "team": [
-          "Listed as a collaborative build; task ownership is not separated in the detailed record."
+          "The broader display project is a collaborative build."
         ],
         "notClaimed": [
           "A functioning display, completed electronics, or physical spin testing.",
@@ -248,20 +250,22 @@
       "tools": [
         {
           "name": "SolidWorks",
-          "usage": "Named CAD tool in the project; individual operator is not identified.",
-          "owner": "unclear",
+          "usage": "Rotor and printable-shaft CAD revisions.",
+          "owner": "individual",
           "evidenceIds": [
-            "box-7-solidworks"
+            "box-7-solidworks",
+            "box-7-personal-contribution"
           ]
         },
         {
           "name": "Onshape",
-          "usage": "Preliminary FEA studies; individual analyst is not identified.",
-          "owner": "unclear",
+          "usage": "Preliminary arm and shaft analysis.",
+          "owner": "individual",
           "evidenceIds": [
             "box-7-onshape",
             "box-7-arm",
-            "box-7-shaft"
+            "box-7-shaft",
+            "box-7-personal-contribution"
           ]
         }
       ],
@@ -269,10 +273,11 @@
         {
           "id": "box-7-radial-supports",
           "text": "Replaced the broad rotating wall with twenty radial supports in the revised CAD model.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled",
           "evidenceIds": [
-            "box-7-rotor"
+            "box-7-rotor",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -286,10 +291,11 @@
         {
           "id": "box-7-arm-analysis",
           "text": "A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-7-arm"
+            "box-7-arm",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -309,20 +315,22 @@
         {
           "id": "box-7-printable-shaft",
           "text": "Split the center shaft into printable sections for the Prusa Mini build envelope.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled",
           "evidenceIds": [
-            "box-7-printing"
+            "box-7-printing",
+            "box-7-personal-contribution"
           ],
           "metrics": []
         },
         {
           "id": "box-7-shaft-input",
           "text": "The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-7-shaft"
+            "box-7-shaft",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -340,49 +348,56 @@
           "path": "src/content/projects/box-7.html",
           "quote": "Twenty radial supports replace the broad rotating wall in the revised CAD model.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-arm",
           "path": "src/content/projects/box-7.html",
           "quote": "The arm plot reports about 23 psi peak stress under a modeled 0.28 lbf load. Three support arms approximate the center constraint.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-shaft",
           "path": "src/content/projects/box-7.html",
           "quote": "The notebook specifies approximately 4,500°/s for the shaft model.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-status",
           "path": "src/content/projects/box-7.html",
           "quote": "The notebook does not yet document a functioning display.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-printing",
           "path": "src/content/projects/box-7.html",
           "quote": "The center shaft was split into printable sections to fit the Prusa Mini’s approximately 7-inch build envelope.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-solidworks",
           "path": "src/content/projects/box-7.html",
           "quote": "SolidWorks",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         },
         {
           "id": "box-7-onshape",
           "path": "src/content/projects/box-7.html",
           "quote": "Onshape FEA",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
-          "sourceSha256": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19"
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
+        },
+        {
+          "id": "box-7-personal-contribution",
+          "path": "src/content/projects/box-7.html",
+          "quote": "My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html",
+          "sourceSha256": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca"
         }
       ],
       "limitations": [
@@ -391,7 +406,6 @@
         "Reduced drag is a design intention, not an established measurement."
       ],
       "reviewNeeded": [
-        "Identify who used SolidWorks and Onshape and which work each collaborator performed.",
         "Confirm progress after the August 4–12 notebook entries."
       ],
       "updatedOn": null,
@@ -407,7 +421,9 @@
       "summary": "A preliminary load-path study of a two-plate robot aligner, with validation and toleranced drawings still to develop.",
       "completionState": "preliminary-analysis",
       "ownership": {
-        "individual": [],
+        "individual": [
+          "I defined the Onshape assembly loads and examined the stress contours in this independent study."
+        ],
         "team": [],
         "notClaimed": [
           "A verified impact capacity or a 400 lbf load rating.",
@@ -419,10 +435,11 @@
         {
           "name": "Onshape",
           "usage": "Preliminary force definitions and stress-contour study.",
-          "owner": "unclear",
+          "owner": "individual",
           "evidenceIds": [
             "box-11-source",
-            "box-11-forces"
+            "box-11-forces",
+            "box-11-personal-contribution"
           ]
         }
       ],
@@ -430,10 +447,11 @@
         {
           "id": "box-11-force-definitions",
           "text": "Modeled separate −200 lbf Y-direction force inputs on the two selected plates.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-11-forces"
+            "box-11-forces",
+            "box-11-personal-contribution"
           ],
           "metrics": [
             {
@@ -447,21 +465,23 @@
         {
           "id": "box-11-load-path",
           "text": "Examined stress-contour variation around holes, cutout corners, and spacer interfaces.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-11-distribution"
+            "box-11-distribution",
+            "box-11-personal-contribution"
           ],
           "metrics": []
         },
         {
           "id": "box-11-validation-next",
           "text": "Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "planned",
           "evidenceIds": [
             "box-11-next",
-            "box-11-status"
+            "box-11-status",
+            "box-11-personal-contribution"
           ],
           "metrics": []
         }
@@ -472,35 +492,42 @@
           "path": "src/content/projects/box-11.html",
           "quote": "Each selected plate has a separate force definition: X = 0 lbf, Y = −200 lbf, Z = 0 lbf. These are model inputs, not a demonstrated load rating.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
         },
         {
           "id": "box-11-distribution",
           "path": "src/content/projects/box-11.html",
           "quote": "The contour highlights local variation around the holes, cutout corners, and spacer interfaces.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
         },
         {
           "id": "box-11-next",
           "path": "src/content/projects/box-11.html",
           "quote": "Document the load rationale and material inputs, resolve model warnings, check mesh sensitivity, and define the critical plate-and-spacer fits in a toleranced drawing.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
         },
         {
           "id": "box-11-status",
           "path": "src/content/projects/box-11.html",
           "quote": "This is a preliminary model. The setup screenshots show warnings, and the supplied evidence does not establish resolved constraints, mesh convergence, or a factor of safety.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
         },
         {
           "id": "box-11-source",
           "path": "src/content/projects/box-11.html",
           "quote": "Evidence: owner-supplied Onshape stress contour and Force 1 / Force 2 setup screenshots. GD&T drawing work remains in progress.",
           "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
-          "sourceSha256": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b"
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
+        },
+        {
+          "id": "box-11-personal-contribution",
+          "path": "src/content/projects/box-11.html",
+          "quote": "I defined the Onshape assembly loads and examined the stress contours in this independent study.",
+          "url": "https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html",
+          "sourceSha256": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c"
         }
       ],
       "limitations": [
@@ -509,7 +536,6 @@
         "The setup contains warnings; drawing work remains in progress."
       ],
       "reviewNeeded": [
-        "Confirm individual authorship of the analysis; the listing says independent, but the detailed evidence does not assign each task.",
         "Verify material inputs, constraint warnings, stress units, and mesh sensitivity before using quantitative conclusions."
       ],
       "updatedOn": null,

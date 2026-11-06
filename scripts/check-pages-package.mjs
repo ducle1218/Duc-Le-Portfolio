@@ -44,6 +44,7 @@ export const REQUIRED_FILES = Object.freeze([
   'data/company-rankings.json',
   'resume/generator/zip.mjs',
   'data/jobs.json',
+  'data/jobs-discovery.json',
   'resume/generator/assets/manifest.json',
   'resume/generator/assets/base.pdf',
   'data/portfolio.json',

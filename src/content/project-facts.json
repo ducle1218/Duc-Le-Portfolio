@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "reviewedOn": "2026-10-30",
+  "reviewedOn": "2026-11-05",
   "reviewBasis": "existing-public-portfolio",
   "projects": [
     {
@@ -170,9 +170,11 @@
       "summary": "Mechanical CAD and preliminary structural studies for a swept-volume display.",
       "completionState": "cad-and-preliminary-analysis",
       "ownership": {
-        "individual": [],
+        "individual": [
+          "My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here."
+        ],
         "team": [
-          "Listed as a collaborative build; task ownership is not separated in the detailed record."
+          "The broader display project is a collaborative build."
         ],
         "notClaimed": [
           "A functioning display, completed electronics, or physical spin testing.",
@@ -183,20 +185,22 @@
       "tools": [
         {
           "name": "SolidWorks",
-          "usage": "Named CAD tool in the project; individual operator is not identified.",
-          "owner": "unclear",
+          "usage": "Rotor and printable-shaft CAD revisions.",
+          "owner": "individual",
           "evidenceIds": [
-            "box-7-solidworks"
+            "box-7-solidworks",
+            "box-7-personal-contribution"
           ]
         },
         {
           "name": "Onshape",
-          "usage": "Preliminary FEA studies; individual analyst is not identified.",
-          "owner": "unclear",
+          "usage": "Preliminary arm and shaft analysis.",
+          "owner": "individual",
           "evidenceIds": [
             "box-7-onshape",
             "box-7-arm",
-            "box-7-shaft"
+            "box-7-shaft",
+            "box-7-personal-contribution"
           ]
         }
       ],
@@ -204,10 +208,11 @@
         {
           "id": "box-7-radial-supports",
           "text": "Replaced the broad rotating wall with twenty radial supports in the revised CAD model.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled",
           "evidenceIds": [
-            "box-7-rotor"
+            "box-7-rotor",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -221,10 +226,11 @@
         {
           "id": "box-7-arm-analysis",
           "text": "A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-7-arm"
+            "box-7-arm",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -244,20 +250,22 @@
         {
           "id": "box-7-printable-shaft",
           "text": "Split the center shaft into printable sections for the Prusa Mini build envelope.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled",
           "evidenceIds": [
-            "box-7-printing"
+            "box-7-printing",
+            "box-7-personal-contribution"
           ],
           "metrics": []
         },
         {
           "id": "box-7-shaft-input",
           "text": "The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-7-shaft"
+            "box-7-shaft",
+            "box-7-personal-contribution"
           ],
           "metrics": [
             {
@@ -304,6 +312,11 @@
           "id": "box-7-onshape",
           "path": "src/content/projects/box-7.html",
           "quote": "Onshape FEA"
+        },
+        {
+          "id": "box-7-personal-contribution",
+          "path": "src/content/projects/box-7.html",
+          "quote": "My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here."
         }
       ],
       "limitations": [
@@ -312,7 +325,6 @@
         "Reduced drag is a design intention, not an established measurement."
       ],
       "reviewNeeded": [
-        "Identify who used SolidWorks and Onshape and which work each collaborator performed.",
         "Confirm progress after the August 4–12 notebook entries."
       ],
       "updatedOn": null
@@ -327,7 +339,9 @@
       "summary": "A preliminary load-path study of a two-plate robot aligner, with validation and toleranced drawings still to develop.",
       "completionState": "preliminary-analysis",
       "ownership": {
-        "individual": [],
+        "individual": [
+          "I defined the Onshape assembly loads and examined the stress contours in this independent study."
+        ],
         "team": [],
         "notClaimed": [
           "A verified impact capacity or a 400 lbf load rating.",
@@ -339,10 +353,11 @@
         {
           "name": "Onshape",
           "usage": "Preliminary force definitions and stress-contour study.",
-          "owner": "unclear",
+          "owner": "individual",
           "evidenceIds": [
             "box-11-source",
-            "box-11-forces"
+            "box-11-forces",
+            "box-11-personal-contribution"
           ]
         }
       ],
@@ -350,10 +365,11 @@
         {
           "id": "box-11-force-definitions",
           "text": "Modeled separate −200 lbf Y-direction force inputs on the two selected plates.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-11-forces"
+            "box-11-forces",
+            "box-11-personal-contribution"
           ],
           "metrics": [
             {
@@ -367,21 +383,23 @@
         {
           "id": "box-11-load-path",
           "text": "Examined stress-contour variation around holes, cutout corners, and spacer interfaces.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated",
           "evidenceIds": [
-            "box-11-distribution"
+            "box-11-distribution",
+            "box-11-personal-contribution"
           ],
           "metrics": []
         },
         {
           "id": "box-11-validation-next",
           "text": "Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "planned",
           "evidenceIds": [
             "box-11-next",
-            "box-11-status"
+            "box-11-status",
+            "box-11-personal-contribution"
           ],
           "metrics": []
         }
@@ -411,6 +429,11 @@
           "id": "box-11-source",
           "path": "src/content/projects/box-11.html",
           "quote": "Evidence: owner-supplied Onshape stress contour and Force 1 / Force 2 setup screenshots. GD&T drawing work remains in progress."
+        },
+        {
+          "id": "box-11-personal-contribution",
+          "path": "src/content/projects/box-11.html",
+          "quote": "I defined the Onshape assembly loads and examined the stress contours in this independent study."
         }
       ],
       "limitations": [
@@ -419,7 +442,6 @@
         "The setup contains warnings; drawing work remains in progress."
       ],
       "reviewNeeded": [
-        "Confirm individual authorship of the analysis; the listing says independent, but the detailed evidence does not assign each task.",
         "Verify material inputs, constraint warnings, stress units, and mesh sensitivity before using quantitative conclusions."
       ],
       "updatedOn": null

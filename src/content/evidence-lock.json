@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "reviewedOn": "2026-10-30",
+  "reviewedOn": "2026-11-05",
   "reviewBasis": "Public source consistency check; not independent verification or owner approval.",
-  "recordsSha256": "4a7bb1da7481df354a6eece5007d427efce7534ba691f29234421e79f28e1ee4",
+  "recordsSha256": "8ad45f3784eed42d94e5d8dfe4c3cf9c8f95293d75a65ed914f5f2b5de573ba7",
   "profileSha256": "52b9d83124e0329fae30c6e66c703a5689a15d790c7b939596a7ba4f4fd748e8",
   "sources": {
     "src/content/projects/box-12.html": "3c8bfb34ffd81abceb4e9364cb98edb39d599930465a13a9ad0fba04879a647a",
-    "src/content/projects/box-7.html": "797e5d2c8046d83736f110be25942611a0487fd47011200ad066eac446bdde19",
-    "src/content/projects/box-11.html": "c02fc2f705768e82650ea64f9212030b5a948983f84c10f9f5484936c6edb24b",
+    "src/content/projects/box-7.html": "528fa9e2b0a2eada5c88ecb8404f21befdd4123b4b3781655e575399bc2df9ca",
+    "src/content/projects/box-11.html": "40c6946dd03de36f2db1e54d882a77d233b3cd300191a6366f6fbf520be1236c",
     "src/content/projects/box-3.html": "4c799222a804381cd60ef13b93417d8251bc311df98672d58e68d5affe5f824a",
     "src/content/projects/box-6.html": "52709aad4d784b19ab4c5a6e5ef992f587f4c70bc34410a2ff9df9b5de159384",
     "src/content/projects/box-4.html": "167c50e8766806edff839b759d863d205a5955fd64d72b1d4832716f96e2f298",

@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location('collector', Path(__file__).with_name('collect-jobs.py'))
@@ -33,4 +34,28 @@ lever = {'id': 'abc', 'text': 'Engineering Intern', 'categories': {'location': '
          'createdAt': 1234, 'lists': [{'text': 'Requirements', 'content': '<li>CAD</li>'}]}
 normalized = collector.normalize(lever, dict(source, provider='lever'), 'checked')
 assert normalized['remote'] and normalized['datePosted'] == '' and 'Requirements' in normalized['description']
+candidate = dict(normalized, title='Mechanical Engineering Intern', location='Newark, NJ', remote=False)
+for location in ('Newark, NJ', 'Philadelphia, Pennsylvania', 'Pittsburgh, PA', 'Buffalo, New York', 'Remote — United States'):
+    assert collector.discovery_candidate(dict(candidate, location=location)), location
+assert collector.discovery_candidate(dict(candidate, location='United States', remote=True))
+for location in ('Austin, TX', 'Remote', 'Remote — Canada', ''):
+    assert not collector.discovery_candidate(dict(candidate, location=location)), location
+for title in ('Mechanical Engineer', 'Senior Mechanical Engineering Intern', 'Engineering Intern Manager', 'Marketing Intern'):
+    assert not collector.discovery_candidate(dict(candidate, title=title)), title
+index = {'version': 1, 'checkedAt': 'original-check', 'sources': [source], 'jobs': [candidate, dict(candidate, location='Austin, TX')]}
+compact = collector.discovery_index(index)
+assert compact['checkedAt'] == index['checkedAt'] and compact['sources'] == index['sources']
+assert compact['jobs'] == [candidate] and compact['jobs'][0]['description'] == candidate['description']
+assert compact['completeForClosureChecks'] is False
+# Guard parity with the JavaScript defaults against real current feed records.
+from subprocess import check_output
+import shutil
+node = shutil.which('node')
+if node:
+    root = Path(__file__).resolve().parents[1]
+    current = json.loads((root / 'data/jobs.json').read_text(encoding='utf-8'))
+    code = "import{readFileSync}from'node:fs';import{DEFAULTS,filterJob}from'./resume/generator/job-core.mjs';let i=JSON.parse(readFileSync('data/jobs.json'));console.log(JSON.stringify(i.jobs.filter(j=>filterJob(j,DEFAULTS).status==='ready').map(j=>j.url).sort()));"
+    expected = json.loads(check_output([node, '--input-type=module', '-e', code], cwd=root, text=True, encoding='utf-8'))
+    assert sorted(job['url'] for job in collector.discovery_index(current)['jobs']) == expected
 print('PASS: employer normalization, HTML decoding, internship scope, publication-date honesty, and source failure isolation.')
+print('PASS: compact regional discovery, uncertain-location exclusion, full descriptions, and filtered-index closure protection.')

@@ -1,4 +1,4 @@
-import {list} from './job-core.mjs?v=20261105.4';
+import {list} from './job-core.mjs?v=20261106.1';
 const DAY=86400000;
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const contains=(text,word)=>new RegExp('(^|[^a-z0-9])'+escape(word)+'(?=$|[^a-z0-9])','i').test(text);
@@ -44,8 +44,10 @@ export function matchResume(job,profile){
 }
 export function freshness(job,now=Date.now()){
  const expires=Date.parse(job.validThrough?.length===10?job.validThrough+'T23:59:59Z':job.validThrough);
- if(job.closed===true||Number.isFinite(expires)&&expires<now)return {tier:4,closed:true,label:'Closed / deadline passed',detail:'The source indicates a closure or a passed application deadline.'};
- const checked=Date.parse(job.checkedAt),posted=Date.parse(job.datePosted),age=Number.isFinite(posted)?Math.floor((now-posted)/DAY):null;
+ if(Number.isFinite(expires)&&expires<now)return {tier:4,closed:true,label:'Application deadline passed',detail:'The source’s application deadline has passed. This does not confirm whether someone was hired.'};
+ if(job.closed===true||job.availability==='closed')return {tier:4,closed:true,label:'Posting inactive',detail:job.statusReason||'The source indicates that applications are closed or the posting was removed. This does not confirm whether someone was hired.'};
+ if(job.availability==='unknown')return {tier:3,label:'Availability unverified',detail:job.statusReason||'The latest check could not verify this posting. It remains in the list because an unreadable page does not prove closure.'};
+ const checked=Date.parse(job.statusCheckedAt||job.checkedAt),posted=Date.parse(job.datePosted),age=Number.isFinite(posted)?Math.floor((now-posted)/DAY):null;
  if(!Number.isFinite(checked)||now-checked>36*3600000)return {tier:3,label:'Needs a fresh check',detail:'This posting has not been checked in the last 36 hours.'};
  if(age!==null&&age>=60)return {tier:2,label:age+' days old · verify',detail:'Older listing; it may still be open. A recent feed check does not reset its posting age.'};
  if(age===null||age<0)return {tier:1,label:'Posting age unknown',detail:'No reliable original posting date was supplied.'};

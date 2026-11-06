@@ -15,7 +15,7 @@
       "bullets": [
         "Extended the robot chassis from 160 to 225 mm in CAD to improve mechanism packaging.",
         "Shortened upper leg links from 143 to 135 mm so the legs fit without further lengthening the body.",
-        "The team attached four legs and actuated one; walking control remains in development."
+        "The prototype has four legs attached and one actuated; walking control remains in development."
       ],
       "height": 57,
       "file": "project-box-12.pdf",
@@ -53,9 +53,9 @@
         "FEA"
       ],
       "bullets": [
-        "The revised CAD replaces a broad rotating wall with 20 radial supports.",
-        "The center shaft was divided into printable sections for the Prusa Mini build envelope.",
-        "Preliminary arm analysis reported about 23 psi at a modeled 0.28 lbf load, not a verified load rating."
+        "Redesigned the rotating structure with 20 radial supports in place of a broad wall.",
+        "Split the center shaft into printable sections for the Prusa Mini build envelope.",
+        "Ran a preliminary arm analysis: about 23 psi at a modeled 0.28 lbf load; load capacity remains unverified."
       ],
       "height": 57,
       "file": "project-box-7.pdf",
@@ -63,25 +63,25 @@
         {
           "id": "box-7-radial-supports",
           "text": "Replaced the broad rotating wall with twenty radial supports in the revised CAD model.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled"
         },
         {
           "id": "box-7-arm-analysis",
           "text": "A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated"
         },
         {
           "id": "box-7-printable-shaft",
           "text": "Split the center shaft into printable sections for the Prusa Mini build envelope.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "modeled"
         },
         {
           "id": "box-7-shaft-input",
           "text": "The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated"
         }
       ],
@@ -98,9 +98,9 @@
         "Onshape"
       ],
       "bullets": [
-        "The preliminary assembly study applies separate -200 lbf Y-direction loads to two aligner plates.",
-        "Stress contours show local variation around holes, cutout corners, and spacer interfaces.",
-        "Model-warning resolution, mesh-sensitivity checks, and toleranced drawings remain in progress."
+        "Modeled separate -200 lbf Y-direction loads on two aligner plates in a preliminary assembly study.",
+        "Examined stress concentrations around holes, cutout corners, and spacer interfaces.",
+        "Next steps: resolve model warnings, check mesh sensitivity, and document critical fits in drawings."
       ],
       "height": 57,
       "file": "project-box-11.pdf",
@@ -108,19 +108,19 @@
         {
           "id": "box-11-force-definitions",
           "text": "Modeled separate −200 lbf Y-direction force inputs on the two selected plates.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated"
         },
         {
           "id": "box-11-load-path",
           "text": "Examined stress-contour variation around holes, cutout corners, and spacer interfaces.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "simulated"
         },
         {
           "id": "box-11-validation-next",
           "text": "Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing.",
-          "owner": "unclear",
+          "owner": "individual",
           "state": "planned"
         }
       ],
@@ -170,7 +170,7 @@
       "bullets": [
         "Led chassis and intake design in Onshape and developed the pneumatic tongue mechanism.",
         "Redesigned sensor mounts to package tracking hardware within the robot envelope.",
-        "The team’s final skills trial scored 60 points (45 driver, 15 autonomous), above its 50-point target."
+        "The robot scored 60 points in its final skills trial (45 driver, 15 autonomous), above the 50-point target."
       ],
       "height": 57,
       "file": "project-box-6.pdf",
@@ -252,9 +252,9 @@
         "mechanical design"
       ],
       "bullets": [
-        "Contributed CAD and led assembly of the team’s competition robot.",
-        "The team revised ground pickup and added a conveyor bracket to stabilize mobile-goal capture.",
-        "Across seven match trials, the team’s best recorded score was 12 points in Trial 6."
+        "Modeled robot components in CAD and led assembly of the competition robot.",
+        "The revised mechanism combines ground pickup with a conveyor bracket to stabilize mobile-goal capture.",
+        "The robot’s best recorded score was 12 points in Trial 6 of seven match trials."
       ],
       "height": 57,
       "file": "project-box-1.pdf",
@@ -331,9 +331,9 @@
         "AutoCAD"
       ],
       "bullets": [
-        "Handled design and notebook work, rebuilding the AutoCAD model when its original file was unavailable.",
-        "The team’s tower held 45 lb before failure; bending at 67 N left the 100 N no-bend criterion unmet.",
-        "Diagonal bracing between layers was proposed for the next iteration to address twisting."
+        "Developed the tower design and notebook, rebuilding the AutoCAD model when its original file was unavailable.",
+        "The tower held 45 lb before failure; bending at 67 N left the 100 N no-bend criterion unmet.",
+        "The next design iteration calls for diagonal bracing between layers to address twisting."
       ],
       "height": 57,
       "file": "project-box-8.pdf",
@@ -370,9 +370,9 @@
         "testing"
       ],
       "bullets": [
-        "Contributed notebook and build work to line-following and sonar-guided parking challenges.",
-        "The team robot avoided obstacles and finished the warehouse course in four of five recorded runs.",
-        "After motor-power tuning, the team achieved a clean parallel park on the seventh trial."
+        "Built and documented sensor-guided robots for line-following and sonar-guided parking challenges.",
+        "The robot avoided obstacles and finished the warehouse course in four of five recorded runs.",
+        "After motor-power tuning, the robot completed a clean parallel park on the seventh trial."
       ],
       "height": 57,
       "file": "project-box-9.pdf",
@@ -448,9 +448,9 @@
         "AutoCAD"
       ],
       "bullets": [
-        "Produced notebook drawings documenting the team’s blade-development process.",
-        "The March 16 team prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
-        "The team tested that prototype facing backward in a wind tunnel for 20 seconds."
+        "Produced engineering notebook drawings documenting blade geometry and design revisions.",
+        "The March 16 prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
+        "A 20-second wind-tunnel trial tested that prototype facing backward."
       ],
       "height": 57,
       "file": "project-box-2.pdf",

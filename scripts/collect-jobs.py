@@ -15,6 +15,38 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 INTERNSHIP = re.compile(r"\bintern(?:ship)?s?\b|co[ -]?op", re.I)
+DISCOVERY_ROLES = ('mechanical', 'CAD', 'robotics', 'manufacturing', 'engineering', 'engineer')
+DISCOVERY_EXCLUSIONS = ('senior', 'principal', 'director', 'manager')
+
+
+def contains_word(text, term):
+    return bool(re.search(r'(^|[^a-z0-9])' + re.escape(term) + r'(?=$|[^a-z0-9])', text, re.I))
+
+
+def discovery_candidate(job):
+    """Mirror job-core.mjs DEFAULTS ready matches, excluding uncertain locations."""
+    title, location = job.get('title', ''), job.get('location', '')
+    if not INTERNSHIP.search(title) or not any(contains_word(title, word) for word in DISCOVERY_ROLES):
+        return False
+    if any(contains_word(title, word) for word in DISCOVERY_EXCLUSIONS):
+        return False
+    local = any(contains_word(location, word) for word in ('New Jersey', 'NJ', 'New York', 'NY', 'Pennsylvania', 'PA'))
+    remote = bool(job.get('remote')) or contains_word(location, 'remote')
+    us = any(contains_word(location, word) for word in ('US', 'USA', 'United States'))
+    return local or (remote and us)
+
+
+def discovery_index(index):
+    # Absence from this filtered subset must never be used as evidence of closure.
+    return {**index, 'scope': 'engineering-internships-nj-ny-pa-us-remote',
+            'completeForClosureChecks': False,
+            'jobs': [job for job in index['jobs'] if discovery_candidate(job)]}
+
+
+def write_discovery_index(index, output):
+    compact = discovery_index(index)
+    output.write_text(json.dumps(compact, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    print(f"Wrote {len(compact['jobs'])} regional discovery candidates to {output}")
 
 
 class PlainText(HTMLParser):
@@ -126,6 +158,11 @@ def collect_source(source, checked_at, fetch=get_json):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--discovery-only':
+        # Refresh the compact artifact without making any employer API requests.
+        output = ROOT / 'data/jobs-discovery.json'
+        write_discovery_index(json.loads((ROOT / 'data/jobs.json').read_text(encoding='utf-8')), output)
+        return
     sources = json.loads((ROOT / 'scripts/job-sources.json').read_text())
     checked_at = dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00', 'Z')
     statuses, jobs = [], []
@@ -140,8 +177,10 @@ def main():
     unique = {job['url']: job for job in jobs}
     output = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'data/jobs.json'
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({'version': 1, 'checkedAt': checked_at, 'sources': statuses,
-        'jobs': sorted(unique.values(), key=lambda job: (job['company'], job['title'], job['id']))}, ensure_ascii=False), encoding='utf-8')
+    index = {'version': 1, 'checkedAt': checked_at, 'sources': statuses,
+        'jobs': sorted(unique.values(), key=lambda job: (job['company'], job['title'], job['id']))}
+    output.write_text(json.dumps(index, ensure_ascii=False), encoding='utf-8')
+    write_discovery_index(index, output.with_name('jobs-discovery.json'))
     print(f'Wrote {len(unique)} internships to {output}')
 
 

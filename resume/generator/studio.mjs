@@ -1,6 +1,6 @@
-import {composePdf} from './engine.mjs?v=20261105.4';
-import {validateJob,filename} from './job-core.mjs?v=20261105.4';
-import {selectProjects,projectSlots,projectFooterRect} from './project-selection.mjs?v=20261105.4';
+import {composePdf} from './engine.mjs?v=20261106.1';
+import {validateJob,filename} from './job-core.mjs?v=20261106.1';
+import {selectProjects,projectSlots,projectFooterRect} from './project-selection.mjs?v=20261106.1';
 const $=id=>document.getElementById(id);
 const status=text=>{$('status').textContent=text;};
 const loaded=new Map();
@@ -72,7 +72,7 @@ async function generateResume(){
     $('empty').hidden=true;$('result').hidden=false;
     status('Your PDF is ready. Review the selected projects and wording before using it.');
     try{
-      const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file+'?v=20261105.4';});
+      const loadImage=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Preview image unavailable'));image.src='./assets/'+file+'?v=20261106.1';});
       const images=await Promise.all(['project-base.png',...selected.map(s=>s.file.replace('.pdf','.png')),'project-footer.png'].map(loadImage));
       const canvas=$('preview');canvas.width=1224;canvas.height=1584;const context=canvas.getContext('2d');context.drawImage(images[0],0,0);
       selected.forEach((slot,i)=>{const [x0,y0]=slot.rect;context.drawImage(images[i+1],Math.floor(x0*2),Math.floor(y0*2));});

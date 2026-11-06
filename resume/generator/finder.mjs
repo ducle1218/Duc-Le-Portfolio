@@ -1,9 +1,9 @@
-import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261106.1';
-import {importJob} from './job-api.mjs?v=20261106.1';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261106.1';
-import {makeZip} from './zip.mjs?v=20261106.1';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261106.1';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261106.1';
+import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261106.2';
+import {importJob} from './job-api.mjs?v=20261106.2';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261106.2';
+import {makeZip} from './zip.mjs?v=20261106.2';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261106.2';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261106.2';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -48,6 +48,8 @@ function showJobs(){
   }detail.append(node('p',fit.explanation,'hint'),fitGrid);
   if(fit.checks.length){const checks=node('div',undefined,'eligibility');checks.append(node('h5','Check before applying'));for(const item of fit.checks){const p=node('p');p.append(node('strong',item.label),node('span',item.quote));checks.append(p);}detail.append(checks);}
   detail.append(node('p',fit.scope,'hint'),node('p',fresh.detail,'hint'),meta);
+  if(job.statusReason&&job.statusReason!==fresh.detail)detail.append(node('p','Last availability result: '+job.statusReason,'hint'));
+  const evidenceUrl=canonical(job.statusEvidenceUrl);if(evidenceUrl){const evidence=node('a','Availability evidence ↗');evidence.href=evidenceUrl;evidence.target='_blank';evidence.rel='noreferrer';detail.append(evidence);}
   if(job.employmentType)detail.append(node('p',job.employmentType,'hint'));
   if(pay.quotes.length){detail.append(node('h5','Pay as listed by the employer'));for(const quote of pay.quotes)detail.append(node('p',quote,'salary-quote'));}
   const description=node('details');description.append(node('summary','Full job description'),node('p',job.description,'job-description'));detail.append(description);

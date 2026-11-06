@@ -1,8 +1,8 @@
 # Duc Le — public experience record
 
-Snapshot: `1d0a40e1247b13c46f4816423fe0d904b1be9dfb4574553b82090c1583c509c3`
+Snapshot: `8eb317e2ba5446d84faddbfb1b1b5366fa8f43ffd7ce5e70e0b6b558771dfd1a`
 
-Source audit: 2026-10-30. Public-source consistency only; not independent verification or permission to submit applications. Unknown values are not negative answers.
+Source audit: 2026-11-05. Public-source consistency only; not independent verification or permission to submit applications. Unknown values are not negative answers.
 
 Mechanical engineering student at Rutgers University
 
@@ -65,20 +65,20 @@ College · Aug 2026 — Present · cad-and-preliminary-analysis
 
 [View project](https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-7)
 
-- **box-7-radial-supports** (unclear; modeled): Replaced the broad rotating wall with twenty radial supports in the revised CAD model. Evidence: box-7-rotor. Revised radial support count: 20 supports (CAD configuration; not a completed display.).
-- **box-7-arm-analysis** (unclear; simulated): A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load. Evidence: box-7-arm. Approximate peak arm stress: 23 psi (Preliminary arm model with 0.28 lbf load and three support arms approximating the center constraint.). Modeled arm load: 0.28 lbf (Analysis input; not a demonstrated load rating.).
-- **box-7-printable-shaft** (unclear; modeled): Split the center shaft into printable sections for the Prusa Mini build envelope. Evidence: box-7-printing.
-- **box-7-shaft-input** (unclear; simulated): The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input. Evidence: box-7-shaft. Specified shaft model rotational input: 4500 degrees/second (Not RPM, a physical test speed, or a validated safe operating speed.).
+- **box-7-radial-supports** (individual; modeled): Replaced the broad rotating wall with twenty radial supports in the revised CAD model. Evidence: box-7-rotor, box-7-personal-contribution. Revised radial support count: 20 supports (CAD configuration; not a completed display.).
+- **box-7-arm-analysis** (individual; simulated): A preliminary arm model reports about 23 psi peak stress under a 0.28 lbf modeled load. Evidence: box-7-arm, box-7-personal-contribution. Approximate peak arm stress: 23 psi (Preliminary arm model with 0.28 lbf load and three support arms approximating the center constraint.). Modeled arm load: 0.28 lbf (Analysis input; not a demonstrated load rating.).
+- **box-7-printable-shaft** (individual; modeled): Split the center shaft into printable sections for the Prusa Mini build envelope. Evidence: box-7-printing, box-7-personal-contribution.
+- **box-7-shaft-input** (individual; simulated): The shaft analysis notebook specifies approximately 4,500 degrees per second as a model input. Evidence: box-7-shaft, box-7-personal-contribution. Specified shaft model rotational input: 4500 degrees/second (Not RPM, a physical test speed, or a validated safe operating speed.).
 
 Tools:
-- SolidWorks (unclear): Named CAD tool in the project; individual operator is not identified. Evidence: box-7-solidworks.
-- Onshape (unclear): Preliminary FEA studies; individual analyst is not identified. Evidence: box-7-onshape, box-7-arm, box-7-shaft.
+- SolidWorks (individual): Rotor and printable-shaft CAD revisions. Evidence: box-7-solidworks, box-7-personal-contribution.
+- Onshape (individual): Preliminary arm and shaft analysis. Evidence: box-7-onshape, box-7-arm, box-7-shaft, box-7-personal-contribution.
 
 Individual work:
-
+- My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here.
 
 Team work:
-- Listed as a collaborative build; task ownership is not separated in the detailed record.
+- The broader display project is a collaborative build.
 
 Ownership limits:
 - A functioning display, completed electronics, or physical spin testing.
@@ -89,7 +89,6 @@ Ownership limits:
 - Reduced drag is a design intention, not an established measurement.
 
 Needs review:
-- Identify who used SolidWorks and Onshape and which work each collaborator performed.
 - Confirm progress after the August 4–12 notebook entries.
 
 Evidence:
@@ -100,6 +99,7 @@ Evidence:
 - **box-7-printing** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html): “The center shaft was split into printable sections to fit the Prusa Mini’s approximately 7-inch build envelope.”
 - **box-7-solidworks** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html): “SolidWorks”
 - **box-7-onshape** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html): “Onshape FEA”
+- **box-7-personal-contribution** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-7.html): “My contributions include the SolidWorks rotor and printable-shaft revisions and the preliminary Onshape analysis described here.”
 
 ## FEA & GD&T
 
@@ -109,15 +109,15 @@ College · 2026 · preliminary-analysis
 
 [View project](https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-11)
 
-- **box-11-force-definitions** (unclear; simulated): Modeled separate −200 lbf Y-direction force inputs on the two selected plates. Evidence: box-11-forces. Y-direction force on each selected plate: -200 lbf (Per-plate analysis input; X and Z are zero. Not a demonstrated load rating.).
-- **box-11-load-path** (unclear; simulated): Examined stress-contour variation around holes, cutout corners, and spacer interfaces. Evidence: box-11-distribution.
-- **box-11-validation-next** (unclear; planned): Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing. Evidence: box-11-next, box-11-status.
+- **box-11-force-definitions** (individual; simulated): Modeled separate −200 lbf Y-direction force inputs on the two selected plates. Evidence: box-11-forces, box-11-personal-contribution. Y-direction force on each selected plate: -200 lbf (Per-plate analysis input; X and Z are zero. Not a demonstrated load rating.).
+- **box-11-load-path** (individual; simulated): Examined stress-contour variation around holes, cutout corners, and spacer interfaces. Evidence: box-11-distribution, box-11-personal-contribution.
+- **box-11-validation-next** (individual; planned): Next steps are to resolve model warnings, check mesh sensitivity, and define critical fits in a toleranced drawing. Evidence: box-11-next, box-11-status, box-11-personal-contribution.
 
 Tools:
-- Onshape (unclear): Preliminary force definitions and stress-contour study. Evidence: box-11-source, box-11-forces.
+- Onshape (individual): Preliminary force definitions and stress-contour study. Evidence: box-11-source, box-11-forces, box-11-personal-contribution.
 
 Individual work:
-
+- I defined the Onshape assembly loads and examined the stress contours in this independent study.
 
 Team work:
 
@@ -131,7 +131,6 @@ Ownership limits:
 - The setup contains warnings; drawing work remains in progress.
 
 Needs review:
-- Confirm individual authorship of the analysis; the listing says independent, but the detailed evidence does not assign each task.
 - Verify material inputs, constraint warnings, stress units, and mesh sensitivity before using quantitative conclusions.
 
 Evidence:
@@ -140,6 +139,7 @@ Evidence:
 - **box-11-next** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html): “Document the load rationale and material inputs, resolve model warnings, check mesh sensitivity, and define the critical plate-and-spacer fits in a toleranced drawing.”
 - **box-11-status** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html): “This is a preliminary model. The setup screenshots show warnings, and the supplied evidence does not establish resolved constraints, mesh convergence, or a factor of safety.”
 - **box-11-source** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html): “Evidence: owner-supplied Onshape stress contour and Force 1 / Force 2 setup screenshots. GD&T drawing work remains in progress.”
+- **box-11-personal-contribution** [Source](https://ducle1218.github.io/Duc-Le-Portfolio/src/content/projects/box-11.html): “I defined the Onshape assembly loads and examined the stress contours in this independent study.”
 
 ## SolidWorks CAD to Manufacturing Readiness
 

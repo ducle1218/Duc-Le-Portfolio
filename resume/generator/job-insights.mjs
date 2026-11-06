@@ -1,4 +1,4 @@
-import {list} from './job-core.mjs';
+import {list} from './job-core.mjs?v=20261105.4';
 const DAY=86400000;
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const contains=(text,word)=>new RegExp('(^|[^a-z0-9])'+escape(word)+'(?=$|[^a-z0-9])','i').test(text);

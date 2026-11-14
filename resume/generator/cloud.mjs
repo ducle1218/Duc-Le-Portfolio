@@ -1,8 +1,8 @@
-let endpoint='',key='';
+let endpoint='',key='',publicLibrary=false;
 export const connected=()=>!!endpoint&&!!key;
 export async function cloudRequest(path,method='GET',data){
- if(!connected())throw new Error('Unlock the online library first.');
- const response=await fetch(endpoint+path,{method,headers:{Authorization:'Bearer '+key,...(data?{'Content-Type':'application/json'}:{})},body:data?JSON.stringify(data):undefined,credentials:'omit',signal:AbortSignal.timeout(30000)});
+ if(!connected()&&!(publicLibrary&&method==='GET'))throw new Error('Unlock the online library first.');
+ const response=await fetch(endpoint+(!key&&publicLibrary?'/public':'')+path,{method,headers:{...(key?{Authorization:'Bearer '+key}:{}),...(data?{'Content-Type':'application/json'}:{})},body:data?JSON.stringify(data):undefined,credentials:'omit',signal:AbortSignal.timeout(30000)});
  const result=await response.json();if(!response.ok)throw Object.assign(new Error(result.error||'Online library unavailable.'),{status:response.status});return result;
 }
 export async function saveJobs(jobs){return cloudRequest('/jobs','PUT',{jobs});}
@@ -42,21 +42,22 @@ async function refreshAutomation(){
 }
 export async function setupCloud(onLoad){
  const status=document.getElementById('cloud-status'),unlock=document.getElementById('cloud-unlock'),refresh=document.getElementById('cloud-refresh');
- try{const config=await fetch('./cloud-config.json',{cache:'no-cache'}).then(r=>r.json());const url=new URL(config.endpoint);if(url.protocol!=='https:'||!url.hostname.endsWith('.workers.dev'))throw new Error();endpoint=url.origin;}catch{status.textContent='Online library setup is pending. Current imports are session-only.';unlock.disabled=true;return;}
+ try{const config=await fetch('./cloud-config.json',{cache:'no-cache'}).then(r=>r.json());const url=new URL(config.endpoint);if(url.protocol!=='https:'||!url.hostname.endsWith('.workers.dev'))throw new Error();endpoint=url.origin;publicLibrary=config.publicLibrary===true;}catch{status.textContent='Online library setup is pending. Current imports are session-only.';unlock.disabled=true;return;}
  let loading=false;
  const loadLibrary=async()=>{
   if(loading)return;loading=true;unlock.disabled=true;refresh.disabled=true;status.textContent='Opening your online library…';
   const jobs=[],cursors=new Set();let cursor='',searchEnabled=false;
   try{
    do{const data=await cloudRequest('/jobs'+(cursor?'?cursor='+encodeURIComponent(cursor):''));jobs.push(...data.jobs);searchEnabled=data.searchEnabled;cursor=data.nextCursor||'';if(cursor&&cursors.has(cursor))throw new Error('Library pagination could not finish. Refresh to try again.');cursors.add(cursor);status.textContent='Loading '+jobs.length+' saved jobs…';}while(cursor);
-   onLoad(jobs);document.getElementById('cloud-save-current').disabled=false;document.getElementById('online-search').disabled=!searchEnabled;
+   onLoad(jobs);document.getElementById('cloud-save-current').disabled=!connected();document.getElementById('online-search').disabled=!searchEnabled;
    const inactive=jobs.filter(job=>job.closed===true||job.availability==='closed').length;
-   status.textContent=jobs.length+' saved jobs loaded'+(inactive?' · '+inactive+' inactive, hidden from the default list':'')+'. New imports save automatically.'+(!searchEnabled?' Wider search awaits a search-provider connection.':'');
+   status.textContent=jobs.length+' saved jobs loaded'+(inactive?' · '+inactive+' inactive, hidden from the default list':'')+(connected()?'. New imports save automatically.':'. Loaded automatically; owner access is optional for saving imports and wider search.')+(!searchEnabled&&connected()?' Wider search awaits a search-provider connection.':'');
    await refreshAutomation();
   }catch(error){if(error.status===401){key='';document.getElementById('cloud-save-current').disabled=true;document.getElementById('online-search').disabled=true;}status.textContent=error.message;}
-  finally{loading=false;unlock.disabled=false;refresh.disabled=!connected();}
+  finally{loading=false;unlock.disabled=false;refresh.disabled=!connected()&&!publicLibrary;}
  };
  unlock.onclick=async()=>{key=document.getElementById('cloud-key').value.trim();document.getElementById('cloud-key').value='';document.getElementById('cloud-save-current').disabled=true;document.getElementById('online-search').disabled=true;await loadLibrary();};
  refresh.onclick=loadLibrary;
- status.textContent='Unlock to load your saved jobs. Clearing browser data does not delete the online library.';
+ status.textContent='The job library opens automatically. Owner access is only needed to save imports or spend search credits.';
+ if(publicLibrary)await loadLibrary();
 }

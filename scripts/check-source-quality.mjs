@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';
+import {sourceDetails} from '../resume/generator/job-source.mjs';
+import {sortJobs} from '../resume/generator/job-insights.mjs';
+for(const url of ['https://jooble.org/rjdp/5259189272434855135','https://us.bebee.com/job/123','https://jobleads.com/job/abc','https://drakesconsultinggr.com/job/1','https://www.linkedin.com.evil.test/jobs/view/123','https://www.indeed.com/rc/clk?jk=abc'])assert(!sourceDetails({url}).allowed,url);
+for(const url of ['https://www.linkedin.com/jobs/view/123/','https://www.indeed.com/viewjob?jk=abc123','https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/Intern/123','https://job-boards.greenhouse.io/spacex/jobs/123'])assert(sourceDetails({url}).allowed,url);
+const entry=(company,rank,date)=>({job:{company,title:'Intern',datePosted:date},company:{rank},fit:{score:50},fresh:{tier:0}});
+const results=sortJobs([entry('Small',null,'2026-11-13'),entry('Large',16,'2026-11-12')],'newest-priority');assert.equal(results[0].job.company,'Large');
+assert.equal(sortJobs(results,'newest')[0].job.company,'Small');
+console.log('PASS source allowlist, redirect/repost exclusion, same-week company ordering and exact-date ordering.');

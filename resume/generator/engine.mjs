@@ -1,4 +1,4 @@
-import {projectFooterRect} from './project-selection.mjs?v=20261106.2';
+import {projectFooterRect} from './project-selection.mjs?v=20261114.1';
 const aliases = {assembly:['assemblies','assemble'],fea:['finite element analysis'],cad:['computer-aided design'],collaborative:['collaborate','collaboration'],spreadsheet:['spreadsheets'],mechanisms:['mechanism']};
 export function selectWording(manifest, description) {
   const normalized = description.toLowerCase();

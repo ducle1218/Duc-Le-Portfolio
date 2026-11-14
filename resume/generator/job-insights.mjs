@@ -1,4 +1,4 @@
-import {list} from './job-core.mjs?v=20261106.2';
+import {list} from './job-core.mjs?v=20261114.1';
 const DAY=86400000;
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const contains=(text,word)=>new RegExp('(^|[^a-z0-9])'+escape(word)+'(?=$|[^a-z0-9])','i').test(text);
@@ -76,12 +76,15 @@ export function payDetails(job){
 const companyKey=value=>String(value).toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\b(inc|incorporated|corp|corporation|llc|ltd)\b/g,'').replace(/\s+/g,' ').trim();
 export function companyDetails(job,registry,priorities){
  const key=companyKey(job.company),entry=registry?.companies?.find(c=>[c.name,...(c.aliases||[])].some(a=>companyKey(a)===key));
- return {priority:list(priorities).some(p=>companyKey(p)===key),rank:entry?.rank||null,source:entry?.source,year:registry?.year};
+ return {priority:list(priorities).some(p=>companyKey(p)===key||companyKey(p)==='google'&&key==='google llc'),rank:entry?.rank||null,source:entry?.source,year:registry?.year};
 }
 export function sortJobs(entries,mode='recommended'){
  return [...entries].sort((a,b)=>{
   const closed=Number(!!a.fresh.closed)-Number(!!b.fresh.closed);if(closed)return closed;
   const freshnessOrder=a.fresh.tier-b.fresh.tier;
+  const companyOrder=Number(b.company.priority)-Number(a.company.priority)||(a.company.rank??1001)-(b.company.rank??1001);
+  if(mode==='newest-priority'){const bucket=e=>Number.isFinite(Date.parse(e.job.datePosted))?Math.floor(Date.parse(e.job.datePosted)/604800000):-1;return bucket(b)-bucket(a)||companyOrder||(Date.parse(b.job.datePosted)||0)-(Date.parse(a.job.datePosted)||0);}
+  if(mode==='company')return companyOrder||(Date.parse(b.job.datePosted)||0)-(Date.parse(a.job.datePosted)||0);
   if(mode==='newest')return (Date.parse(b.job.datePosted)||0)-(Date.parse(a.job.datePosted)||0)||freshnessOrder;
   if(freshnessOrder)return freshnessOrder;
   if(mode==='match')return (b.fit.score??-1)-(a.fit.score??-1)||a.job.title.localeCompare(b.job.title);

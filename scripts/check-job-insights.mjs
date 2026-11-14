@@ -82,6 +82,9 @@ await setupCloud(jobs=>{loaded=jobs;});document.getElementById('cloud-key').valu
 assert.equal(loaded.length,2);assert(loaded[0].closed);assert.equal(document.getElementById('daily-added').textContent,'16');assert.equal(document.getElementById('cloud-key').value,'');assert(document.getElementById('cloud-status').textContent.includes('1 inactive'));assert(connected());
 await document.getElementById('cloud-refresh').onclick();assert.equal(refreshes,2);assert(requested.every(path=>!path.includes('/run')),'Opening the page must not launch a collection run.');
 rejected=true;await document.getElementById('cloud-refresh').onclick();assert(!connected());assert(document.getElementById('cloud-refresh').disabled);assert(document.getElementById('online-search').disabled);
+rejected=false;const authenticatedMock=globalThis.fetch;
+globalThis.fetch=async request=>{const target=String(request);if(target==='./cloud-config.json')return Response.json({endpoint:'https://example.workers.dev',publicLibrary:true});return authenticatedMock(target.replace('/public/','/'));};
+await setupCloud(jobs=>{loaded=jobs;});assert.equal(loaded.length,2);assert(!document.getElementById('cloud-refresh').disabled);
 globalThis.fetch=previousFetch;globalThis.document=previousDocument;
 console.log('PASS: job-scoped HTML / JSON-LD extraction, evidence matching, salary units, rank provenance, freshness and closure ordering.');
 console.log('PASS: paginated cloud refresh, daily-run status, blocked-source visibility, and closure preservation across fresh search results.');

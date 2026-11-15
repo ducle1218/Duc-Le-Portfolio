@@ -1,7 +1,13 @@
 import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core.mjs';
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
+import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
 let memoryWrite=Promise.resolve();
-const readMemory=async()=>cleanMemory((await chrome.storage.local.get('answerMemory')).answerMemory||[]);
+let preferenceSeed;
+const readMemory=async()=>{
+ // One migration per installation; edits and deletions persist after restart.
+ preferenceSeed??=(async()=>{const saved=await chrome.storage.local.get(['answerMemory','preferences160']);if(saved.preferences160)return;const existing=cleanMemory(saved.answerMemory||[]);const additions=PREFERENCE_ANSWERS.filter(p=>!existing.some(a=>a.question===p.question)).map(p=>({...p,scope:'*'}));await chrome.storage.local.set({answerMemory:mergeMemory(existing,additions),preferences160:true});})();
+ await preferenceSeed;return cleanMemory((await chrome.storage.local.get('answerMemory')).answerMemory||[]);
+};
 const writeMemory=fn=>{const task=memoryWrite.then(async()=>{const items=await fn(await readMemory());await chrome.storage.local.set({answerMemory:items});return items;});memoryWrite=task.catch(()=>{});return task;};
 const key=id=>'handoff:'+id;
 const extensionPage=sender=>sender.id===chrome.runtime.id&&sender.url?.startsWith(chrome.runtime.getURL(''));

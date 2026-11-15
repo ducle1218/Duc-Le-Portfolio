@@ -46,6 +46,9 @@ jobs:
           node scripts/build-application-helper.mjs
           node scripts/check-applications.mjs
           node scripts/check-dropdown-resume.mjs
+          node scripts/check-selectize-availability.mjs
+          node scripts/check-dependent-controls.mjs
+          node scripts/check-identity-upload.mjs
           node scripts/check-application-handoff.mjs
           node scripts/check-helper-memory-update.mjs
           node scripts/check-helper-popup.mjs

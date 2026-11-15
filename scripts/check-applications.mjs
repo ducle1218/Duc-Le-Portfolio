@@ -58,7 +58,18 @@ assert.equal(ui.document.getElementById('app-firstName').value,'Reviewed');asser
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;
 await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers.find(a=>a.question==='When can you start?').answer,'June 1, 2027');assert.equal(savedProfile.answers.find(a=>a.question==='Sex').answer,'Male');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
 byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
-byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,2,'Unsaved edits require review rather than exporting stale saved data');byId('profile-confirm').checked=true;await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');URL.createObjectURL=originalCreate;
+byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,2,'Unsaved edits require review rather than exporting stale saved data');byId('profile-confirm').checked=true;await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
+const countBeforeOnline=downloads.length;
+savedProfile={...savedProfile,values:{...savedProfile.values,firstName:'Latest online'}};
+await byId('download-online-profile').onclick();
+assert.equal(downloads.length,countBeforeOnline+1);
+assert.equal(JSON.parse(await downloads.at(-1).text()).profile.values.firstName,'Latest online','Online export fetches fresh server data, not a stale draft');
+assert.equal(byId('app-firstName').value,'Latest edit','Online export does not overwrite the local draft');
+assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).values.firstName,'Latest edit');
+const savedBeforeMissing=savedProfile;savedProfile=null;
+await byId('download-online-profile').onclick();assert.equal(downloads.length,countBeforeOnline+1,'Missing online profile must not export a fallback');assert.match(byId('profile-download-status').textContent,/No profile is saved online/);savedProfile=savedBeforeMissing;
+URL.createObjectURL=originalCreate;
+
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');
 console.log('PASS: profile download without owner access, required confirmation, one-click saved export, unsaved-edit review, private load and online save.');
 assert(browserStore.has('duc-application-draft-v1'));

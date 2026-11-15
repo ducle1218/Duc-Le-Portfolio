@@ -50,6 +50,17 @@ fillProfile();$('add-background').onclick=()=>{let added=0;for(const item of COM
 for(const item of COMMON_QUESTIONS){const option=node('option',item.question);option.value=item.question;$('common-question').append(option);}
 $('add-common-question').onclick=()=>{const question=$('common-question').value;if(!question)return;const existing=[...$('reusable-answers').children].find(row=>commonQuestion(row.querySelector('.answer-question').value)?.question===question);if(existing){existing.querySelector('.answer-value').focus();return;}addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();};
 $('export-profile').onclick=$('download-profile').onclick=()=>{if(profile&&!profileEdited)downloadProfile(profile);else reviewForDownload();};
+$('download-online-profile').onclick=async()=>{
+ if(!needOwner()){exportStatus('Unlock owner access in Online library, then export your saved online profile.');return;}
+ const button=$('download-online-profile');button.disabled=true;
+ try{
+  const result=await cloudRequest('/application-profile');
+  if(!result.profile)throw new Error('No profile is saved online yet. Review your profile below and choose Save profile online.');
+  const saved={...cleanProfile(result.profile),confirmedAt:result.profile.confirmedAt};
+  downloadProfile(saved);
+  exportStatus('Downloaded your latest saved online profile. Your current browser draft was kept. Import Duc_Application_Profile.json in the helper’s Profile settings.');
+ }catch(error){exportStatus(error.message);}finally{button.disabled=false;}
+};
 $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();});$('profile-form').addEventListener('change',()=>{profileEdited=true;saveDraft();});
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
 $('add-answer').addEventListener('click',()=>{profileEdited=true;});

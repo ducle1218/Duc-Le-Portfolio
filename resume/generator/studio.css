@@ -34,3 +34,5 @@ main{max-width:1560px;padding-top:38px}.intro{margin-bottom:30px}.intro h1{font-
 .background-facts{padding:20px;margin:20px 0;border:1px solid var(--line);border-left:3px solid #bda365;border-radius:10px;background:color-mix(in srgb,#bda365 6%,var(--panel))}.background-facts p{margin:8px 0 14px}
 
 .profile-download-actions{display:grid;gap:10px;flex:0 1 310px}.profile-download-actions .primary,.profile-download-actions .quiet{width:100%;font-size:14px;padding:15px 20px;justify-content:space-between}.profile-download-actions small{font-size:11px;line-height:1.5}@media(max-width:760px){.profile-download-actions{flex:1 0 100%}}
+
+.reusable-answer[hidden],.imported-answer[hidden]{display:none!important}.answer-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0;flex-wrap:wrap}.answer-pagination[hidden]{display:none}.answer-pagination button{padding:10px 16px;border:1px solid var(--border,#41494e);border-radius:8px;background:transparent;color:inherit}.answer-pagination span{font-size:.85rem;opacity:.8}

@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
-  "sha256": "40b621d672d9e0d4af7506ecd75ce84c40da191b0f2eaed351d3aeb268a975c5",
+  "version": "1.8.0",
+  "sha256": "083a25d17e4a474d0cf8bc7fb92afa470d0d69609e3a49c3daf4f73274325924",
   "files": [
     "manifest.json",
     "popup.html",
@@ -11,6 +11,7 @@
     "answer-memory.mjs",
     "answer-rules.mjs",
     "portfolio-answers.mjs",
+    "answer-pagination.mjs",
     "common-questions.mjs",
     "resume-attachment.mjs",
     "portfolio-source.mjs",

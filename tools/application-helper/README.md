@@ -1,4 +1,6 @@
-# Application Helper 1.7.0 — Chrome and Edge
+# Application Helper 1.8.0 — Chrome and Edge
+
+Version 1.8 removes the fixed answer-count caps. Website profile and imported-answer cards appear ten per page; saving and exporting includes every page. A 1 MB document-size guard remains. **Remember my answers** shows only new or changed detected answers by default; **Show all detected answers** also reveals existing matches. Saved profile answers and employer-specific memory are included in the comparison.
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -23,7 +25,7 @@ After answering questions on an employer form, click **Remember my answers** in 
 
 Future scans suggest exact matches and supported equivalent wording, such as “When can you start?” / “What is your earliest available start date?”. Suggestions show the original question. Conflicting answers and changed dates, numbers or negations are not guessed. Shared job-board domains do not mix company-specific answers. Sensitive answers are not harvested into answer memory. Add supported common questions explicitly in Studio; legal attestations remain manual.
 
-**Manage saved answers** opens search, editing, deletion, and backup/import. Up to 200 answers stay in extension storage on this browser. Normal cache clearing and updating in place preserve them; uninstalling removes them. This library does not sync to the portfolio database or other devices. Export a private backup when moving browsers.
+**Manage saved answers** opens search, editing, deletion, and backup/import. Answers stay in extension storage on this browser. Normal cache clearing and updating in place preserve them; uninstalling removes them. This library does not sync to the portfolio database or other devices. Export a private backup when moving browsers.
 
 ## Drag-and-drop updates
 

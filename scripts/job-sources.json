@@ -1,14 +1,128 @@
 [
-  {"provider":"greenhouse","board":"syskahennessy","company":"Syska Hennessy Group"},
-  {"provider":"greenhouse","board":"rebuildmanufacturing","company":"Re:Build Manufacturing"},
-  {"provider":"greenhouse","board":"langanengineeringandenvironmentalservicesllc","company":"Langan"},
-  {"provider":"greenhouse","board":"whitestoneassociatesinc","company":"Whitestone Associates"},
-  {"provider":"greenhouse","board":"jensenhughes","company":"Jensen Hughes"},
-  {"provider":"greenhouse","board":"eqtcorporation","company":"EQT"},
-  {"provider":"greenhouse","board":"altentechnologyusa","company":"ALTEN Technology USA"},
-  {"provider":"greenhouse","board":"formlabs","company":"Formlabs"},
-  {"provider":"greenhouse","board":"asteraearlycareer2027","company":"Astera Labs Early Career"},
-  {"provider":"greenhouse","board":"spacex","company":"SpaceX"},
-  {"provider":"lever","board":"amtengineering","company":"AMT Engineering"},
-  {"provider":"greenhouse","board":"agilityrobotics","company":"Agility Robotics"}
+  {
+    "provider": "greenhouse",
+    "board": "syskahennessy",
+    "company": "Syska Hennessy Group"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "rebuildmanufacturing",
+    "company": "Re:Build Manufacturing"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "langanengineeringandenvironmentalservicesllc",
+    "company": "Langan"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "whitestoneassociatesinc",
+    "company": "Whitestone Associates"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "jensenhughes",
+    "company": "Jensen Hughes"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "eqtcorporation",
+    "company": "EQT"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "altentechnologyusa",
+    "company": "ALTEN Technology USA"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "formlabs",
+    "company": "Formlabs"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "asteraearlycareer2027",
+    "company": "Astera Labs Early Career"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "spacex",
+    "company": "SpaceX"
+  },
+  {
+    "provider": "lever",
+    "board": "amtengineering",
+    "company": "AMT Engineering"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "agilityrobotics",
+    "company": "Agility Robotics"
+  },
+  {
+    "provider": "eightfold",
+    "board": "lockheedmartin",
+    "company": "Lockheed Martin",
+    "careersUrl": "https://lockheedmartin.eightfold.ai/careers"
+  },
+  {
+    "provider": "workday",
+    "tenant": "nvidia",
+    "board": "NVIDIAExternalCareerSite",
+    "company": "NVIDIA",
+    "careersUrl": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite"
+  },
+  {
+    "provider": "workday",
+    "tenant": "boeing",
+    "board": "EXTERNAL_CAREERS",
+    "company": "Boeing",
+    "careersUrl": "https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS"
+  },
+  {
+    "provider": "workday",
+    "tenant": "globalhr",
+    "board": "REC_RTX_Ext_Gateway",
+    "company": "RTX",
+    "careersUrl": "https://globalhr.wd5.myworkdayjobs.com/REC_RTX_Ext_Gateway"
+  },
+  {
+    "provider": "workday",
+    "tenant": "ngc",
+    "board": "Northrop_Grumman_External_Site",
+    "company": "Northrop Grumman",
+    "careersUrl": "https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site"
+  },
+  {
+    "provider": "workday",
+    "tenant": "intel",
+    "board": "External",
+    "company": "Intel",
+    "careersUrl": "https://intel.wd1.myworkdayjobs.com/External"
+  },
+  {
+    "provider": "workday",
+    "tenant": "blueorigin",
+    "board": "BlueOrigin",
+    "company": "Blue Origin",
+    "careersUrl": "https://blueorigin.wd5.myworkdayjobs.com/BlueOrigin"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "andurilindustries",
+    "company": "Anduril",
+    "careersUrl": "https://job-boards.greenhouse.io/andurilindustries"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "rocketlab",
+    "company": "Rocket Lab",
+    "careersUrl": "https://job-boards.greenhouse.io/rocketlab"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "relativity",
+    "company": "Relativity Space",
+    "careersUrl": "https://job-boards.greenhouse.io/relativity"
+  }
 ]

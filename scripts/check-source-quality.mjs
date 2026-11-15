@@ -7,3 +7,7 @@ const entry=(company,rank,date)=>({job:{company,title:'Intern',datePosted:date},
 const results=sortJobs([entry('Small',null,'2026-11-13'),entry('Large',16,'2026-11-12')],'newest-priority');assert.equal(results[0].job.company,'Large');
 assert.equal(sortJobs(results,'newest')[0].job.company,'Small');
 console.log('PASS source allowlist, redirect/repost exclusion, same-week company ordering and exact-date ordering.');
+
+assert(sourceDetails({url:'https://lockheedmartin.eightfold.ai/careers?pid=996477737507'}).allowed);
+assert(!sourceDetails({url:'https://lockheedmartin.eightfold.ai/careers'}).allowed);
+assert(!sourceDetails({url:'https://other.eightfold.ai/careers?pid=123'}).allowed);

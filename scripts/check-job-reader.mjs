@@ -48,3 +48,6 @@ assert.equal(view.getUint32(0,true),0x04034b50);assert.equal(view.getUint32(arch
 assert.throws(()=>makeZip([{name:'../outside.pdf',data:new Uint8Array()}]));
 const folder=new URL('../../tmp/job-reader-test/',import.meta.url);await mkdir(folder,{recursive:true});await writeFile(new URL('real-jobs.zip',folder),archive);
 console.log(`PASS: filters, safe imports, deduplication, and ZIP with two one-page PDFs generated from ${matches.length} actual regional matches.`);
+
+assert.equal(canonical('https://lockheedmartin.eightfold.ai/careers?hl=en-US&pid=996477737507&start=0'),'https://lockheedmartin.eightfold.ai/careers?pid=996477737507');
+assert.equal(canonical('https://lockheedmartin.eightfold.ai/careers/job/996477737507'),'https://lockheedmartin.eightfold.ai/careers?pid=996477737507');

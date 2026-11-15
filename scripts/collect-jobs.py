@@ -12,6 +12,8 @@ from pathlib import Path
 import re
 import sys
 import urllib.request
+import urllib.error
+from urllib.parse import urlencode, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 INTERNSHIP = re.compile(r"\bintern(?:ship)?s?\b|co[ -]?op", re.I)
@@ -78,13 +80,139 @@ def plain(value):
     return '\n'.join(line.strip() for line in ''.join(parser.parts).splitlines() if line.strip())
 
 
-def get_json(url):
-    request = urllib.request.Request(url, headers={'User-Agent': 'DucLe-Portfolio-JobIndex/1.0', 'Accept': 'application/json'})
-    with urllib.request.urlopen(request, timeout=25) as response:
-        data = response.read(20_000_001)
-        if len(data) > 20_000_000:
-            raise ValueError('Source exceeds size limit')
-        return json.loads(data)
+def get_json(url, body=None):
+    request = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
+        headers={'User-Agent': 'DucLe-Portfolio-JobIndex/1.0', 'Accept': 'application/json', 'Content-Type': 'application/json'})
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(request, timeout=25) as response:
+                data = response.read(20_000_001)
+                if len(data) > 20_000_000:
+                    raise ValueError('Source exceeds size limit')
+                return json.loads(data)
+        except urllib.error.HTTPError as error:
+            if attempt or error.code < 500: raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt: raise
+
+
+def direct_job(item, source, checked_at):
+    """Normalize employer detail responses, never search snippets or relative dates."""
+    if source['provider'] == 'eightfold':
+        title, description = item['name'], plain(item.get('jobDescription'))
+        locations = item.get('standardizedLocations') or item.get('locations') or []
+        location = '; '.join(locations)
+        remote = item.get('workLocationOption') in ('remote', 'remote_local')
+        stamp = item.get('postedTs')
+        posted = dt.datetime.fromtimestamp(stamp, dt.timezone.utc).isoformat() if stamp else ''
+        url = source['careersUrl'] + '?pid=' + str(int(item['id']))
+        identity, expires = str(item['id']), ''
+        employment = ', '.join(item.get('efcustomTextLevelofexperience') or [])
+        closed = False
+        verified = item.get('positionUserActions', {}).get('applyAction', {}).get('status') == 'allowed'
+    else:
+        title, description = item['title'], plain(item.get('jobDescription'))
+        locations = [item.get('location', ''), *(item.get('additionalLocations') or [])]
+        country = (item.get('country') or {}).get('descriptor', '')
+        location = '; '.join(dict.fromkeys(filter(None, locations)))
+        if country and country not in location:
+            location += ' · ' + country
+        remote = bool(re.search(r'\bremote\b|fully virtual', item.get('remoteType', '') + ' ' + location, re.I))
+        posted, expires = item.get('startDate', ''), item.get('endDate', '')
+        url, identity = item['externalUrl'], item['jobReqId']
+        employment = item.get('timeType', '')
+        closed = item.get('canApply') is False or item.get('posted') is False
+        verified = item.get('canApply') is True and item.get('posted') is True
+    expected = urlparse(source['careersUrl']).hostname
+    parsed = urlparse(url)
+    if parsed.scheme != 'https' or parsed.hostname != expected or parsed.username or len(description) < 80:
+        raise ValueError('Incomplete or off-domain employer posting')
+    return {'id': source['provider'] + ':' + source['board'] + ':' + identity,
+        'title': title, 'company': source['company'], 'location': location,
+        'description': description[:65000], 'url': url, 'datePosted': posted,
+        'validThrough': expires, 'checkedAt': checked_at, 'remote': remote,
+        'source': source['provider'], 'board': source['board'], 'employmentType': employment,
+        'closed': closed, 'availability': 'closed' if closed else 'active' if verified else 'unknown',
+        'statusCheckedAt': checked_at, 'statusReason': 'The employer’s careers system was checked.',
+        'statusEvidenceUrl': url}
+
+
+def collect_direct(source, checked_at, fetch, status):
+    jobs, seen = [], set()
+    if source['provider'] == 'eightfold':
+        host = 'https://lockheedmartin.eightfold.ai'
+        # This is Lockheed's public search service, not a general-purpose URL fetcher.
+        for query in ('intern', 'co-op'):
+            offset = 0
+            total, pages_seen = 0, set()
+            for page in range(40):
+                data = fetch(host + '/api/pcsx/search?' + urlencode({'domain': 'lockheedmartin.com',
+                    'query': query, 'start': offset, 'sort_by': 'timestamp'}))['data']
+                items = data['positions']
+                total = max(total, data['count'])
+                if not items:
+                    if offset < total: status['truncated'] = True
+                    break
+                signature = tuple(str(item['id']) for item in items)
+                if signature in pages_seen:
+                    status['truncated'] = True
+                    break
+                pages_seen.add(signature)
+                for item in items:
+                    identity = str(item['id'])
+                    if identity in seen or not INTERNSHIP.search(item['name']): continue
+                    seen.add(identity)
+                    try:
+                        detail = fetch(host + '/api/pcsx/position_details?' + urlencode({
+                            'domain': 'lockheedmartin.com', 'position_id': identity}))['data']
+                        if str(detail['id']) != identity: raise ValueError('Mismatched posting')
+                        if INTERNSHIP.search(detail['name']): jobs.append(direct_job(detail, source, checked_at))
+                    except Exception: status['omitted'] += 1
+                offset += len(items)
+                if offset >= total: break
+            else: status['truncated'] = True
+    else:
+        base = source['careersUrl'].split('/' + source['board'])[0] + '/wday/cxs/' + source['tenant'] + '/' + source['board']
+        probe = fetch(base + '/jobs', {'limit': 20, 'offset': 0, 'searchText': '', 'appliedFacets': {}})
+        values = next((f['values'] for f in probe.get('facets', []) if f.get('facetParameter') == 'workerSubType'), [])
+        interns = [v['id'] for v in values if INTERNSHIP.search(v.get('descriptor', ''))]
+        # Use the employer's internship classification where available, but still
+        # require an internship/co-op title. A regular role mentioning interns is excluded.
+        queries = [''] if interns else ['intern', 'co-op']
+        for query in queries:
+            offset = 0
+            total, pages_seen = 0, set()
+            for page in range(50):
+                data = fetch(base + '/jobs', {'limit': 20, 'offset': offset, 'searchText': query,
+                    'appliedFacets': {'workerSubType': interns} if interns else {}})
+                # Workday commonly sends total=0 after page one, even while returning
+                # more jobs. Preserve the first page's count across pagination.
+                total = max(total, data['total'])
+                items = data['jobPostings']
+                if not items:
+                    if offset < total: status['truncated'] = True
+                    break
+                signature = tuple(item['externalPath'] for item in items)
+                if signature in pages_seen:
+                    status['truncated'] = True
+                    break
+                pages_seen.add(signature)
+                fresh = [item for item in items if item['externalPath'] not in seen]
+                for item in fresh:
+                    path = item['externalPath']; seen.add(path)
+                    if not INTERNSHIP.search(item['title']): continue
+                    if not path.startswith('/job/') or '..' in path: raise ValueError('Invalid job path')
+                    try:
+                        detail = fetch(base + path)['jobPostingInfo']
+                        requested_id = re.sub(r'-\d+$', '', path.rsplit('_', 1)[-1])
+                        if detail.get('jobReqId') != requested_id: raise ValueError('Mismatched posting')
+                        if not INTERNSHIP.search(detail['title']): continue
+                        jobs.append(direct_job(detail, source, checked_at))
+                    except Exception: status['omitted'] += 1
+                offset += len(items)
+                if offset >= total: break
+            else: status['truncated'] = True
+    return jobs
 
 
 def normalize(item, source, checked_at):
@@ -147,10 +275,12 @@ def collect_source(source, checked_at, fetch=get_json):
                         jobs.append(normalize(item, source, checked_at))
                     except Exception:
                         status['omitted'] += 1
+        elif provider in ('workday', 'eightfold'):
+            jobs = collect_direct(source, checked_at, fetch, status)
         else:
             raise ValueError('Unsupported provider')
         status['count'] = len(jobs)
-        if status['omitted']:
+        if status['omitted'] or status.get('truncated'):
             status['status'] = 'partial'
     except Exception as error:
         status.update(status='unavailable', error=type(error).__name__)

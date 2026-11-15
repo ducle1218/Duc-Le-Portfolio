@@ -11,10 +11,10 @@ at 07:17 / 19:17 UTC daily. GitHub schedules can be delayed; the UI shows the
 actual check time and flags an index older than 36 hours. GitHub may disable
 scheduled workflows after 60 days without repository activity; re-enable the
 workflow in Actions if that occurs. Standard hosted runners are free for this
-public repository. Greenhouse and Lever public GET APIs need no key.
+public repository. Public Greenhouse, Lever, Workday and Lockheed Martin Eightfold career feeds need no search API key. Direct employer collection does not use SerpApi credits.
 
 `job-sources.json` is the explicit employer coverage list. To add an employer,
-verify its official board, add its provider (`greenhouse` or `lever`), board slug,
+verify its official board, add its provider (`greenhouse`, `lever`, `workday`, or the Lockheed-specific `eightfold` adapter), board slug,
 and company display name. Run `python scripts/collect-jobs.py` and inspect the
 reported health. This does not search all employers, LinkedIn, or Indeed.
 
@@ -123,3 +123,11 @@ LinkedIn, Indeed, and ZipRecruiter coverage varies. It does not directly search
 all listings on those sites. The backend caps searches at 200 per month.
 
 The default wider search uses separate NJ, NY, PA and US-remote queries (four provider calls). Focused role filters remain in the query; long keyword lists use engineering and the local filters refine returned titles.
+
+## Direct employer coverage (November 2026)
+
+The 22 configured sources include Lockheed Martin, Boeing, RTX (Raytheon/Collins/Pratt & Whitney), Northrop Grumman, Blue Origin, SpaceX, Anduril, Rocket Lab, Relativity Space, NVIDIA and Intel. This is an explicit coverage list, not a claim to cover every major company. Google and other unconnected employers remain discoverable through the separate wider search.
+
+Workday discovers its internship worker-type facet, then paginates listings and fetches full detail responses. Later pages may return total=0; preserve the initial total. Eightfold uses Lockheed's public search and detail endpoints. Both enforce internship/co-op titles, preserve official posting dates, and report omissions/truncation. Results outside NJ/NY/PA and US remote remain accessible by changing filters; daily database ingestion keeps those regional defaults. “Employer websites” filters the combined list to direct career destinations. Opening the library does not hide freshly collected employer results.
+
+The backend supports individual Workday and Lockheed availability checks. HTTP 403/429, server failures, unexpected IDs and partial lists never prove a closure. No absence-from-list closure inference is used.

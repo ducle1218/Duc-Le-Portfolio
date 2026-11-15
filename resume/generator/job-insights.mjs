@@ -1,7 +1,8 @@
-import {list} from './job-core.mjs?v=20261114.3';
+import {list} from './job-core.mjs?v=20261114.4';
 const DAY=86400000;
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const contains=(text,word)=>new RegExp('(^|[^a-z0-9])'+escape(word)+'(?=$|[^a-z0-9])','i').test(text);
+const wordMatchers=new Map();
+const contains=(text,word)=>{let pattern=wordMatchers.get(word);if(!pattern){pattern=new RegExp('(^|[^a-z0-9])'+escape(word)+'(?=$|[^a-z0-9])','i');wordMatchers.set(word,pattern);}return pattern.test(text);};
 // The same concept counts once, regardless of keyword repetition or synonyms.
 export const CONCEPTS={
  'CAD':['CAD','computer-aided design'], 'SolidWorks':['SolidWorks','Solid Works'], 'Onshape':['Onshape'],

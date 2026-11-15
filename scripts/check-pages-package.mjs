@@ -31,6 +31,7 @@ export const REQUIRED_FILES = Object.freeze([
   'resume/generator/extension-client.mjs',
   'resume/generator/application-core.mjs',
   'resume/generator/downloads/Application-Helper.zip',
+  'resume/generator/downloads/helper-release.json',
   'resume/generator/finder.mjs',
   'resume/generator/cloud.mjs',
   'resume/generator/cloud-config.json',

@@ -14,12 +14,12 @@ const fixture='<html><body><fieldset><legend>Are you willing to relocate?</legen
 const {document,window}=dom.parseHTML(fixture);Object.assign(globalThis,{document,location:new URL('https://example.com/apply'),getComputedStyle:()=>({visibility:'visible'}),Event:window.Event,KeyboardEvent:window.Event,HTMLInputElement:window.HTMLInputElement,HTMLTextAreaElement:window.HTMLTextAreaElement,HTMLSelectElement:window.HTMLSelectElement});
 const prepare=()=>{for(const e of document.querySelectorAll('*'))e.getClientRects=()=>e.closest('[hidden]')?[]:[{}];};prepare();
 const rs=[...document.querySelectorAll('[type=radio]')];for(const r of rs)r.onclick=()=>{for(const other of rs)other.checked=other===r;};
-const button=document.querySelector('.dropdown-toggle'),list=document.getElementById('sources');button.onclick=()=>{list.hidden=false;button.setAttribute('aria-expanded','true');};
-list.querySelector('a').onclick=()=>{button.textContent='Amazon Career Site';button.setAttribute('aria-expanded','false');list.hidden=true;document.getElementById('followup').innerHTML='<div class="form-group"><label>If "Amazon Career Site" please specify</label><div class="ng-select"><span class="ng-value-label">Amazon.jobs</span></div></div>';prepare();};
+let controlEvent,optionEvent;const button=document.querySelector('.dropdown-toggle'),list=document.getElementById('sources');button.onclick=e=>{controlEvent=e;list.hidden=false;button.setAttribute('aria-expanded','true');};
+list.querySelector('a').onclick=e=>{optionEvent=e;button.textContent='Amazon Career Site';button.setAttribute('aria-expanded','false');list.hidden=true;document.getElementById('followup').innerHTML='<div class="form-group"><label>If "Amazon Career Site" please specify</label><div class="ng-select"><span class="ng-value-label">Amazon.jobs</span></div></div>';prepare();};
 let submit=0;document.getElementById('submit').onclick=()=>submit++;
 const memory=cleanMemory([{question:'Are you willing to relocate?',answer:'Yes',scope:'*'},{question:'How did you hear about this role?',answer:'Amazon Career Site',scope:location.origin,context:'amazon'}]);
 const scan=formBridge(),fields=scan.fields.flatMap(f=>{const a=suggestField(f,profile,memory,location.origin,'amazon');return a?[{...f,...a}]:[];});assert.equal(fields.length,2);assert.equal(fields[0].type,'radio-group');
-assert.deepEqual(await formBridge({action:'fill',url:scan.url,fields}),{filled:2,skipped:0});assert.equal(rs[0].checked,true);assert.equal(submit,0);
+assert.deepEqual(await formBridge({action:'fill',url:scan.url,fields}),{filled:2,skipped:0});assert(controlEvent.defaultPrevented);assert(optionEvent.defaultPrevented);assert.equal(rs[0].checked,true);assert.equal(submit,0);
 const remembered=scanAnsweredFields().candidates;assert.deepEqual(remembered.map(a=>a.answer),['Yes','Amazon Career Site','Amazon.jobs']);assert(employerSpecific(remembered[2].question));assert(!remembered.some(a=>a.answer==='private'));
 assert.deepEqual(await formBridge({action:'fill',url:scan.url,fields}),{filled:0,skipped:2});
 // A parent selection can replace a child control. A previously reviewed child must not be filled after replacement.

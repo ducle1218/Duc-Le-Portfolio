@@ -49,17 +49,16 @@ const byId=id=>ui.document.getElementById(id),downloads=[];
 for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
 const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test-profile';};
 byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11);byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11,'Background defaults do not duplicate cards');
-byId('download-profile').onclick();assert.equal(byId('application-profile').open,true);assert.match(byId('profile-download-status').textContent,/No owner key/);assert.equal(downloads.length,0);
-await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,0,'Unconfirmed defaults must not export');
-byId('app-firstName').value='Reviewed';byId('profile-confirm').checked=true;
-await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
-const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261115.11');await setupCloud(()=>{});
+assert.equal(byId('profile-confirm'),null,'The extra confirmation checkbox is removed');
+byId('app-firstName').value='';byId('download-profile').onclick();assert.equal(downloads.length,0,'Invalid profiles still cannot export');
+byId('app-firstName').value='Reviewed';byId('download-profile').onclick();assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.confirmed,true);assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
+const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261115.12');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Reviewed');assert.equal(ui.document.getElementById('export-profile').disabled,false);
-ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;
+ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';
 await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers.find(a=>a.question==='When can you start?').answer,'June 1, 2027');assert.equal(savedProfile.answers.find(a=>a.question==='Sex').answer,'Male');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
 byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
-byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,2,'Unsaved edits require review rather than exporting stale saved data');byId('profile-confirm').checked=true;await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
+byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,3,'Download uses the latest draft in one click');assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
 const countBeforeOnline=downloads.length;
 savedProfile={...savedProfile,values:{...savedProfile.values,firstName:'Latest online'}};
 await byId('download-online-profile').onclick();
@@ -72,12 +71,12 @@ await byId('download-online-profile').onclick();assert.equal(downloads.length,co
 URL.createObjectURL=originalCreate;
 
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');
-console.log('PASS: profile download without owner access, required confirmation, one-click saved export, unsaved-edit review, private load and online save.');
+console.log('PASS: profile download without owner access, explicit download/save actions, one-click current-draft export, private load and online save.');
 assert(browserStore.has('duc-application-draft-v1'));
 const backup={format:'duc-answer-memory-v1',items:[{question:'When can you start?',answer:'June 1',scope:'*',sourceOrigin:'https://employer.example'},{question:'Why this company?',answer:'Their lab',scope:'https://employer.example',context:'company a',sourceOrigin:'https://employer.example'}]};
 byId('answer-import-file').files=[{size:1000,text:async()=>JSON.stringify(backup)}];await byId('answer-import-file').onchange();assert.equal(byId('imported-answer-list').children.length,2);assert(browserStore.has('duc-imported-answers-v1'));assert.equal(byId('imported-answer-list').lastElementChild.querySelectorAll('button')[1].disabled,true);
 const {importAnswers}=await import('../resume/generator/answer-import.mjs');const first=importAnswers(backup);assert.equal(importAnswers(backup,first.items).added,0);assert.equal(importAnswers({...backup,items:[{...backup.items[0],answer:'changed'}]},first.items).items[0].answer,'June 1');assert.throws(()=>importAnswers({format:'wrong',items:[]}));
-const restored=dom.parseHTML(html);globalThis.document=restored.document;await import('../resume/generator/applications.mjs?restore-test');assert.equal(restored.document.getElementById('app-firstName').value,'Latest edit');assert.equal(restored.document.getElementById('imported-answer-list').children.length,2);assert.equal(restored.document.getElementById('profile-confirm').checked,false);
+const restored=dom.parseHTML(html);globalThis.document=restored.document;await import('../resume/generator/applications.mjs?restore-test');assert.equal(restored.document.getElementById('app-firstName').value,'Latest edit');assert.equal(restored.document.getElementById('imported-answer-list').children.length,2);assert.equal(restored.document.getElementById('profile-confirm'),null);
 console.log('PASS: persisted drafts and imports restored; duplicate imports preserve edits; employer-specific answers cannot enter the global profile.');
 
 // Upgrade the old single-Sex draft without overwriting its edited contact details.
@@ -86,7 +85,7 @@ const legacy=dom.parseHTML(html);globalThis.document=legacy.document;
 await import('../resume/generator/applications.mjs?legacy-prefill');
 assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,11);
 assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
-assert.equal(legacy.document.getElementById('profile-confirm').checked,false);
+assert.equal(legacy.document.getElementById('profile-confirm'),null);
 savedProfile=cleanProfile({confirmed:true,values:{firstName:'Online',lastName:'Applicant'},answers:[{question:'Are you 18 years or older?',answer:'Yes'},{question:'Sex',answer:'Different saved value'}]});
 await legacy.document.getElementById('load-online-answers').onclick();
 assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,12);
@@ -105,10 +104,27 @@ assert.equal([...manyId('reusable-answers').children].filter(r=>!r.hidden).lengt
 assert.match(manyId('answer-pagination').textContent,/Page 4 of 4/);
 manyId('answer-pagination').firstElementChild.onclick();assert.equal([...manyId('reusable-answers').children].filter(r=>!r.hidden).length,10);
 manyId('reusable-answers').children[22].querySelector('.answer-value').value='Edited on page three';
-manyId('profile-confirm').checked=true;await manyId('profile-form').onsubmit({preventDefault(){}});
+await manyId('profile-form').onsubmit({preventDefault(){}});
 assert.equal(savedProfile.answers.length,35);assert.equal(savedProfile.answers[22].answer,'Edited on page three');
 const manyReload=dom.parseHTML(html);globalThis.document=manyReload.document;await import('../resume/generator/applications.mjs?many-reload');
 assert.equal(manyReload.document.querySelectorAll('.reusable-answer').length,35);
 assert.equal([...manyReload.document.querySelectorAll('.reusable-answer')].filter(r=>!r.hidden).length,10);
 assert.equal(manyReload.document.querySelectorAll('.answer-value')[22].value,'Edited on page three');
 console.log('PASS: 35 website answers saved online and restored, with ten visible per page and offscreen edits retained.');
+
+// Add controls reveal newly added cards across pagination and target existing answers.
+const editor=manyReload.document;let focused,scrolled;
+Object.assign(manyReload.window.HTMLElement.prototype,{focus(){focused=this;},scrollIntoView(){scrolled=this;}});
+const commonSelect=editor.getElementById('common-question');Object.defineProperty(commonSelect,'value',{value:'Preferred pronouns',writable:true});
+editor.getElementById('add-common-question').click();
+assert.equal(editor.querySelectorAll('.reusable-answer').length,36);
+let newRow=editor.getElementById('reusable-answers').lastElementChild;
+assert.equal(newRow.hidden,false);assert.equal(scrolled,newRow);assert.equal(focused,newRow.querySelector('.answer-value'));
+assert.match(editor.getElementById('answer-action-status').textContent,/Added Preferred pronouns/);
+editor.getElementById('add-common-question').click();assert.equal(editor.querySelectorAll('.reusable-answer').length,36);assert.match(editor.getElementById('answer-action-status').textContent,/already saved/);
+editor.getElementById('answer-pagination').firstElementChild.click();editor.getElementById('add-answer').click();
+newRow=editor.getElementById('reusable-answers').lastElementChild;
+assert.equal(newRow.hidden,false);assert.equal(scrolled,newRow);assert.equal(focused,newRow.querySelector('.answer-question'));
+assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,37);
+assert.equal(editor.getElementById('add-answer').type,'button');assert.equal(editor.getElementById('add-common-question').type,'button');
+console.log('PASS: real Add button clicks reveal and focus cards, duplicates open existing answers, and drafts persist without a confirmation checkbox.');

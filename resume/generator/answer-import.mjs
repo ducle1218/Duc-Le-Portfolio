@@ -1,4 +1,4 @@
-import {cleanMemory} from './answer-memory.mjs?v=20261115.11';
+import {cleanMemory} from './answer-memory.mjs?v=20261115.12';
 export function importAnswers(data,current=[]){
  if(data?.format!=='duc-answer-memory-v1')throw new Error('Choose Application-Answers-Backup.json from the helper’s Saved answers → Export backup.');
  const incoming=cleanMemory(data.items),map=new Map(cleanMemory(current).map(a=>[a.id,a]));let added=0;

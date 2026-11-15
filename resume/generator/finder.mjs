@@ -1,14 +1,14 @@
-import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.2';
-import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261114.2';
-import {importJob} from './job-api.mjs?v=20261114.2';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.2';
-import {makeZip} from './zip.mjs?v=20261114.2';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.2';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.2';
+import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.3';
+import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.3';
+import {importJob} from './job-api.mjs?v=20261114.3';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.3';
+import {makeZip} from './zip.mjs?v=20261114.3';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.3';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.3';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-const date=value=>{const parsed=Date.parse(value);return Number.isFinite(parsed)?new Date(parsed).toLocaleString(): 'Unknown';};
+const date=value=>{if(/^\d{4}-\d{2}-\d{2}$/.test(value||''))return postingDate(value);const parsed=Date.parse(value);return Number.isFinite(parsed)?new Date(parsed).toLocaleString(): 'Unknown';};
 function readFilters(){return {...DEFAULTS,include:$('roles').value,locations:$('locations').value,exclude:$('exclude').value,companies:$('companies').value,terms:$('terms').value,remote:$('remote').checked,days:Number($('days').value),priorities:$('priorities').value};}
 function fillFilters(f){for(const [id,name] of [['roles','include'],['locations','locations'],['exclude','exclude'],['companies','companies'],['terms','terms'],['days','days']])$(id).value=f[name];$('remote').checked=f.remote;$('priorities').value=f.priorities??DEFAULT_PRIORITIES;}
 let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}');}catch{}if(!saved.priorities||saved.priorities==='SpaceX')saved.priorities=DEFAULT_PRIORITIES;fillFilters({...DEFAULTS,...saved});
@@ -33,7 +33,7 @@ function showJobs(){
   const content=node('div',undefined,'job-content');content.append(node('p',job.company,'eyebrow'),node('h4',job.title),node('p',job.location||'Location not provided','muted'));
   if(status==='review')content.append(node('p',reason+' — select only after checking the source.','review-note'));
   const chips=node('div',undefined,'job-chips');
-  chips.append(node('span',sourceDetails(job).label,'source-chip'),node('span',job.datePosted?(job.dateApproximate?'Approx. posted ':'Posted ')+new Date(job.datePosted).toLocaleDateString():'Posting date unavailable','date-chip'));
+  chips.append(node('span',sourceDetails(job).label,'source-chip'),node('span',job.datePosted?(job.dateApproximate?'Approx. posted ':'Posted ')+postingDate(job.datePosted):'Posting date unavailable','date-chip'));
   chips.append(node('span',pay.label,'pay-chip'),node('span',fresh.label,fresh.tier>=2?'age-chip needs-check':'age-chip'));
   if(company.priority)chips.append(node('span','★ Your priority','priority-chip'));
   const rank=node(company.rank?'a':'span',company.rank?'Fortune 500 · #'+company.rank:'Rank not reviewed');

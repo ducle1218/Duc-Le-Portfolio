@@ -24,3 +24,5 @@ export function filterJob(job,f,now=Date.now()){
  return {status:skipped.length?'skipped':review.length?'review':'ready',reason:[...skipped,...review].join(' · ')};
 }
 export function filename(job){const clean=s=>String(s).normalize('NFKD').replace(/[^a-zA-Z0-9 -]/g,'').trim().replace(/\s+/g,'_').slice(0,65)||'Job';let hash=2166136261;for(const c of job.url||'')hash=Math.imul(hash^c.charCodeAt(0),16777619);return 'Duc_Le_'+clean(job.company)+'_'+clean(job.title)+'_'+(hash>>>0).toString(16)+'.pdf';}
+
+export function postingDate(value,locale){const d=new Date(value);if(!Number.isFinite(d.getTime()))return 'Unknown';return d.toLocaleDateString(locale,/^\d{4}-\d{2}-\d{2}$/.test(value)?{timeZone:'UTC'}:undefined);}

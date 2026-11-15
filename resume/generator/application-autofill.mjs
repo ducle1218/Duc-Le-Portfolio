@@ -1,7 +1,7 @@
-import {memoryMatch} from './answer-memory.mjs?v=20261115.6';
-import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.6';
-import {answerRule} from './answer-rules.mjs?v=20261115.6';
-import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.6';
+import {memoryMatch} from './answer-memory.mjs?v=20261115.10';
+import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.10';
+import {answerRule} from './answer-rules.mjs?v=20261115.10';
+import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.10';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
  if(!profile?.confirmed)return null;

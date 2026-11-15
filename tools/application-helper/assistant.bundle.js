@@ -27,7 +27,7 @@
     container.append(details);
   }
 
-  // tools/application-helper/common-questions.mjs?v=20261115.6
+  // tools/application-helper/common-questions.mjs?v=20261115.10
   var COMMON_QUESTIONS = [
     { question: "Summer internship start date", aliases: ["summer internship start date"], defaultAnswer: "2027-05-13" },
     { question: "Summer internship end date", aliases: ["summer internship end date"], defaultAnswer: "2027-08-31" },
@@ -94,7 +94,7 @@
     return seasons[0];
   }
 
-  // tools/application-helper/answer-rules.mjs?v=20261115.6
+  // tools/application-helper/answer-rules.mjs?v=20261115.10
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -155,7 +155,7 @@
     return null;
   }
 
-  // tools/application-helper/portfolio-answers.mjs?v=20261115.6
+  // tools/application-helper/portfolio-answers.mjs?v=20261115.10
   var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
   var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
@@ -235,7 +235,7 @@
     return answer(text, claims.flatMap((c) => c.sources));
   }
 
-  // tools/application-helper/application-autofill.mjs?v=20261115.6
+  // tools/application-helper/application-autofill.mjs?v=20261115.10
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -444,7 +444,7 @@
     })();
   }
 
-  // tools/application-helper/answer-memory.mjs?v=20261115.6
+  // tools/application-helper/answer-memory.mjs?v=20261115.10
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));

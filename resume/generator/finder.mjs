@@ -1,11 +1,11 @@
-import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.5';
-import {companyBrand} from './company-brand.mjs?v=20261114.5';
-import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.5';
-import {importJob} from './job-api.mjs?v=20261114.5';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.5';
-import {makeZip} from './zip.mjs?v=20261114.5';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.5';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.5';
+import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.6';
+import {companyBrand} from './company-brand.mjs?v=20261114.6';
+import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.6';
+import {importJob} from './job-api.mjs?v=20261114.6';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.6';
+import {makeZip} from './zip.mjs?v=20261114.6';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.6';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.6';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const insightCache=new WeakMap();
@@ -67,7 +67,8 @@ function showJobs(){
   const description=node('button','Read posting','quiet');description.type='button';description.onclick=()=>openPosting(job);detail.append(description);
   content.append(detail);const actions=node('div',undefined,'job-actions');
   const score=node('button',undefined,'fit-score');score.type='button';score.append(node('strong',fit.score===null?'—':fit.score+'%'),node('span','Skills match'),node('small',fit.count+' skills assessed'));score.setAttribute('aria-label','Skills match '+(fit.score??'unavailable')+'. Show evidence');score.onclick=()=>{detail.open=!detail.open;};
-  actions.append(score,preview,source);row.append(check,content,actions);$('jobs').append(row);
+  const apply=node('button','Prepare application ↗','quiet apply-action');apply.type='button';apply.disabled=!!fresh.closed;apply.dataset.inactive=String(!!fresh.closed);apply.onclick=()=>document.dispatchEvent(new CustomEvent('prepare-application',{detail:job}));
+  actions.append(score,apply,preview,source);row.append(check,content,actions);$('jobs').append(row);
  }
  selection();
 }

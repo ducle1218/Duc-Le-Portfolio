@@ -44,7 +44,7 @@ async function include(source) {
 }
 
 await copyFile(join(root, 'index.html'), join(destination, 'index.html'));
-for (const name of ['data', 'src', 'resume', 'generator']) {
+for (const name of ['data', 'src', 'resume', 'generator', 'applications']) {
   await cp(join(root, name), join(destination, name), {
     recursive: true, force: false, errorOnExist: true, dereference: false, filter: include,
   });

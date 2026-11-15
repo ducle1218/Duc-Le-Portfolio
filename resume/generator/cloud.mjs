@@ -49,7 +49,7 @@ export async function setupCloud(onLoad){
   const jobs=[],cursors=new Set();let cursor='',searchEnabled=false;
   try{
    do{const data=await cloudRequest('/jobs'+(cursor?'?cursor='+encodeURIComponent(cursor):''));jobs.push(...data.jobs);searchEnabled=data.searchEnabled;cursor=data.nextCursor||'';if(cursor&&cursors.has(cursor))throw new Error('Library pagination could not finish. Refresh to try again.');cursors.add(cursor);status.textContent='Loading '+jobs.length+' saved jobs…';}while(cursor);
-   onLoad(jobs);document.getElementById('cloud-save-current').disabled=!connected();document.getElementById('online-search').disabled=!searchEnabled;
+   onLoad(jobs);if(connected())document.dispatchEvent(new document.defaultView.Event('application-auth'));document.getElementById('cloud-save-current').disabled=!connected();document.getElementById('online-search').disabled=!searchEnabled;
    const inactive=jobs.filter(job=>job.closed===true||job.availability==='closed').length;
    status.textContent=jobs.length+' saved jobs loaded'+(inactive?' · '+inactive+' inactive, hidden from the default list':'')+(connected()?'. New imports save automatically.':'. Loaded automatically; owner access is optional for saving imports and wider search.')+(!searchEnabled&&connected()?' Wider search awaits a search-provider connection.':'');
    await refreshAutomation();

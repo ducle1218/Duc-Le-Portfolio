@@ -26,6 +26,10 @@ export const REQUIRED_FILES = Object.freeze([
   'index.html',
   'resume/generator/index.html',
   'generator/index.html',
+  'applications/index.html',
+  'resume/generator/applications.mjs',
+  'resume/generator/application-core.mjs',
+  'resume/generator/downloads/Application-Helper.zip',
   'resume/generator/finder.mjs',
   'resume/generator/cloud.mjs',
   'resume/generator/cloud-config.json',
@@ -106,7 +110,7 @@ export async function checkPagesPackage() {
   assert(info.isDirectory() && !info.isSymbolicLink(), '_site must be a real directory inside the site root');
   assert.equal(await realpath(destination), destination, '_site must not resolve outside its fixed location');
   const top = (await readdir(destination)).sort();
-  assert.deepEqual(top, ['data', 'generator', 'index.html', 'resume', 'src'], 'Only index.html, data/, generator/, resume/, and src/ may be published');
+  assert.deepEqual(top, ['applications', 'data', 'generator', 'index.html', 'resume', 'src'], 'Only index.html and the approved applications/, data/, generator/, resume/, and src/ directories may be published');
 
   await checkRequiredInputs(destination);
   const files = await packageFiles(destination);

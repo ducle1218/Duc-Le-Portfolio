@@ -43,6 +43,8 @@ jobs:
           node scripts/check-spotlight.mjs
           node scripts/check-portfolio-data.mjs
           node scripts/check-resume-generator.mjs
+          node scripts/build-application-helper.mjs
+          node scripts/check-applications.mjs
           node scripts/check-job-reader.mjs
           node scripts/check-job-insights.mjs
           node scripts/check-source-quality.mjs

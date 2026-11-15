@@ -1,4 +1,4 @@
-export const STUDIO='https://ducle1218.github.io/Duc-Le-Portfolio/generator/';
+export const STUDIO='https://ducle1218.github.io/Duc-Le-Portfolio/applications/';
 export const DEFAULTS={locations:'New Jersey, New York, Pennsylvania',remote:true,internships:true,include:'mechanical, CAD, robotics, manufacturing, engineering, engineer',exclude:'senior, principal, director, manager',companies:'',terms:'',days:0,limit:15};
 export const list=s=>String(s||'').split(',').map(x=>x.trim()).filter(Boolean);
 export function safeUrl(value){try{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password||u.port||/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[)|\.(local|internal)$/i.test(u.hostname)||!u.hostname.includes('.'))return null;return u;}catch{return null;}}

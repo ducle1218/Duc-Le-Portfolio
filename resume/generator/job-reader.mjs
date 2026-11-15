@@ -1,8 +1,10 @@
-import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.4';
-const BOARDS=['lockheedmartin.eightfold.ai','linkedin.com','indeed.com','glassdoor.com','ziprecruiter.com','myworkdayjobs.com','myworkdaysite.com','smartrecruiters.com','workable.com','icims.com','usajobs.gov','amazon.jobs','jobs.ashbyhq.com','jobs.jobvite.com','careers.microsoft.com','jobs.apple.com','careers.google.com','careers.spacex.com','careers.boeing.com'];
+import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.5';
+const BOARDS=['lockheedmartin.eightfold.ai','apply.careers.microsoft.com','www.amazon.jobs','linkedin.com','indeed.com','glassdoor.com','ziprecruiter.com','myworkdayjobs.com','myworkdaysite.com','smartrecruiters.com','workable.com','icims.com','usajobs.gov','amazon.jobs','jobs.ashbyhq.com','jobs.jobvite.com','careers.microsoft.com','jobs.apple.com','careers.google.com','careers.spacex.com','careers.boeing.com'];
 export function readerUrl(value){
- const u=safeUrl(value);if(!u||!BOARDS.some(h=>u.hostname===h||u.hostname.endsWith('.'+h)))return null;
+ const u=safeUrl(value);if(!u)return null;
  if([...u.searchParams.keys()].some(k=>/token|password|session|secret|auth|email/i.test(k)))return null;
+ const google=u.hostname==='www.google.com'&&/^\/about\/careers\/applications\/jobs\/results\/\d+(?:-[^/]+)?\/?$/.test(u.pathname);
+ if(!google&&!BOARDS.some(h=>u.hostname===h||u.hostname.endsWith('.'+h)))return null;
  return canonical(value);
 }
 export function plain(value){

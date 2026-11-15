@@ -124,5 +124,24 @@
     "board": "relativity",
     "company": "Relativity Space",
     "careersUrl": "https://job-boards.greenhouse.io/relativity"
+  },
+  {
+    "provider": "google",
+    "board": "google",
+    "company": "Google",
+    "careersUrl": "https://www.google.com/about/careers/applications/jobs/results/"
+  },
+  {
+    "provider": "amazon",
+    "board": "amazon",
+    "company": "Amazon",
+    "careersUrl": "https://www.amazon.jobs/en/search"
+  },
+  {
+    "provider": "eightfold",
+    "board": "microsoft",
+    "company": "Microsoft",
+    "domain": "microsoft.com",
+    "careersUrl": "https://apply.careers.microsoft.com/careers"
   }
 ]

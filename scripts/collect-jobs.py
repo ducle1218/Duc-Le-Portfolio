@@ -13,7 +13,7 @@ import re
 import sys
 import urllib.request
 import urllib.error
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urlparse, urljoin
 
 ROOT = Path(__file__).resolve().parents[1]
 INTERNSHIP = re.compile(r"\bintern(?:ship)?s?\b|co[ -]?op", re.I)
@@ -80,7 +80,7 @@ def plain(value):
     return '\n'.join(line.strip() for line in ''.join(parser.parts).splitlines() if line.strip())
 
 
-def get_json(url, body=None):
+def get_text(url, body=None):
     request = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
         headers={'User-Agent': 'DucLe-Portfolio-JobIndex/1.0', 'Accept': 'application/json', 'Content-Type': 'application/json'})
     for attempt in range(2):
@@ -89,11 +89,15 @@ def get_json(url, body=None):
                 data = response.read(20_000_001)
                 if len(data) > 20_000_000:
                     raise ValueError('Source exceeds size limit')
-                return json.loads(data)
+                return data.decode('utf-8')
         except urllib.error.HTTPError as error:
             if attempt or error.code < 500: raise
         except (urllib.error.URLError, TimeoutError):
             if attempt: raise
+
+
+def get_json(url, body=None):
+    return json.loads(get_text(url, body))
 
 
 def direct_job(item, source, checked_at):
@@ -140,13 +144,14 @@ def direct_job(item, source, checked_at):
 def collect_direct(source, checked_at, fetch, status):
     jobs, seen = [], set()
     if source['provider'] == 'eightfold':
-        host = 'https://lockheedmartin.eightfold.ai'
-        # This is Lockheed's public search service, not a general-purpose URL fetcher.
+        host = source['careersUrl'].split('/careers')[0]
+        domain = source.get('domain', 'lockheedmartin.com')
+        # Hosts come from the reviewed configuration, never user-provided URLs.
         for query in ('intern', 'co-op'):
             offset = 0
             total, pages_seen = 0, set()
             for page in range(40):
-                data = fetch(host + '/api/pcsx/search?' + urlencode({'domain': 'lockheedmartin.com',
+                data = fetch(host + '/api/pcsx/search?' + urlencode({'domain': domain,
                     'query': query, 'start': offset, 'sort_by': 'timestamp'}))['data']
                 items = data['positions']
                 total = max(total, data['count'])
@@ -164,7 +169,7 @@ def collect_direct(source, checked_at, fetch, status):
                     seen.add(identity)
                     try:
                         detail = fetch(host + '/api/pcsx/position_details?' + urlencode({
-                            'domain': 'lockheedmartin.com', 'position_id': identity}))['data']
+                            'domain': domain, 'position_id': identity}))['data']
                         if str(detail['id']) != identity: raise ValueError('Mismatched posting')
                         if INTERNSHIP.search(detail['name']): jobs.append(direct_job(detail, source, checked_at))
                     except Exception: status['omitted'] += 1
@@ -215,6 +220,100 @@ def collect_direct(source, checked_at, fetch, status):
     return jobs
 
 
+def google_listing(page):
+    """Read the JSON data embedded in Google's public rendered search page; never execute scripts."""
+    records = None
+    for match in re.finditer(r"AF_initDataCallback\(\{key: '[^']+'.*?data:", page):
+        data, _ = json.JSONDecoder().raw_decode(page[match.end():])
+        if (isinstance(data, list) and len(data) == 4 and isinstance(data[2], int)
+                and isinstance(data[3], int) and (data[0] is None or isinstance(data[0], list))):
+            records = data
+            break
+    if records is None:
+        raise ValueError('Google search data format unavailable')
+    links = {}
+    for href in re.findall(r'href="([^"]+)"', page):
+        href = html.unescape(href)
+        match = re.search(r'(?:^|/)jobs/results/(\d+)-', href)
+        if match:
+            url = urljoin('https://www.google.com/about/careers/applications/', href).split('?')[0]
+            if url.startswith('https://www.google.com/about/careers/applications/jobs/results/'):
+                links[match[1]] = url
+    return records[0] or [], records[2], links
+
+
+def tech_job(source, checked_at, identity, title, description, location, url, posted='', remote=False):
+    if urlparse(url).hostname != urlparse(source['careersUrl']).hostname or len(description) < 80:
+        raise ValueError('Incomplete or off-domain employer posting')
+    return {'id': source['provider'] + ':' + source['board'] + ':' + str(identity),
+        'title': title, 'company': source['company'], 'description': description[:65000],
+        'location': location, 'url': url, 'datePosted': posted, 'checkedAt': checked_at,
+        'remote': remote, 'source': source['provider'], 'board': source['board'],
+        'availability': 'unknown', 'statusCheckedAt': checked_at,
+        'statusReason': 'Listed on the employer’s career search; application availability is not independently confirmed.',
+        'statusEvidenceUrl': url}
+
+
+def collect_tech(source, checked_at, fetch, fetch_text, status):
+    jobs, seen = [], set()
+    for query in ('intern', 'co-op'):
+        offset, total, pages_seen = 0, 0, set()
+        for page in range(1, 31):
+            if source['provider'] == 'google':
+                listing = fetch_text(source['careersUrl'] + '?' + urlencode({'q': query, 'page': page}))
+                items, count, links = google_listing(listing)
+                ids = tuple(str(item[0]) for item in items)
+            else:
+                data = fetch('https://www.amazon.jobs/en/search.json?' + urlencode({
+                    'base_query': query, 'offset': offset, 'result_limit': 100}))
+                if data.get('error'): raise ValueError('Amazon search unavailable')
+                items, count = data['jobs'], data['hits']
+                ids = tuple(str(item['id_icims']) for item in items)
+            total = max(total, count)
+            if not items:
+                if offset < total: status['truncated'] = True
+                break
+            if ids in pages_seen:
+                status['truncated'] = True
+                break
+            pages_seen.add(ids)
+            for item, identity in zip(items, ids):
+                title = item[1] if source['provider'] == 'google' else item['title']
+                if identity in seen or not INTERNSHIP.search(title): continue
+                seen.add(identity)
+                try:
+                    if source['provider'] == 'google':
+                        if item[7] != 'Google' or not identity.isdigit(): raise ValueError('Unexpected Google employer identity')
+                        description = plain('\n'.join(item[i][1] for i in (15, 10, 4, 3, 18)
+                            if len(item) > i and isinstance(item[i], list) and len(item[i]) > 1 and isinstance(item[i][1], str)))
+                        # Keep regional locations first so brief displays retain the matching region.
+                        locations = [loc[0] for loc in item[9]]
+                        locations.sort(key=lambda loc: not bool(re.search(r', (NJ|NY|PA),', loc)))
+                        location = '; '.join(locations)
+                        # Undocumented internal timestamps are NOT treated as original posting dates.
+                        job = tech_job(source, checked_at, identity, title, description, location, links[identity])
+                    else:
+                        path = item['job_path']
+                        if not re.match(r'^/en/jobs/' + re.escape(identity) + r'(?:/|$)', path): raise ValueError('Mismatched Amazon posting')
+                        description = plain('\n'.join(item.get(key) or '' for key in
+                            ('description', 'basic_qualifications', 'preferred_qualifications')))
+                        locations = [item.get('location', '')]
+                        for raw in item.get('locations') or []:
+                            loc = json.loads(raw) if isinstance(raw, str) else raw
+                            locations.append(loc.get('location') or loc.get('normalizedLocation', ''))
+                        location = '; '.join(dict.fromkeys(filter(None, locations)))
+                        stamp = item.get('posted_date')
+                        posted = dt.datetime.strptime(stamp, '%B %d, %Y').date().isoformat() if stamp else ''
+                        job = tech_job(source, checked_at, identity, title, description, location,
+                            'https://www.amazon.jobs' + path, posted, bool(re.search(r'\bremote\b', location, re.I)))
+                    jobs.append(job)
+                except Exception: status['omitted'] += 1
+            offset += len(items)
+            if offset >= total: break
+        else: status['truncated'] = True
+    return jobs
+
+
 def normalize(item, source, checked_at):
     greenhouse = source['provider'] == 'greenhouse'
     if greenhouse:
@@ -250,7 +349,7 @@ def normalize(item, source, checked_at):
     }
 
 
-def collect_source(source, checked_at, fetch=get_json):
+def collect_source(source, checked_at, fetch=get_json, fetch_text=get_text):
     board, provider = source['board'], source['provider']
     if not re.fullmatch(r'[a-zA-Z0-9_-]+', board):
         raise ValueError('Invalid configured board')
@@ -277,13 +376,15 @@ def collect_source(source, checked_at, fetch=get_json):
                         status['omitted'] += 1
         elif provider in ('workday', 'eightfold'):
             jobs = collect_direct(source, checked_at, fetch, status)
+        elif provider in ('google', 'amazon'):
+            jobs = collect_tech(source, checked_at, fetch, fetch_text, status)
         else:
             raise ValueError('Unsupported provider')
         status['count'] = len(jobs)
         if status['omitted'] or status.get('truncated'):
             status['status'] = 'partial'
     except Exception as error:
-        status.update(status='unavailable', error=type(error).__name__)
+        status.update(status='unavailable', error=type(error).__name__ + (':' + str(error.code) if isinstance(error, urllib.error.HTTPError) else ''))
     return status, jobs
 
 

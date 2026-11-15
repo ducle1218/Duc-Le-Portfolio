@@ -126,8 +126,12 @@ The default wider search uses separate NJ, NY, PA and US-remote queries (four pr
 
 ## Direct employer coverage (November 2026)
 
-The 22 configured sources include Lockheed Martin, Boeing, RTX (Raytheon/Collins/Pratt & Whitney), Northrop Grumman, Blue Origin, SpaceX, Anduril, Rocket Lab, Relativity Space, NVIDIA and Intel. This is an explicit coverage list, not a claim to cover every major company. Google and other unconnected employers remain discoverable through the separate wider search.
+The 25 configured sources include Lockheed Martin, Boeing, RTX (Raytheon/Collins/Pratt & Whitney), Northrop Grumman, Blue Origin, SpaceX, Anduril, Rocket Lab, Relativity Space, NVIDIA and Intel. This is an explicit coverage list, not a claim to cover every major company. Google and Amazon are collected from their own career sites; Microsoft uses its official Eightfold career service. Other unconnected employers remain discoverable through the separate wider search.
 
 Workday discovers its internship worker-type facet, then paginates listings and fetches full detail responses. Later pages may return total=0; preserve the initial total. Eightfold uses Lockheed's public search and detail endpoints. Both enforce internship/co-op titles, preserve official posting dates, and report omissions/truncation. Results outside NJ/NY/PA and US remote remain accessible by changing filters; daily database ingestion keeps those regional defaults. “Employer websites” filters the combined list to direct career destinations. Opening the library does not hide freshly collected employer results.
 
 The backend supports individual Workday and Lockheed availability checks. HTTP 403/429, server failures, unexpected IDs and partial lists never prove a closure. No absence-from-list closure inference is used.
+
+Google search pages embed complete JSON job records. The collector parses those records without executing page scripts, follows result pages, and does not guess original posting dates from undocumented timestamps. Amazon search JSON includes full descriptions, qualifications, multiple locations and an explicit posting date. Both require internship/co-op titles. Microsoft uses the same exact-host Eightfold adapter as Lockheed. Public API rate limits (including Microsoft HTTP 429 in local testing) are reported as unavailable, never bypassed or interpreted as job closures.
+
+Gold borders and name badges are visual highlights for a curated group of major technology/defense/aerospace employers, separate from Fortune ranking and source availability. Local logos come from the official assets listed in resume/generator/logos/sources.json; initials are used when no logo is available.

@@ -5,7 +5,9 @@ export function sourceDetails(job){
  const host=u.hostname.toLowerCase();
  if(u.protocol!=='https:'||u.username||u.password||u.port)return {allowed:false,label:'Invalid link'};
  if(['bebee.com','jobleads.com','jooble.org','drakesconsultinggr.com'].some(d=>within(host,d))||/drakesconsultinggr/i.test(host))return {allowed:false,label:'Unverified repost / redirect'};
- if(host==='lockheedmartin.eightfold.ai')return {allowed:u.pathname==='/careers'&&/^\d+$/.test(u.searchParams.get('pid')||'')||/^\/careers\/job\/\d+\/?$/.test(u.pathname),board:false,label:'Employer careers',host};
+ if(['lockheedmartin.eightfold.ai','apply.careers.microsoft.com'].includes(host))return {allowed:u.pathname==='/careers'&&/^\d+$/.test(u.searchParams.get('pid')||'')||/^\/careers\/job\/\d+\/?$/.test(u.pathname),board:false,label:'Employer careers',host};
+ if(host==='www.amazon.jobs'||host==='amazon.jobs')return {allowed:/^\/en\/jobs\/\d+(?:\/[^/]+)?\/?$/.test(u.pathname),board:false,label:'Employer careers',host};
+ if(host==='www.google.com')return {allowed:/^\/about\/careers\/applications\/jobs\/results\/\d+(?:-[^/]+)?\/?$/.test(u.pathname),board:false,label:'Employer careers',host};
  if(within(host,'linkedin.com'))return {allowed:/^\/jobs\/view\/(?:[^/]*-)?\d+\/?$/.test(u.pathname),board:true,label:'LinkedIn'};
  if(within(host,'indeed.com'))return {allowed:u.pathname==='/viewjob'&&/^[a-f0-9]+$/i.test(u.searchParams.get('jk')||''),board:true,label:'Indeed'};
  if(['greenhouse.io','lever.co','myworkdayjobs.com','smartrecruiters.com','ashbyhq.com','careers.google.com','www.google.com','nvidia.com','lockheedmartinjobs.com'].some(d=>within(host,d)))return {allowed:true,board:false,label:'Employer careers',host};

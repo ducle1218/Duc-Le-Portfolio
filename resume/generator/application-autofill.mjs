@@ -1,7 +1,7 @@
-import {memoryMatch} from './answer-memory.mjs?v=20261115.12';
-import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.12';
-import {answerRule} from './answer-rules.mjs?v=20261115.12';
-import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.12';
+import {memoryMatch} from './answer-memory.mjs?v=20261115.13';
+import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.13';
+import {answerRule} from './answer-rules.mjs?v=20261115.13';
+import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.13';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
  if(!profile?.confirmed)return null;
@@ -9,9 +9,9 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  const common=commonQuestion(label),background=backgroundAnswer(label,profile,memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context));
  const rule=answerRule(field,profile,memory,origin,context);if(rule?.blocked)return null;
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
- if(!label||(!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
- if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','number','date','month'].includes(field.type)||field.filled||field.disabled)return null;
- const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
+ if(!label||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
+ if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||field.filled||field.disabled)return null;
+ const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|school or university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
  const key=Object.keys(patterns).find(k=>patterns[k].test(label));const custom=(profile.answers||[]).filter(a=>normalize(a.question)===label||(common&&commonQuestion(a.question)?.question===common.question));
  const remembered=!key?memoryMatch(field.label,memory,origin,context):null;
  const value=rule?.value||(key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?(profile.values[key]||background?.value):common?.question==='How did you hear about this position?'&&remembered?remembered.value:custom.length&&new Set(custom.map(a=>a.answer.trim())).size===1?custom[0].answer:background?.value||remembered?.value);
@@ -26,6 +26,13 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   return ['text','textarea'].includes(field.type)?derived:null;
  }
  if(field.maxLength>0&&value.length>field.maxLength)return null;
+ if(field.type==='checkbox-group'){
+  // Only explicit region preferences are supported: never consent/attestation boxes.
+  if(common?.question!=='Preferred work regions')return null;
+  const desired=value.split(';').map(normalize),matches=(field.options||[]).filter(o=>!o.disabled&&desired.includes(normalize(o.label)));
+  if(matches.length!==desired.length||new Set(matches.map(o=>normalize(o.label))).size!==desired.length)return null;
+  return {value:matches.map(o=>o.value),display:matches.map(o=>o.label).join('; '),selectedLabels:matches.map(o=>o.label),reason:'Your saved work-region preferences',requiresReview:false};
+ }
  const confirmedMale=common?.question==='Sex'&&normalize(value)==='male'&&custom.length>0&&new Set(custom.map(a=>normalize(a.answer))).size===1;
  const review=rule?{reason:rule.reason,sourceQuestion:rule.sourceQuestion,requiresReview:rule.requiresReview}:{reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){
@@ -53,24 +60,26 @@ export function formBridge({action='scan',url,fields=[]}={}){
  };
  const custom=e=>e.tagName!=='SELECT'&&e.matches(comboSelector);
  const radio=e=>e.type==='radio'||e.getAttribute('role')==='radio';
- const type=e=>radio(e)?'radio-group':custom(e)?'combobox':e.type||e.tagName.toLowerCase();
+ const checkbox=e=>e.type==='checkbox';
+ const choice=e=>radio(e)||checkbox(e);
+ const type=e=>radio(e)?'radio-group':checkbox(e)?'checkbox-group':custom(e)?'combobox':e.type||e.tagName.toLowerCase();
  const labelled=e=>(e?.getAttribute('aria-labelledby')||'').split(/\s+/).filter(Boolean).map(id=>text(document.getElementById(id))).join(' ');
- const group=e=>e.closest('[role="radiogroup"],fieldset');
- const radios=e=>{const g=group(e);return [...(g||e.form||document).querySelectorAll('input[type="radio"],[role="radio"]')].filter(r=>g?group(r)===g&&(!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
+ const group=e=>{const explicit=e.closest('[role="radiogroup"],[role="group"],fieldset');if(explicit||!checkbox(e))return explicit;let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,.question-label,.form-label,.control-label'))return p;}return null;};
+ const radios=e=>{const g=group(e),selector=checkbox(e)?'input[type="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
  const ownLabel=e=>(e.getAttribute('aria-label')||labelled(e)||[...(e.labels||[]),...([...document.querySelectorAll('label[for]')].filter(l=>e.id&&l.getAttribute('for')===e.id))].map(labelText).filter((v,i,a)=>a.indexOf(v)===i).join(' ')||labelText(e.closest('label'))||'').trim();
- const nearbyLabel=e=>{let parent=e.parentElement;const members=radio(e)?radios(e):[];
+ const nearbyLabel=e=>{let parent=e.parentElement;const members=choice(e)?radios(e):[];
   for(let n=0;n<8&&parent&&parent!==document.body;n++,parent=parent.parentElement){
    const contained=[...parent.querySelectorAll(controls)].filter(c=>!c.parentElement?.closest(comboSelector));
-   if(radio(e)){if(contained.some(c=>!radio(c)||!members.includes(c)))break;if(!members.length||!members.every(r=>parent.contains(r)))continue;}
+   if(choice(e)){if(contained.some(c=>!choice(c)||!members.includes(c)))break;if(!members.length||!members.every(r=>parent.contains(r)))continue;}
    else if(contained.filter(c=>!radio(c)).length!==1)break;
    const candidates=[...parent.querySelectorAll('legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label')].filter(h=>!h.querySelector(controls)&&!members.some(r=>r.closest('label')?.contains(h)||[...(r.labels||[])].some(l=>l.contains(h))));
    for(const heading of candidates){const value=labelText(heading);if(value&&!/^(yes|no|male|female)$/i.test(value)&&value.length<=250)return value;}
   }return '';
  };
- const label=e=>{if(radio(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,250);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||'').trim().slice(0,250);};
- const elements=()=>[...document.querySelectorAll(controls)].filter(e=>!e.parentElement?.closest(comboSelector)).filter((e,i,all)=>!radio(e)||radios(e)[0]===e);
+ const label=e=>{if(choice(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,250);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||'').trim().slice(0,250);};
+ const elements=()=>[...document.querySelectorAll(controls)].filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);
  const selectedValue=e=>{
   if(e.matches('.selectize-input,.ts-control,.ui-select-container')){
    const items=[...e.querySelectorAll('.item,[data-item],.ui-select-match-item,.ui-select-match-text')].filter(n=>!n.parentElement?.closest('.item,[data-item],.ui-select-match-item'));
@@ -80,17 +89,32 @@ export function formBridge({action='scan',url,fields=[]}={}){
  const selectedRadio=e=>radios(e).find(r=>r.checked||r.getAttribute('aria-checked')==='true');
  const optionLabel=e=>{const associated=[...(e.labels||[])];const root=associated[0]||e.closest('label');if(root){const copy=root.cloneNode(true);const described=(e.getAttribute('aria-describedby')||'').split(/\s+/);for(const n of copy.querySelectorAll('input,[role="radio"],p,small,.description,.help-block,[id]'))if(n.matches('input,[role="radio"],p,small,.description,.help-block')||described.includes(n.id))n.remove();const value=text(copy).split('\n').map(s=>s.trim()).find(Boolean);if(value)return value;}return ownLabel(e)||text(e)||e.value||'';};
  const placeholder=value=>!value||/^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
- const empty=e=>radio(e)?!selectedRadio(e):custom(e)?placeholder(selectedValue(e)):!e.value||(e.tagName==='SELECT'&&e.selectedIndex===0&&/select|choose|please/i.test(text(e.options[0])));
+ const empty=e=>choice(e)?!selectedRadio(e):custom(e)?placeholder(selectedValue(e)):!e.value||(e.tagName==='SELECT'&&e.selectedIndex===0&&/select|choose|please/i.test(text(e.options[0])));
  const disabled=e=>e.disabled||e.readOnly&&!custom(e)||e.getAttribute('aria-disabled')==='true';
- const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):radio(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
+ const valueText=e=>e.tagName==='SELECT'?text(e.options[e.selectedIndex]):custom(e)?selectedValue(e):e.value||'';
+ const context=e=>{
+  const q=norm(label(e));if(!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
+  const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
+  if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
+  if(/^(please specify|other please specify|academic standing details)$/.test(q)){const last=before.at(-1);if(last&&!empty(last)&&/current academic standing/.test(norm(label(last)))){parentAnswer=valueText(last);parentQuestion=label(last);}}
+  if(/degree|gpa|grade point|overall result|field of study/.test(q)){
+   let container=e.parentElement;for(let n=0;n<7&&container&&container!==document.body;n++,container=container.parentElement){
+    const schools=all.filter(c=>container.contains(c)&&/^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
+    if(schools.length>1)break;if(schools.length===1){educationSchool=valueText(schools[0]);break;}
+   }
+  }
+  return {parentAnswer,parentQuestion,educationSchool};
+ };
+ const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
  if(action==='scan'){const all=elements();return {url:location.href,fields:all.map(snapshot).filter(f=>visible(all[f.index])).slice(0,150),embeddedForms:document.querySelectorAll('iframe').length};}
  if(action==='remember'){
   const blocked=/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
   const candidates=[];
   for(const e of elements()){
-   if(!['text','email','tel','url','textarea','select-one','number','combobox','radio-group','date','month'].includes(type(e))||disabled(e)||!visible(e)||empty(e))continue;
+   if(!['text','email','tel','url','textarea','select-one','number','combobox','radio-group','checkbox-group','date','month'].includes(type(e))||disabled(e)||!visible(e)||empty(e))continue;
+   if(checkbox(e)&&norm(label(e))!=='in which of the following u s geographic locations are you willing to work')continue;
    const question=label(e),identity=/^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));if(!question||/^(in )?(what|which) country( region)?$/.test(norm(question))||(!identity&&blocked.test(question+' '+(e.name||'')+' '+e.id))||/one-time-code|cc-|current-password|new-password/.test(e.autocomplete||''))continue;
-   const answer=radio(e)?optionLabel(selectedRadio(e)):custom(e)?selectedValue(e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):e.value;
+   const answer=checkbox(e)?radios(e).filter(r=>r.checked).map(optionLabel).join('; '):radio(e)?optionLabel(selectedRadio(e)):custom(e)?selectedValue(e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):e.value;
    if(!answer||answer.length>1500||placeholder(answer))continue;
    candidates.push({question,answer});if(candidates.length>=100)break;
   }
@@ -101,7 +125,13 @@ export function formBridge({action='scan',url,fields=[]}={}){
   const all=elements(),targets=fields.map(f=>[f,all[f.index]]);let filled=0,skipped=0;
   for(const [f,e] of targets){
    if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!visible(e)||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
-   if(radio(e)){
+   const currentContext=context(e);if((f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
+   if(checkbox(e)){
+    const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&visible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
+    if(!labels.length||matching.length!==labels.length||new Set(matching.map(r=>norm(optionLabel(r)))).size!==labels.length){skipped++;continue;}
+    for(const r of matching)if(!r.checked)r.click();await new Promise(r=>setTimeout(r,60));
+    if(matching.every(r=>r.checked))filled++;else skipped++;
+   }else if(radio(e)){
     const choices=radios(e),matching=choices.filter(r=>!disabled(r)&&visible(r)&&norm(optionLabel(r))===norm(f.display));
     if(matching.length!==1){skipped++;continue;}matching[0].click();await new Promise(r=>setTimeout(r,60));
     if(selectedRadio(e)===matching[0])filled++;else skipped++;

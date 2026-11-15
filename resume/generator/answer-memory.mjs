@@ -1,6 +1,6 @@
-import {commonQuestion} from './common-questions.mjs?v=20261115.12';
-import {formBridge} from './application-autofill.mjs?v=20261115.12';
-import {ageThreshold,dateConcept} from './answer-rules.mjs?v=20261115.12';
+import {commonQuestion} from './common-questions.mjs?v=20261115.13';
+import {formBridge} from './application-autofill.mjs?v=20261115.13';
+import {ageThreshold,dateConcept} from './answer-rules.mjs?v=20261115.13';
 export const normalizeQuestion=value=>String(value||'').toLowerCase().replace(/[’']/g,'').replace(/\+/g,' plus ').replace(/#/g,' sharp ').replace(/%/g,' percent ').replace(/-(?=\d)/g,' minus ').replace(/(\d)\.(?=\d)/g,'$1 decimal ').replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
 export const reviewedIdentityQuestion=q=>['Sex','Preferred pronouns','Race / ethnic background','Country of citizenship'].includes(commonQuestion(q)?.question);
 export const privateQuestion=q=>!reviewedIdentityQuestion(q)&&/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));

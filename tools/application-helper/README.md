@@ -1,4 +1,6 @@
-# Application Helper 1.8.1 — Chrome and Edge
+# Application Helper 1.9.0 — Chrome and Edge
+
+Version 1.9 adds street/ZIP recognition, dependent source details, education-aware degree/GPA answers, freshman standing, East Coast region checkboxes, and hidden CV upload detection with size limits. It keeps unknown college GPA separate from high-school GPA. The private profile is downloaded separately; no address is included in this extension.
 
 Version 1.8 removes the fixed answer-count caps. Website profile and imported-answer cards appear ten per page; saving and exporting includes every page. A 1 MB document-size guard remains. **Remember my answers** shows only new or changed detected answers by default; **Show all detected answers** also reveals existing matches. Saved profile answers and employer-specific memory are included in the comparison.
 

@@ -49,6 +49,7 @@ jobs:
           node scripts/check-dropdown-resume.mjs
           node scripts/check-selectize-availability.mjs
           node scripts/check-dependent-controls.mjs
+          node scripts/check-education-controls.mjs
           node scripts/check-identity-upload.mjs
           node scripts/check-application-handoff.mjs
           node scripts/check-helper-memory-update.mjs

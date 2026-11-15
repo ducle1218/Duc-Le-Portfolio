@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Application Helper browser regression</title>
+<style>body{font:16px system-ui;background:#151719;color:#eee;max-width:920px;margin:40px auto;padding:20px}label{display:block;margin:12px 0}input,select,button{font:inherit;padding:8px}fieldset{margin:20px 0;border:1px solid #576363}#result{white-space:pre-wrap;color:#a7dfd1}h1{font-size:25px}</style>
+<h1>Application Helper · Browser verification</h1><p>Fictional test form. Nothing is sent to an employer.</p><button id="run">Run browser check</button><pre id="result" role="status">Ready</pre>
+<form onsubmit="return false">
+<label>Address Line 1 <input id="street" type="text"></label><label>Postal Code <input id="zip" type="text"></label>
+<label>How Did You Hear About Us?<select id="source"><option value="">Please Select</option><option>Our Website</option><option>University Recruiting</option></select></label><div id="detail"></div>
+<fieldset><legend>Education</legend><label>School or University<input type="text" value="Rutgers University–New Brunswick"></label><label>Degree<select id="degree"><option value="">Please Select</option><option>Bachelors</option><option>High School Diploma/GED</option></select></label><label>Overall result (GPA)<input id="gpa"></label></fieldset>
+<fieldset><legend>In which of the following U.S. geographic locations are you willing to work?</legend><label><input type="checkbox" name="region">Northeast</label><label><input type="checkbox" name="region">Mid-Atlantic</label><label><input type="checkbox" name="region">Southeast</label><label><input type="checkbox" name="region">Mid-West</label><label><input type="checkbox" name="region">Gulf Coast</label><label><input type="checkbox" name="region">Open/Flexible</label></fieldset>
+<section><h2>Resume Label</h2><p>Upload your resume or CV (1MB max)</p><button type="button">Upload CV</button><input type="file" hidden accept=".pdf"></section>
+</form>
+<script type="module">
+import {formBridge,suggestField} from '../../resume/generator/application-autofill.mjs';
+import {COMMON_QUESTIONS} from '../../resume/generator/common-questions.mjs';
+import {makeResumeAttachment,attachResume} from '../../resume/generator/resume-attachment.mjs';
+const $=id=>document.getElementById(id);
+const profile={confirmed:true,values:{city:'Example City',state:'New Jersey',school:'Rutgers University–New Brunswick'},answers:[...COMMON_QUESTIONS.filter(q=>q.defaultAnswer).map(q=>({question:q.question,answer:q.defaultAnswer})),{question:'Address Line',answer:'123 Sample Street, Example City, NJ 08854'}]};
+$('source').onchange=()=>{$('detail').innerHTML='<label>Source Details<select id="source-detail"><option value="">Please Select</option>'+($('source').value==='Our Website'?'<option>Company Website</option>':'<option>Rutgers University</option><option>Other University</option>')+'</select></label>';};
+$('run').onclick=async()=>{try{
+ const checks=[];const check=(ok,name)=>{if(!ok)throw Error(name);checks.push('PASS · '+name);};
+ const scan=formBridge(),fields=scan.fields.flatMap(f=>{const a=suggestField(f,profile);return a?[{...f,...a}]:[];});
+ const filled=await formBridge({action:'fill',url:location.href,fields});
+ check(filled.filled===5,'Native inputs, dropdowns and checkbox group accepted all five suggestions');
+ check($('street').value==='123 Sample Street'&&$('zip').value==='08854','Street and ZIP split correctly');
+ check($('degree').value==='Bachelors'&&$('gpa').value==='','Degree in progress selected; unknown college GPA left blank');
+ check([...document.querySelectorAll('[name=region]')].map(e=>e.checked).join(',')==='true,true,true,false,false,false','Only the three East Coast regions selected');
+ const next=formBridge().fields.flatMap(f=>{const a=suggestField(f,profile);return a?[{...f,...a}]:[];});
+ check((await formBridge({action:'fill',url:location.href,fields:next})).filled===1&&$('source-detail').value==='Company Website','Dependent source detail discovered on the next scan');
+ const resume=await makeResumeAttachment(new TextEncoder().encode('%PDF-1.4\n'+'fixture '.repeat(40)),'https://employer.example/job/123','Sample_Tailored.pdf');
+ check((await attachResume({url:location.href,resume})).attached&&document.querySelector('[type=file]').files[0].name==='Sample_Tailored.pdf','Hidden CV input received the matching test PDF');
+ $('result').textContent=checks.join('\n');$('run').disabled=true;
+}catch(error){$('result').textContent='FAIL · '+error.message;throw error;}};
+</script></html>

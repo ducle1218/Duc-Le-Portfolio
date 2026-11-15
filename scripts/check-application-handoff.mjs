@@ -52,6 +52,6 @@ await import('../tools/application-helper/assistant.mjs');messageListener({type:
 assert.equal(document.querySelector('input').value,'');assert.equal(shadow.querySelectorAll('.answer').length,2);assert.equal(document.querySelectorAll('input').length,3);
 // linkedom does not mirror the checked property into its :checked selector.
 for(const check of shadow.querySelectorAll('input'))check.setAttribute('checked','');
-document.querySelector('input[aria-label="Last name"]').value='User edit';shadow.querySelector('.fill').click();assert.equal(document.querySelector('input').value,'Sample');assert.equal(document.querySelector('input[aria-label="Last name"]').value,'User edit');assert.equal(document.querySelector('input[aria-label="GPA"]').value,'');assert.equal(submitted,0);
+document.querySelector('input[aria-label="Last name"]').value='User edit';await shadow.querySelector('.fill').onclick();assert.equal(document.querySelector('input').value,'Sample');assert.equal(document.querySelector('input[aria-label="Last name"]').value,'User edit');assert.equal(document.querySelector('input[aria-label="GPA"]').value,'');assert.equal(submitted,0);
 shadow.querySelector('button[aria-label="End application helper"]').click();
 console.log('PASS: trusted website bridge, confirmed profile handoff, per-origin permission gate, tab sessions/expiry, redirect isolation, panel review, preserved user edits, and no submission.');

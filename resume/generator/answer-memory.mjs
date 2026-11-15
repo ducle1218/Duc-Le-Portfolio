@@ -1,5 +1,5 @@
 export const normalizeQuestion=value=>String(value||'').toLowerCase().replace(/[’']/g,'').replace(/\+/g,' plus ').replace(/#/g,' sharp ').replace(/%/g,' percent ').replace(/-(?=\d)/g,' minus ').replace(/(\d)\.(?=\d)/g,'$1 decimal ').replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
-export const privateQuestion=q=>/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
+export const privateQuestion=q=>/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
 // Deliberately small equivalence groups. Do not infer similarity from shared keywords:
 // "can travel" and "cannot travel", dates, years, and percentages must not collapse.
 const equivalents=[
@@ -36,7 +36,7 @@ export function memoryMatch(question,entries,origin,context=''){
 }
 // This function is injected alone by the popup: keep dependencies inside it.
 export function scanAnsweredFields(){
- const blocked=/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
+ const blocked=/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
  const candidates=[];
  for(const e of document.querySelectorAll('input,textarea,select')){
   const type=e.type||e.tagName.toLowerCase();if(!['text','email','tel','url','textarea','select-one','number'].includes(type)||e.disabled||e.readOnly||!e.getClientRects().length||getComputedStyle(e).visibility==='hidden')continue;

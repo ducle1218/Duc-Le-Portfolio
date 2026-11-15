@@ -35,8 +35,8 @@ for(const e of document.querySelectorAll('input'))e.getClientRects=()=>[{}];
 let submitted=0;document.querySelector('button').onclick=()=>submitted++;
 const scan=scanForm(),fields=scan.fields.map(f=>({f,s:suggestField(f,profile)})).filter(a=>a.s).map(a=>({...a.f,...a.s}));assert.equal(fields.length,2);
 document.querySelector('input[aria-label="Last name"]').value='User edit';
-const filled=fillForm({url:scan.url,fields});assert.deepEqual(filled,{filled:1,skipped:1});assert.equal(document.querySelector('input').value,'Duc');assert.equal(document.querySelector('input[aria-label="Last name"]').value,'User edit');assert.equal(document.querySelector('input[aria-label="GPA"]').value,'');assert.equal(submitted,0);
-location.href='https://employer.example/new';assert.equal(fillForm({url:scan.url,fields}).changed,true);
+const filled=await fillForm({url:scan.url,fields});assert.deepEqual(filled,{filled:1,skipped:1});assert.equal(document.querySelector('input').value,'Duc');assert.equal(document.querySelector('input[aria-label="Last name"]').value,'User edit');assert.equal(document.querySelector('input[aria-label="GPA"]').value,'');assert.equal(submitted,0);
+location.href='https://employer.example/new';assert.equal((await fillForm({url:scan.url,fields})).changed,true);
 // Exercise real profile UI handlers against an isolated in-memory cloud response.
 const ui=dom.parseHTML(html);globalThis.document=ui.document;globalThis.Event=ui.window.Event;
 let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[]});
@@ -49,12 +49,12 @@ const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.pu
 byId('download-profile').onclick();assert.equal(byId('application-profile').open,true);assert.match(byId('profile-download-status').textContent,/No owner key/);assert.equal(downloads.length,0);
 await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,0,'Unconfirmed defaults must not export');
 byId('app-firstName').value='Reviewed';byId('profile-confirm').checked=true;
-await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,1);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
-const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261114.8');await setupCloud(()=>{});
+await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
+const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261115.2');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Sample');assert.equal(ui.document.getElementById('export-profile').disabled,false);
-ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.answer-question').value='When can you start?';ui.document.querySelector('.answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;
-await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers[0].answer,'June 1, 2027');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
+ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;
+await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers.find(a=>a.question==='When can you start?').answer,'June 1, 2027');assert.equal(savedProfile.answers.find(a=>a.question==='Sex').answer,'Male');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
 byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
 byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,2,'Unsaved edits require review rather than exporting stale saved data');byId('profile-confirm').checked=true;await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');URL.createObjectURL=originalCreate;
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');

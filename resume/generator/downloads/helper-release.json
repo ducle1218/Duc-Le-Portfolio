@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
-  "sha256": "ba1b0624d9c643b1182370e8ee13154e0fbfeba5415973e006accb31fba9cfbe",
+  "version": "1.3.0",
+  "sha256": "74d99deceb9cdea9a073b9e546a478fb75735e6ae65dc925e0547d5f323a384c",
   "files": [
     "manifest.json",
     "popup.html",
@@ -9,6 +9,8 @@
     "application-core.mjs",
     "application-autofill.mjs",
     "answer-memory.mjs",
+    "common-questions.mjs",
+    "resume-attachment.mjs",
     "memory-panel.mjs",
     "memory.html",
     "memory.mjs",

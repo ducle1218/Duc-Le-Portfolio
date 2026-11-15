@@ -1,10 +1,10 @@
-# Application Helper 1.2.1 — Chrome and Edge
+# Application Helper 1.3.0 — Chrome and Edge
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
 3. Refresh Application Studio, unlock owner access, review and save your profile. No export is needed for the connected workflow.
 4. Choose a job’s **Prepare application**, then **Start application with helper**. On first use, allow access to that employer’s site in the extension’s launch screen.
-5. Open the employer's actual application form or sign in. The helper panel recognizes supported fields. Review the suggestions and choose **Fill selected**. Attach your tailored PDF and submit yourself.
+5. Open the employer's actual application form or sign in. The helper panel recognizes supported fields. Review the suggestions and the job-specific PDF filename, then choose **Fill selected**. The helper attaches the PDF to one supported resume/CV input. Check the employer’s upload status and submit yourself.
 
 To update from 1.0, replace the old extracted files, click **Reload** on its extension card, and refresh Application Studio. If an employer redirects to a different domain, click the extension icon and **Scan current form** there. No profile is automatically injected into a different origin. New tabs opened by an employer are not automatically linked: start that application URL from Studio, or use manual import.
 
@@ -14,14 +14,14 @@ Manual fallback: export your profile JSON from Studio and import it through the 
 
 Permissions are `activeTab`, `scripting` and `storage`, with a content script restricted to Application Studio on ducle1218.github.io. Optional HTTPS host access is declared for employer forms, but requested only for the single origin selected at launch. There is no blanket access request. Revoke individual site grants in the browser’s extension settings. This does not use a remote browser service.
 
-Supported: visible standard text fields, textareas and native dropdowns with exact matches. Existing values are preserved. Passwords, sensitive eligibility/demographic/legal fields, checkboxes and submission controls are not filled. Embedded cross-origin frames, custom controls and file uploads need manual handling. Chrome/Edge desktop support unpacked extensions; normal mobile browsers do not.
+Supported: visible text fields, textareas, native selects and accessible custom comboboxes with exact, unambiguous options. Existing values and selected files are preserved. Common answers saved in Studio support sex, pronouns, separate age thresholds, US work authorization, sponsorship, referral source, relocation, travel, enrollment and availability. Demographic and eligibility answers start unchecked for per-application review; nothing is inferred. Passwords, signatures, legal attestations, arbitrary checkboxes and submission controls are never filled. Inaccessible widgets and embedded cross-origin frames may require manual entry. Chrome/Edge desktop support unpacked extensions; normal mobile browsers do not.
 
 
 ## Remember answers
 
 After answering questions on an employer form, click **Remember my answers** in the helper panel or popup. It reads supported completed fields only when clicked. Review and edit the answers, uncheck anything you do not want to keep, choose **All employers** or **This employer only**, and save. Without a connected job, restricted answers are tied to that page instead.
 
-Future scans suggest exact matches and supported equivalent wording, such as “When can you start?” / “What is your earliest available start date?”. Suggestions show the original question. Conflicting answers and changed dates, numbers or negations are not guessed. Shared job-board domains do not mix company-specific answers. Sensitive/legal fields remain manual.
+Future scans suggest exact matches and supported equivalent wording, such as “When can you start?” / “What is your earliest available start date?”. Suggestions show the original question. Conflicting answers and changed dates, numbers or negations are not guessed. Shared job-board domains do not mix company-specific answers. Sensitive answers are not harvested into answer memory. Add supported common questions explicitly in Studio; legal attestations remain manual.
 
 **Manage saved answers** opens search, editing, deletion, and backup/import. Up to 200 answers stay in extension storage on this browser. Normal cache clearing and updating in place preserve them; uninstalling removes them. This library does not sync to the portfolio database or other devices. Export a private backup when moving browsers.
 
@@ -41,3 +41,9 @@ The same updater is available at https://ducle1218.github.io/Duc-Le-Portfolio/ap
 The optional **Choose exported profile** control accepts **Duc_Application_Profile.json**, downloaded from Studio’s **Export profile (manual fallback)** button after saving your profile. `manifest.json` is extension configuration, not your profile. **Application-Helper.zip** belongs in **Update helper**. The normal connection flow needs no upload: open Studio, save your profile, and start an application.
 
 Profiles imported manually or received from Studio, plus saved answers, persist across computer restarts in this browser. The temporary connection to a particular application still expires. Keep the extension installed; uninstalling it clears its local data.
+
+## Tailored resume attachment
+
+Keep **Bring a resume tailored to this job** checked when starting from Studio. Studio builds from that posting’s description, preserves the original resume template, and sends the PDF with that job’s tab handoff. The PDF is not saved to the public website or backend. The handoff validates the job URL, PDF header, size and digest; the upload rechecks the digest. **Fill selected** attaches only to one clearly labelled resume/CV input that accepts PDF. Existing files, multiple ambiguous uploaders, cover letters and unsupported widgets are left alone. Some employers upload immediately when a file is selected. Final application submission remains yours.
+
+A popup opened on a different domain cannot use a previous employer’s PDF. Restart from Studio on the correct application URL, or download and attach the PDF manually. Profile-only imports do not include a resume. Update in place to 1.3.0 and refresh Studio; no new extension permissions are required.

@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {formBridge,suggestField} from '../resume/generator/application-autofill.mjs';
+import {scanAnsweredFields,cleanMemory,employerSpecific} from '../resume/generator/answer-memory.mjs';
+import {COMMON_QUESTIONS} from '../resume/generator/common-questions.mjs';
+let dom;try{dom=await import('linkedom');}catch{dom=await import('../../tmp/job-tests/node_modules/linkedom/esm/index.js');}
+const profile={confirmed:true,values:{graduationYear:'2030'},answers:COMMON_QUESTIONS.filter(q=>q.defaultAnswer).map(q=>({question:q.question,answer:q.defaultAnswer}))};
+const field=label=>({label,type:'text',filled:false});
+for(const [q,value] of [['High school graduation year','2026'],['Name of high school','Atlantic County Institute of Technology'],['Highest degree earned','High school diploma'],['Expected graduation year','2030'],['Do you have professional experience?','No'],['Have you previously been employed by Amazon (including Amazon subsidiaries)?','No'],['Do you have research experience?','No'],['Years of work experience','0'],['Country of residence','United States'],['Most recent employer','None']])assert.equal(suggestField(field(q),profile)?.value,value,q);
+for(const q of ['Have you previously applied to Amazon?','Years of CAD experience','Do you have robotics experience?','Are you legally eligible to work?','Country of citizenship','Are you subject to a non-competition agreement?','Are you living in a sanctioned country?'])assert.equal(suggestField(field(q),profile),null,q);
+assert.equal(suggestField({label:'Years of work experience',type:'radio-group',options:[{value:'0',label:'Yes'},{value:'1',label:'No'}]},profile),null,'Radio choice index is never an answer');
+assert.equal(suggestField(field('Highest degree earned'),{...profile,confirmed:false}),null);
+assert.equal(suggestField(field('Do you have professional experience?'),profile).requiresReview,true);
+const fixture='<html><body><fieldset><legend>Are you willing to relocate?</legend><label><input type="radio" name="relocate" value="y">Yes</label><label><input type="radio" name="relocate" value="n">No</label></fieldset><div class="form-group"><label>How did you hear about this role?</label><button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="sources">Select</button><ul class="dropdown-menu" id="sources" hidden><li><a role="menuitem">Amazon Career Site</a></li></ul></div><div id="followup"></div><input type="password" aria-label="Password" value="private"><button type="submit" id="submit">Continue</button></body></html>';
+const {document,window}=dom.parseHTML(fixture);Object.assign(globalThis,{document,location:new URL('https://example.com/apply'),getComputedStyle:()=>({visibility:'visible'}),Event:window.Event,KeyboardEvent:window.Event,HTMLInputElement:window.HTMLInputElement,HTMLTextAreaElement:window.HTMLTextAreaElement,HTMLSelectElement:window.HTMLSelectElement});
+const prepare=()=>{for(const e of document.querySelectorAll('*'))e.getClientRects=()=>e.closest('[hidden]')?[]:[{}];};prepare();
+const rs=[...document.querySelectorAll('[type=radio]')];for(const r of rs)r.onclick=()=>{for(const other of rs)other.checked=other===r;};
+const button=document.querySelector('.dropdown-toggle'),list=document.getElementById('sources');button.onclick=()=>{list.hidden=false;button.setAttribute('aria-expanded','true');};
+list.querySelector('a').onclick=()=>{button.textContent='Amazon Career Site';button.setAttribute('aria-expanded','false');list.hidden=true;document.getElementById('followup').innerHTML='<div class="form-group"><label>If "Amazon Career Site" please specify</label><div class="ng-select"><span class="ng-value-label">Amazon.jobs</span></div></div>';prepare();};
+let submit=0;document.getElementById('submit').onclick=()=>submit++;
+const memory=cleanMemory([{question:'Are you willing to relocate?',answer:'Yes',scope:'*'},{question:'How did you hear about this role?',answer:'Amazon Career Site',scope:location.origin,context:'amazon'}]);
+const scan=formBridge(),fields=scan.fields.flatMap(f=>{const a=suggestField(f,profile,memory,location.origin,'amazon');return a?[{...f,...a}]:[];});assert.equal(fields.length,2);assert.equal(fields[0].type,'radio-group');
+assert.deepEqual(await formBridge({action:'fill',url:scan.url,fields}),{filled:2,skipped:0});assert.equal(rs[0].checked,true);assert.equal(submit,0);
+const remembered=scanAnsweredFields().candidates;assert.deepEqual(remembered.map(a=>a.answer),['Yes','Amazon Career Site','Amazon.jobs']);assert(employerSpecific(remembered[2].question));assert(!remembered.some(a=>a.answer==='private'));
+assert.deepEqual(await formBridge({action:'fill',url:scan.url,fields}),{filled:0,skipped:2});
+// A parent selection can replace a child control. A previously reviewed child must not be filled after replacement.
+button.textContent='Select';document.querySelector('.ng-value-label').textContent='Select';
+const changedScan=formBridge(),parent=changedScan.fields.find(f=>f.label==='How did you hear about this role?'),child=changedScan.fields.find(f=>f.label.startsWith('If'));
+const changed=await formBridge({action:'fill',url:changedScan.url,fields:[{...parent,value:'Amazon Career Site',display:'Amazon Career Site'},{...child,value:'Other',display:'Other'}]});
+assert.deepEqual(changed,{filled:1,skipped:1},'A replaced dependent control is skipped until rescanned');
+console.log('PASS: custom dropdown and radio remembering/filling, cascading follow-up discovery, existing-answer preservation, background facts, no legal/experience overreach and no submission.');

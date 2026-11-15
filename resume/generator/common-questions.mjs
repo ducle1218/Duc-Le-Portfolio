@@ -11,8 +11,29 @@ export const COMMON_QUESTIONS=[
  {question:'Are you willing to relocate?',options:['Yes','No'],aliases:['are you willing to relocate','are you open to relocation','would you be willing to relocate']},
  {question:'Are you willing to travel?',options:['Yes','No'],aliases:['are you willing to travel','are you open to travel','would you be willing to travel']},
  {question:'When are you available to start?',aliases:['when are you available to start','when can you start','earliest start date','what is your earliest available start date']},
- {question:'How did you hear about this position?',options:['LinkedIn','Indeed','Company careers website','University career center','Employee referral','Other'],aliases:['how did you hear about this position','how did you hear about this job','how did you hear about us'],review:true},
+ {question:'How did you hear about this position?',options:['LinkedIn','Indeed','Company careers website','University career center','Employee referral','Other'],aliases:['how did you hear about this position','how did you hear about this job','how did you hear about us','how did you hear about this role'],review:true},
  {question:'Are you currently enrolled in a university?',options:['Yes','No'],aliases:['are you currently enrolled in a university','are you currently enrolled in college'],review:true},
+ {question:'High school name',aliases:['high school name','name of high school','which high school did you graduate from'],defaultAnswer:'Atlantic County Institute of Technology'},
+ {question:'High school graduation year',aliases:['high school graduation year','year of high school graduation','what year did you graduate from high school'],defaultAnswer:'2026'},
+ {question:'Highest completed degree',aliases:['highest completed degree','highest degree earned','highest degree obtained','highest level of education completed','what is your highest completed degree'],options:['High school diploma','Associate degree','Bachelor degree','Master degree','Doctorate'],defaultAnswer:'High school diploma'},
+ {question:'Employment experience',aliases:['employment experience','work experience','professional experience','employment history','work history'],defaultAnswer:'None'},
+ {question:'Research positions',aliases:['research positions','research experience','research employment history'],defaultAnswer:'None'},
+ {question:'Residence history',aliases:['residence history','describe your residence history','where have you lived'],defaultAnswer:'I lived in Vietnam before moving to the United States in 2014. I have lived in New Jersey since then.'},
 ];
 export const questionKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
 export const commonQuestion=q=>COMMON_QUESTIONS.find(item=>item.aliases.includes(questionKey(q)));
+
+// Derivations are deliberately narrow. No employment does not mean no projects,
+// no prior applications, no agreements, or any particular legal eligibility.
+export function backgroundAnswer(question,profile){
+ const q=questionKey(question),answers=profile.answers||[];
+ const fact=canonical=>{const matches=answers.filter(a=>commonQuestion(a.question)?.question===canonical);return matches.length&&new Set(matches.map(a=>a.answer.trim())).size===1?matches[0].answer:null;};
+ const residence=fact('Residence history');
+ if(residence===COMMON_QUESTIONS.find(a=>a.question==='Residence history').defaultAnswer&&/^(current |home )?country( of residence)?$/.test(q))return {value:'United States',sourceQuestion:'Residence history'};
+ const noWork=questionKey(fact('Employment experience'))==='none',noResearch=questionKey(fact('Research positions'))==='none';
+ if(noWork&&/^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed)$/.test(q))return {value:'No',sourceQuestion:'Employment experience'};
+ if(noWork&&/^(years of (work|employment|professional work|professional) experience|how many years of (work|employment|professional work|professional) experience do you have)$/.test(q))return {value:'0',sourceQuestion:'Employment experience'};
+ if(noWork&&/^(current employer|most recent employer|previous employer|current job title|most recent job title)$/.test(q))return {value:'None',sourceQuestion:'Employment experience'};
+ if(noResearch&&/^(do you have (any )?research experience|have you (ever )?held (a |any )research positions?|do you (currently )?hold a research position)$/.test(q))return {value:'No',sourceQuestion:'Research positions'};
+ return null;
+}

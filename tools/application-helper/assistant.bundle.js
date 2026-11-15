@@ -1,5 +1,5 @@
 (() => {
-  // tools/application-helper/answer-memory.mjs
+  // tools/application-helper/answer-memory.mjs?v=20261114.8
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var privateQuestion = (q) => /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
   var equivalents = [
@@ -14,9 +14,6 @@
     const i = equivalents.findIndex((group) => group.includes(q));
     return i < 0 ? null : "equivalent-" + i;
   }
-  function employerSpecific(question) {
-    return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)/i.test(question);
-  }
   function memoryMatch(question, entries, origin, context = "") {
     if (privateQuestion(question)) return null;
     const q = normalizeQuestion(question), concept = questionConcept(question);
@@ -30,21 +27,6 @@
     if (scoped.length) matches = scoped;
     if (!matches.length || new Set(matches.map((a) => a.answer.trim())).size !== 1) return null;
     return { value: matches[0].answer, question: matches[0].question, reason: kind };
-  }
-  function scanAnsweredFields() {
-    const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
-    const candidates = [];
-    for (const e of document.querySelectorAll("input,textarea,select")) {
-      const type = e.type || e.tagName.toLowerCase();
-      if (!["text", "email", "tel", "url", "textarea", "select-one", "number"].includes(type) || e.disabled || e.readOnly || !e.getClientRects().length || getComputedStyle(e).visibility === "hidden") continue;
-      const question = ([...e.labels || []].map((l) => l.innerText).join(" ") || e.getAttribute("aria-label") || (e.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => document.getElementById(id)?.innerText || "").join(" ") || e.placeholder || "").trim();
-      if (!question || question.length > 250 || blocked.test(question + " " + e.name + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
-      const answer = (e.tagName === "SELECT" ? e.selectedOptions[0]?.textContent : e.value || "")?.trim();
-      if (!answer || answer.length > 1500 || e.tagName === "SELECT" && (!e.value || /^(select|choose|please select)/i.test(answer))) continue;
-      candidates.push({ question, answer });
-      if (candidates.length >= 100) break;
-    }
-    return { url: location.href, origin: location.origin, candidates };
   }
 
   // tools/application-helper/application-autofill.mjs
@@ -94,6 +76,28 @@
     return { filled, skipped };
   }
 
+  // tools/application-helper/answer-memory.mjs
+  var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
+  var privateQuestion2 = (q) => /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
+  function employerSpecific(question) {
+    return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)/i.test(question);
+  }
+  function scanAnsweredFields() {
+    const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
+    const candidates = [];
+    for (const e of document.querySelectorAll("input,textarea,select")) {
+      const type = e.type || e.tagName.toLowerCase();
+      if (!["text", "email", "tel", "url", "textarea", "select-one", "number"].includes(type) || e.disabled || e.readOnly || !e.getClientRects().length || getComputedStyle(e).visibility === "hidden") continue;
+      const question = ([...e.labels || []].map((l) => l.innerText).join(" ") || e.getAttribute("aria-label") || (e.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => document.getElementById(id)?.innerText || "").join(" ") || e.placeholder || "").trim();
+      if (!question || question.length > 250 || blocked.test(question + " " + e.name + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
+      const answer = (e.tagName === "SELECT" ? e.selectedOptions[0]?.textContent : e.value || "")?.trim();
+      if (!answer || answer.length > 1500 || e.tagName === "SELECT" && (!e.value || /^(select|choose|please select)/i.test(answer))) continue;
+      candidates.push({ question, answer });
+      if (candidates.length >= 100) break;
+    }
+    return { url: location.href, origin: location.origin, candidates };
+  }
+
   // tools/application-helper/memory-panel.mjs
   function reviewAnswers(container, { origin, context, candidates, onSave, onCancel }) {
     const el = (tag, text) => {
@@ -105,7 +109,7 @@
     const hint = el("p", "Choose answers to remember. Edit them now and choose where they may be reused. Nothing is saved until you click Save selected.");
     container.append(hint);
     const rows = [];
-    for (const item of candidates.filter((a) => !privateQuestion(a.question))) {
+    for (const item of candidates.filter((a) => !privateQuestion2(a.question))) {
       const row = el("div");
       row.className = "memory-row";
       const label = el("label"), check = el("input");

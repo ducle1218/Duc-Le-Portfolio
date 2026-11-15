@@ -739,8 +739,41 @@
   var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion2 = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion2 = (q) => !reviewedIdentityQuestion2(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
+  var equivalents2 = [
+    ["when can you start", "when are you available to start", "what is your earliest start date", "what is your earliest available start date", "earliest start date", "available start date", "availability to start", "when would you be available to start"],
+    ["are you willing to relocate", "are you open to relocation", "would you be willing to relocate", "willing to relocate", "open to relocation"],
+    ["are you willing to travel", "are you open to travel", "would you be willing to travel", "willing to travel"],
+    ["what is your preferred name", "preferred name", "what name do you prefer to go by"],
+    ["what is your preferred contact method", "preferred contact method", "how do you prefer to be contacted"]
+  ];
+  function questionConcept2(question) {
+    if (reviewedIdentityQuestion2(question)) return "identity-" + commonQuestion(question).question;
+    const age = ageThreshold(question);
+    if (age !== null) return "age-" + age;
+    const date = dateConcept(question);
+    if (date) return "date-" + date;
+    const common = commonQuestion(question);
+    if (common) return "common-" + common.question;
+    const q = normalizeQuestion2(question);
+    const i = equivalents2.findIndex((group) => group.includes(q));
+    return i < 0 ? null : "equivalent-" + i;
+  }
   function employerSpecific(question) {
     return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)|^if\b|please specify|how.*hear/i.test(question);
+  }
+  function memoryMatch2(question, entries, origin, context = "") {
+    if (privateQuestion2(question)) return null;
+    const q = normalizeQuestion2(question), concept = questionConcept2(question);
+    const available = entries.filter((a) => a.scope === "*" || a.scope === origin && a.context && a.context === context);
+    let matches = available.filter((a) => normalizeQuestion2(a.question) === q), kind = "Saved answer \xB7 same question";
+    if (!matches.length && concept) {
+      matches = available.filter((a) => questionConcept2(a.question) === concept);
+      kind = "Saved answer \xB7 equivalent wording";
+    }
+    const scoped = matches.filter((a) => a.scope === origin);
+    if (scoped.length) matches = scoped;
+    if (!matches.length || new Set(matches.map((a) => a.answer.trim())).size !== 1) return null;
+    return { value: matches[0].answer, question: matches[0].question, reason: kind, requiresReview: reviewedIdentityQuestion2(question) };
   }
   var scanAnsweredFields = () => formBridge({ action: "remember" });
 
@@ -779,23 +812,72 @@
     }
   }
 
+  // tools/application-helper/answer-pagination.mjs
+  function paginateAnswers(rows, nav, state) {
+    const pages = Math.max(1, Math.ceil(rows.length / 10));
+    state.page = Math.min(pages, Math.max(1, state.page || 1));
+    rows.forEach((row, i) => {
+      row.hidden = Math.floor(i / 10) !== state.page - 1;
+    });
+    nav.replaceChildren();
+    nav.hidden = rows.length <= 10;
+    if (nav.hidden) return;
+    const button = (text, disabled, step) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = text;
+      b.disabled = disabled;
+      b.onclick = () => {
+        state.page += step;
+        paginateAnswers(rows, nav, state);
+        state.onPage?.();
+      };
+      return b;
+    };
+    const status = document.createElement("span");
+    status.setAttribute("role", "status");
+    status.textContent = "Page " + state.page + " of " + pages + " \xB7 " + rows.length + " answers";
+    nav.append(button("Previous answers", state.page === 1, -1), status, button("Next answers", state.page === pages, 1));
+  }
+
   // tools/application-helper/memory-panel.mjs
-  function reviewAnswers(container, { origin, context, candidates, onSave, onCancel }) {
+  var normalizedAnswer = (value) => String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+  function answerDifference(item, { origin, context, memory = [], profile }) {
+    const current = suggestField({ label: item.question, type: "text" }, profile, memory, origin, context) || memoryMatch2(item.question, memory, origin, context);
+    if (current) {
+      const previous = current.value;
+      return { kind: normalizedAnswer(previous) === normalizedAnswer(item.answer) ? "unchanged" : "changed", previous };
+    }
+    const concept = questionConcept2(item.question), same = (q) => normalizeQuestion2(q) === normalizeQuestion2(item.question) || concept && questionConcept2(q) === concept;
+    const known = [...profile?.answers || [], ...memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context)].filter((a) => same(a.question));
+    return { kind: known.length ? "changed" : "new", previous: known.map((a) => a.answer).join(" / ") };
+  }
+  function reviewAnswers(container, { origin, context, candidates, memory = [], profile, onSave, onCancel }) {
     const el = (tag, text) => {
       const n = document.createElement(tag);
       if (text) n.textContent = text;
       return n;
     };
     container.replaceChildren();
-    const hint = el("p", "Choose answers to remember. Edit them now and choose where they may be reused. Identity answers start unchecked: select them explicitly to remember them. Nothing is saved until you click Save selected.");
-    container.append(hint);
+    const hint = el("p", "Review new or changed answers. Your existing bank stays hidden unless you choose Show all detected answers. Identity answers need explicit selection.");
+    const summary = el("p"), toggle = el("button"), list = el("div"), nav = el("nav"), status = el("p"), save = el("button", "Save selected answers"), cancel = el("button", "Cancel");
+    toggle.type = save.type = cancel.type = "button";
+    nav.className = "answer-pagination";
+    nav.setAttribute("aria-label", "Answer review pages");
+    status.setAttribute("role", "status");
+    summary.setAttribute("role", "status");
+    const state = { page: 1 };
+    let showAll = false;
     const rows = [];
     for (const item of candidates.filter((a) => !privateQuestion2(a.question))) {
-      const row = el("div");
+      const difference = answerDifference(item, { origin, context, memory, profile }), row = el("div");
       row.className = "memory-row";
+      row.dataset.difference = difference.kind;
+      const badge = el("strong", difference.kind === "new" ? "New answer" : difference.kind === "changed" ? "Changed answer" : "Already saved");
+      badge.className = "memory-difference " + difference.kind;
       const label = el("label"), check = el("input");
       check.type = "checkbox";
-      check.checked = !reviewedIdentityQuestion2(item.question);
+      check.checked = difference.kind !== "unchanged" && !reviewedIdentityQuestion2(item.question);
       label.append(check, document.createTextNode(" " + item.question));
       const answer = el("textarea");
       answer.value = item.answer;
@@ -810,18 +892,32 @@
         scope.append(option);
       }
       scope.value = employerSpecific(item.question) ? origin : "*";
-      row.append(label, answer, scope);
-      container.append(row);
-      rows.push({ item, check, answer, scope });
+      row.append(badge, label);
+      if (difference.kind === "changed") row.append(el("small", "Saved: " + difference.previous));
+      row.append(answer, scope);
+      list.append(row);
+      rows.push({ item, check, answer, scope, row, ...difference });
     }
-    const status = el("p");
-    status.setAttribute("role", "status");
-    const save = el("button", "Save selected answers"), cancel = el("button", "Cancel");
-    save.type = cancel.type = "button";
-    save.disabled = !rows.length;
-    if (!rows.length) hint.textContent = "No supported completed fields found. Answer a question on this page first. Passwords, sensitive and legal questions are excluded.";
+    const changed = rows.filter((r) => r.kind !== "unchanged");
+    function render() {
+      const visible = showAll ? rows : changed;
+      for (const r of rows) r.row.hidden = true;
+      paginateAnswers(visible.map((r) => r.row), nav, state);
+      toggle.textContent = showAll ? "Show only new or changed answers" : "Show all detected answers (" + rows.length + ")";
+      toggle.hidden = !rows.some((r) => r.kind === "unchanged");
+      summary.textContent = changed.length + " new or changed \xB7 " + (rows.length - changed.length) + " already saved";
+      save.disabled = !visible.length;
+      if (!rows.length) hint.textContent = "No supported completed fields found. Answer a question on this page first.";
+      else if (!visible.length) hint.textContent = "All detected answers match your saved profile or answer bank. Nothing new to save.";
+      else hint.textContent = "Review the answers below. Previously saved matches are hidden by default.";
+    }
+    toggle.onclick = () => {
+      showAll = !showAll;
+      state.page = 1;
+      render();
+    };
     save.onclick = async () => {
-      const selected = rows.filter((r) => r.check.checked).map((r) => ({ question: r.item.question, answer: r.answer.value, scope: r.scope.value, sourceOrigin: origin, context }));
+      const selected = rows.filter((r) => r.check.checked && (showAll || r.kind !== "unchanged")).map((r) => ({ question: r.item.question, answer: r.answer.value, scope: r.scope.value, sourceOrigin: origin, context }));
       if (!selected.length) {
         status.textContent = "Select an answer to remember.";
         return;
@@ -836,7 +932,8 @@
       }
     };
     cancel.onclick = onCancel;
-    container.append(status, save, cancel);
+    container.append(hint, summary, toggle, list, nav, status, save, cancel);
+    render();
   }
 
   // tools/application-helper/assistant.mjs
@@ -873,18 +970,27 @@
       memoryArea.className = "answers";
       memoryArea.hidden = true;
       const memoryNote = el("small", "Saved answers stay in this extension, even after clearing browser cache.");
-      style.textContent += " .portfolio-evidence{font-size:12px;border:1px solid #384a48;border-radius:8px;padding:8px;margin:4px 0 12px}.portfolio-evidence a{color:#9dd4c7}.portfolio-evidence small{margin:5px 0 10px} .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
+      style.textContent += " .memory-row[hidden],.answer-pagination[hidden]{display:none!important}.answer-pagination{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.memory-difference{display:block;color:#9dd4c7;margin-bottom:6px}.memory-difference.changed{color:#e2bf73} .portfolio-evidence{font-size:12px;border:1px solid #384a48;border-radius:8px;padding:8px;margin:4px 0 12px}.portfolio-evidence a{color:#9dd4c7}.portfolio-evidence small{margin:5px 0 10px} .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
       const portfolioNote = el("small", entry.portfolio?.knowledge ? "Portfolio: " + entry.portfolio.knowledge.projects.length + " projects \xB7 " + (entry.portfolio.state === "cached" ? "cached evidence" : "source-backed suggestions") : "Portfolio evidence unavailable; saved answers still work.");
       content.append(job, company, portfolioNote, status, list, footer, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
       panel.append(header, content);
       root.append(style, panel);
       document.documentElement.append(host);
-      remember.onclick = () => {
+      remember.onclick = async () => {
         remembering = true;
         memoryArea.hidden = false;
         list.hidden = footer.hidden = true;
+        const freshMemory = await chrome.runtime.sendMessage({ type: "memory-list" }).catch(() => ({ ok: false }));
+        if (!freshMemory?.ok) {
+          status.textContent = "Could not load saved answers. Try again.";
+          remembering = false;
+          memoryArea.hidden = true;
+          list.hidden = footer.hidden = false;
+          return;
+        }
+        entry.memory = freshMemory.items;
         const found = scanAnsweredFields();
-        reviewAnswers(memoryArea, { origin: found.origin, context: entry.job.company.trim().toLowerCase(), candidates: found.candidates, onSave: async (items) => {
+        reviewAnswers(memoryArea, { origin: found.origin, profile: entry.profile, memory: entry.memory || [], context: entry.job.company.trim().toLowerCase(), candidates: found.candidates, onSave: async (items) => {
           const result = await chrome.runtime.sendMessage({ type: "memory-save", items });
           if (!result.ok) throw new Error(result.error);
           entry.memory = result.items;

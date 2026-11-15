@@ -16,7 +16,8 @@ const equivalents=[
 export function questionConcept(question){if(reviewedIdentityQuestion(question))return 'identity-'+commonQuestion(question).question;const age=ageThreshold(question);if(age!==null)return 'age-'+age;const date=dateConcept(question);if(date)return 'date-'+date;const common=commonQuestion(question);if(common)return 'common-'+common.question;const q=normalizeQuestion(question);const i=equivalents.findIndex(group=>group.includes(q));return i<0?null:'equivalent-'+i;}
 export function employerSpecific(question){return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)|^if\b|please specify|how.*hear/i.test(question);}
 export function cleanMemory(input){
- if(!Array.isArray(input)||input.length>200)throw new Error('Keep up to 200 saved answers.');
+ if(!Array.isArray(input))throw new Error('Choose an answer list.');
+ if(new TextEncoder().encode(JSON.stringify(input)).length>1000000)throw new Error('The answer library exceeds the 1 MB storage size. Export a backup and shorten long answers.');
  return input.map(item=>{
   let question=String(item.question||'').trim(),answer=String(item.answer||'').trim();
   // Old scans included selected chips in wrapped labels. Only remove a proven

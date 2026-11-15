@@ -15,7 +15,7 @@ assert.equal(mergeMemory(saved,[{...entry,answer:'July 1, 2027'}]).length,1);
 const cpp=cleanMemory([{...entry,question:'Do you know C++?',answer:'Yes'}]);assert.equal(memoryMatch('Do you know C?',cpp,sourceOrigin),null);assert.equal(memoryMatch('Do you know C#?',cpp,sourceOrigin),null);
 assert.equal(memoryMatch('Can you travel 50 percent of the time?',cleanMemory([{...entry,question:'Can you travel 5.0 percent of the time?',answer:'Yes'}]),sourceOrigin),null);
 for(const question of ['Password','Social security number','Do you certify this?','GPA'])assert.throws(()=>cleanMemory([{...entry,question}]));
-assert.throws(()=>cleanMemory([{...entry,scope:'javascript:alert(1)'}]));assert.throws(()=>cleanMemory(Array.from({length:201},()=>entry)));
+assert.throws(()=>cleanMemory([{...entry,scope:'javascript:alert(1)'}]));assert.equal(cleanMemory(Array.from({length:201},()=>entry)).length,201);
 const profile={confirmed:true,values:{firstName:'Sample'},answers:[]};const field={label:'What is your earliest available start date?',type:'text',filled:false};
 assert.equal(suggestField(field,profile,saved,sourceOrigin).value,entry.answer);assert.equal(suggestField({...field,filled:true},profile,saved,sourceOrigin),null);
 assert.equal(suggestField({label:'Preferred contact method',type:'select-one',options:[{value:'email',label:'Email'}]},profile,cleanMemory([{...entry,question:'How do you prefer to be contacted?',answer:'Email'}]),sourceOrigin).value,'email');

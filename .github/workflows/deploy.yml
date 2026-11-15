@@ -52,6 +52,7 @@ jobs:
           node scripts/check-identity-upload.mjs
           node scripts/check-application-handoff.mjs
           node scripts/check-helper-memory-update.mjs
+          node scripts/check-answer-pagination.mjs
           node scripts/check-helper-popup.mjs
           node scripts/check-job-reader.mjs
           node scripts/check-job-insights.mjs

@@ -13,12 +13,13 @@ export const PROFILE_FIELDS = [
 ];
 export const APPLICATION_STATES=['Preparing','In progress','Submitted','Interview','Offer','Not proceeding'];
 export function cleanProfile(input){
+ if(new TextEncoder().encode(JSON.stringify(input)).length>1000000)throw new Error('This profile exceeds the 1 MB storage size. Export a backup and shorten long answers.');
  if(!input||input.confirmed!==true)throw new Error('Review and confirm your profile first.');
  const values={};for(const [key] of PROFILE_FIELDS){const value=String(input.values?.[key]||'').trim();if(value.length>220||/[\u0000-\u001f]/.test(value))throw new Error('Profile field is too long or invalid.');values[key]=value;}
  if(!values.firstName||!values.lastName)throw new Error('Add your first and last name.');
  if(values.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))throw new Error('Check your email.');
  for(const key of ['portfolio','linkedin','github'])if(values[key]){const u=new URL(values[key]);if(u.protocol!=='https:'||u.username||u.password)throw new Error('Profile links must use HTTPS.');}
  const answers=(Array.isArray(input.answers)?input.answers:[]).map(a=>({question:String(a.question||'').trim(),answer:String(a.answer||'').trim()})).filter(a=>a.question||a.answer);
- if(answers.length>12||answers.some(a=>!a.question||!a.answer||a.question.length>160||a.answer.length>1500))throw new Error('Add a question and answer for each reusable answer (up to 12).');
+ if(answers.some(a=>!a.question||!a.answer||a.question.length>160||a.answer.length>1500))throw new Error('Add a question and answer for each reusable answer without empty questions or answers.');
  return {values,answers,confirmed:true,confirmedAt:new Date().toISOString()};
 }

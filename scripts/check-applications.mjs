@@ -98,3 +98,17 @@ browserStore.set('duc-application-draft-v1',JSON.stringify({starterAnswersVersio
 const removed=dom.parseHTML(html);globalThis.document=removed.document;await import('../resume/generator/applications.mjs?removed-prefill');
 assert.equal(removed.document.querySelectorAll('.reusable-answer').length,0);
 console.log('PASS: automatic fresh-visit cards, old single-card draft migration, private online answer merge, preserved edits and intentional removals.');
+// More than the old cap: page changes never discard offscreen edits or saved rows.
+const manyDocument=removed.document,manyId=id=>manyDocument.getElementById(id);
+for(let i=0;i<35;i++){manyId('add-answer').onclick();const row=manyId('reusable-answers').lastElementChild;row.querySelector('.answer-question').value=i===0?'Sex':'Project interest '+i;row.querySelector('.answer-value').value=i===0?'Male':'Answer '+i;}
+assert.equal([...manyId('reusable-answers').children].filter(r=>!r.hidden).length,5);
+assert.match(manyId('answer-pagination').textContent,/Page 4 of 4/);
+manyId('answer-pagination').firstElementChild.onclick();assert.equal([...manyId('reusable-answers').children].filter(r=>!r.hidden).length,10);
+manyId('reusable-answers').children[22].querySelector('.answer-value').value='Edited on page three';
+manyId('profile-confirm').checked=true;await manyId('profile-form').onsubmit({preventDefault(){}});
+assert.equal(savedProfile.answers.length,35);assert.equal(savedProfile.answers[22].answer,'Edited on page three');
+const manyReload=dom.parseHTML(html);globalThis.document=manyReload.document;await import('../resume/generator/applications.mjs?many-reload');
+assert.equal(manyReload.document.querySelectorAll('.reusable-answer').length,35);
+assert.equal([...manyReload.document.querySelectorAll('.reusable-answer')].filter(r=>!r.hidden).length,10);
+assert.equal(manyReload.document.querySelectorAll('.answer-value')[22].value,'Edited on page three');
+console.log('PASS: 35 website answers saved online and restored, with ten visible per page and offscreen edits retained.');

@@ -1,6 +1,8 @@
 import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core.mjs';
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
 import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
+import {loadPortfolio} from './portfolio-source.mjs';
+const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
 let memoryWrite=Promise.resolve();
 let preferenceSeed;
 const readMemory=async()=>{
@@ -25,6 +27,7 @@ async function launch(entry){
 }
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  (async()=>{
+  if(message?.type==='portfolio-read'&&extensionPage(sender))return {ok:true,portfolio:await portfolio(message.force===true)};
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
@@ -75,7 +78,7 @@ async function attach(id,tab){
  if(injecting.has(id))return;const entry=await record(id);if(!entry)return;
  if(!employerURL(tab.url)||new URL(tab.url).origin!==entry.origin){await chrome.action.setBadgeText({tabId:id,text:'↗'});return;}
  if(!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))return;
- injecting.add(id);try{const memory=(await readMemory()).filter(a=>a.scope==='*'||a.scope===entry.origin);await chrome.scripting.executeScript({target:{tabId:id},files:['assistant.bundle.js']});await chrome.tabs.sendMessage(id,{type:'application-handoff',entry:{...entry,memory}});await chrome.action.setBadgeText({tabId:id,text:'ON'});}catch{await chrome.action.setBadgeText({tabId:id,text:'!'}).catch(()=>{});}finally{injecting.delete(id);}
+ injecting.add(id);try{const memory=(await readMemory()).filter(a=>a.scope==='*'||a.scope===entry.origin);const evidence=await portfolio(false);await chrome.scripting.executeScript({target:{tabId:id},files:['assistant.bundle.js']});await chrome.tabs.sendMessage(id,{type:'application-handoff',entry:{...entry,memory,portfolio:evidence}});await chrome.action.setBadgeText({tabId:id,text:'ON'});}catch{await chrome.action.setBadgeText({tabId:id,text:'!'}).catch(()=>{});}finally{injecting.delete(id);}
 }
 chrome.tabs.onUpdated.addListener((id,change,tab)=>{if(change.status==='complete')attach(id,tab).catch(()=>{});});
 chrome.tabs.onRemoved.addListener(id=>{chrome.storage.session.remove(key(id)).catch(()=>{});});

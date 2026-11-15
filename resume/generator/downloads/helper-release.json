@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "sha256": "5543e41188fbeb27111e42891c7d06b9334a9e8c6498ffb4e901e2c2c4cec53d",
+  "version": "1.7.0",
+  "sha256": "40b621d672d9e0d4af7506ecd75ce84c40da191b0f2eaed351d3aeb268a975c5",
   "files": [
     "manifest.json",
     "popup.html",
@@ -10,8 +10,11 @@
     "application-autofill.mjs",
     "answer-memory.mjs",
     "answer-rules.mjs",
+    "portfolio-answers.mjs",
     "common-questions.mjs",
     "resume-attachment.mjs",
+    "portfolio-source.mjs",
+    "portfolio-ui.mjs",
     "memory-panel.mjs",
     "memory.html",
     "memory.mjs",

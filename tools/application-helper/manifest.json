@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Duc — Application Helper",
-  "version": "1.6.0",
+  "name": "Duc \u2014 Application Helper",
+  "version": "1.7.0",
   "description": "Review and fill common application fields using your confirmed Application Studio profile.",
   "permissions": [
     "activeTab",
@@ -31,5 +31,8 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "Prepare application answers"
-  }
+  },
+  "host_permissions": [
+    "https://ducle1218.github.io/*"
+  ]
 }

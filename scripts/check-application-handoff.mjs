@@ -17,6 +17,8 @@ for(const sender of [{...studio,url:'https://evil.example/'},{...studio,frameId:
 assert.equal(tabs.size,0);assert.equal((await send({type:'studio-start',payload:{...payload,profile:{confirmed:false}}})).ok,false);
 assert.equal((await send({type:'studio-start',payload})).ok,true);assert.equal(tabs.get(2).url,'chrome-extension://helper/launch.html?ready=1');assert.equal(stored.get('handoff:2').profile.values.firstName,'Sample');assert.equal(local.get('profile').values.firstName,'Sample');assert(!JSON.stringify([...tabs.values()]).includes('sample@example.com'));
 const extension={id:'helper',url:'chrome-extension://helper/launch.html'};
+assert.equal((await send({type:'portfolio-read'},studio)).ok,false);
+assert.equal((await send({type:'portfolio-read'},extension)).portfolio.state,'needs-access');
 assert.equal((await send({type:'get-handoff',tabId:2},studio)).ok,false);
 assert.equal((await send({type:'open-handoff',tabId:2},extension)).ok,false);assert(tabs.get(2).url.startsWith('chrome-extension:'));
 grants.add('https://careers.example.com/*');assert.equal((await send({type:'open-handoff',tabId:2},extension)).ok,true);assert.equal(tabs.get(2).url,payload.job.url);

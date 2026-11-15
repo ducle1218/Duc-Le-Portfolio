@@ -1,5 +1,33 @@
 (() => {
-  // site/tools/application-helper/common-questions.mjs?v=20261115.6
+  // tools/application-helper/portfolio-answers.mjs
+  var PORTFOLIO_URL = "https://ducle1218.github.io/Duc-Le-Portfolio/";
+  var aliases = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
+  Object.assign(aliases, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
+
+  // tools/application-helper/portfolio-ui.mjs
+  function addPortfolioEvidence(container, suggestion) {
+    if (!suggestion.portfolioDerived || !suggestion.sources?.length) return;
+    const details = document.createElement("details"), summary = document.createElement("summary");
+    details.className = "portfolio-evidence";
+    summary.textContent = "Why this answer \xB7 portfolio sources";
+    details.append(summary);
+    for (const source of suggestion.sources) {
+      if (!source.url.startsWith(PORTFOLIO_URL)) continue;
+      const a = document.createElement("a");
+      a.href = source.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = source.title + " \u2197";
+      const quote = document.createElement("small");
+      quote.textContent = source.quote;
+      const item = document.createElement("div");
+      item.append(a, quote);
+      details.append(item);
+    }
+    container.append(details);
+  }
+
+  // tools/application-helper/common-questions.mjs?v=20261115.6
   var COMMON_QUESTIONS = [
     { question: "Summer internship start date", aliases: ["summer internship start date"], defaultAnswer: "2027-05-13" },
     { question: "Summer internship end date", aliases: ["summer internship end date"], defaultAnswer: "2027-08-31" },
@@ -54,7 +82,7 @@
     return null;
   }
 
-  // site/tools/application-helper/answer-rules.mjs
+  // tools/application-helper/answer-rules.mjs
   function applicationSeason(title = "") {
     const s = questionKey(title);
     const seasons = ["summer", "fall", "autumn", "winter", "spring"].filter((x) => new RegExp("\\b" + x + "\\b").test(s));
@@ -66,7 +94,7 @@
     return seasons[0];
   }
 
-  // site/tools/application-helper/answer-rules.mjs?v=20261115.6
+  // tools/application-helper/answer-rules.mjs?v=20261115.6
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -96,7 +124,7 @@
       const values = entries.filter((a) => questionKey(a.question) === questionKey(q)).map((a) => a.answer.trim());
       return new Set(values).size === 1 ? values[0] : null;
     };
-    const result = (value, reason, aliases) => ({ value, display: value, reason, sourceQuestion: "Saved preferences", requiresReview: false, ...aliases ? { aliases } : {} });
+    const result = (value, reason, aliases3) => ({ value, display: value, reason, sourceQuestion: "Saved preferences", requiresReview: false, ...aliases3 ? { aliases: aliases3 } : {} });
     if (/please indicate your availability for the internship.*select multiple/i.test(field.label) && unique("Summer internship end date")) return { blocked: true };
     const threshold = ageThreshold(field.label);
     if (threshold !== null) {
@@ -127,7 +155,87 @@
     return null;
   }
 
-  // site/tools/application-helper/application-autofill.mjs?v=20261115.6
+  // tools/application-helper/portfolio-answers.mjs?v=20261115.6
+  var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
+  var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
+  Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
+  var skillKey = (s) => Object.entries(aliases2).find(([, names]) => names.includes(key(s)))?.[0] || key(s);
+  var uniqueSources = (items) => [...new Map(items.map((s) => [s.url + "\n" + s.quote, s])).values()].slice(0, 4);
+  function portfolioAnswer(field, knowledge) {
+    if (knowledge?.format !== "duc-portfolio-knowledge-v1") return null;
+    const q = key(field.label).replace(/\b(required|optional)\b/g, "").trim();
+    if (/\b(not|never|without|lack|professional|professionally|commercial|industry|industrial|paid|employed|employment|years|months|year|month|expert|expertise|proficient|advanced|certified|certification|license|licensed|citizen|citizenship|visa|sponsor|authorized|authorization|gpa|salary|gender|race|ethnicity|disability|veteran|birth|age|agree|certify|completed|successful|successfully|production|productionized|fluent|fully|functional|deployed|operational|independently|alone|sole)\b/.test(q) || /\d/.test(q.replace(/3d/g, ""))) return null;
+    const answer = (value, sources, reason = "Draft from documented portfolio evidence") => sources.length && (!field.maxLength || field.maxLength < 0 || value.length <= field.maxLength) ? { value, display: value, requiresReview: true, reason, sourceQuestion: "Portfolio \xB7 " + knowledge.reviewedOn, sources: uniqueSources(sources), portfolioDerived: true } : null;
+    const allSkills = /* @__PURE__ */ new Map();
+    for (const s of knowledge.skills) allSkills.set(s.key, { ...s, project: false });
+    for (const p2 of knowledge.projects) for (const t of p2.tools) {
+      const previous = allSkills.get(t.key);
+      allSkills.set(t.key, { ...t, project: true, sources: uniqueSources([...previous?.sources || [], ...t.sources]) });
+    }
+    {
+      const cad = [...allSkills.values()].filter((s) => ["solidworks", "onshape", "autocad"].includes(s.key));
+      if (cad.length) allSkills.set("cad", { name: "CAD", key: "cad", project: cad.some((s) => s.project), sources: cad.flatMap((s) => s.sources) });
+    }
+    const domainRules = [
+      ["robotics", "Robotics project work", (p2) => /\brobot\b|\brobotics\b/.test(key(p2.title)), (c) => true],
+      ["electronics", "Electronics projects", (p2) => /\belectronics\b|\barduino\b/.test(key(p2.title)), (c) => c.state === "built"],
+      ["simulation", "Engineering simulation", (p2) => true, (c) => c.state === "simulated"],
+      ["prototyping", "Physical prototyping", (p2) => true, (c) => c.state === "built"]
+    ];
+    for (const [name, label, projectTest, claimTest] of domainRules) {
+      const claims2 = knowledge.projects.filter(projectTest).flatMap((p2) => p2.claims.filter(claimTest));
+      if (claims2.length && !allSkills.has(name)) allSkills.set(name, { key: name, name: label, project: true, sources: claims2.flatMap((c) => c.sources) });
+    }
+    const rearranged = q.replace(/^do you have (any )?(.+) experience$/, "do you have experience with $2");
+    const yes = rearranged.match(/^(?:do you have (?:any |hands on |project )?(?:experience|knowledge|working knowledge) (?:with|in|of|using)|have you (?:ever )?(?:used|worked with|worked on)|are you familiar with) (.+)$/);
+    if (yes) {
+      let subject = yes[1].replace(/\s+(software|tools|tool)$/, "");
+      const either = subject.includes(" or ");
+      if (either && subject.includes(" and ")) return null;
+      const terms2 = subject.split(either ? /\s+or\s+/ : /\s+and\s+|\s*,\s*/).map((s) => skillKey(s)).filter(Boolean);
+      const found = terms2.map((t) => allSkills.get(t));
+      const valid = (s) => s && (!q.includes("project experience") || s.project);
+      if (!terms2.length || terms2.length > 5 || (either ? !found.some(valid) : !found.every(valid))) return null;
+      return answer("Yes", found.filter(valid).flatMap((s) => s.sources), "Supported skill overlap \xB7 confirm the employer\u2019s wording");
+    }
+    if (/^(?:what (?:are|is)|list|which) (?:your )?(?:technical skills|engineering skills|cad tools|cad software|design software)(?: do you (?:use|know|have experience with))?$/.test(q)) {
+      const chosen = [...allSkills.values()].filter((s) => !/cad tools|cad software|design software/.test(q) || ["solidworks", "onshape", "autocad"].includes(s.key));
+      return chosen.length ? answer(chosen.map((s) => s.name).join(", "), chosen.flatMap((s) => s.sources), "Skills documented in the portfolio or current resume") : null;
+    }
+    const edu = knowledge.education.match(/^Mechanical engineering student at (Rutgers University)/i);
+    if (edu && knowledge.educationSources.length) {
+      if (/^(what are you (currently )?studying|what is your (major|field of study)|field of study)$/.test(q)) return answer("Mechanical Engineering", knowledge.educationSources);
+      if (/^(which university are you currently attending|what university do you (currently )?attend)$/.test(q)) return answer(edu[1], knowledge.educationSources);
+      if (/^(describe|summarize|tell us about) your (education|educational background|academic background)$/.test(q)) return answer("I am a mechanical engineering student at " + edu[1] + ".", knowledge.educationSources);
+    }
+    const narrative = /^(?:please )?(describe|summarize|tell us about|tell me about|give (?:us )?an example of|provide an example of)\b/.test(q) && /\b(project|projects|experience|work|design|designing|built|building)\b/.test(q);
+    if (!narrative || /\b(why|failure|failed|conflict|difficult|challenge|challenging|proud|leadership|led|lead|managed|manage|greatest|best|favorite|budget|deadline|overcame)\b/.test(q)) return null;
+    const requestedSkills = [...Object.entries(aliases2)].filter(([, names]) => names.some((n) => (" " + q + " ").includes(" " + n + " "))).map(([k]) => k);
+    const specific = q.match(/(?:experience|work) (?:with|using|in) (.+)$/);
+    if (specific && !specific[1].split(/\s+and\s+|\s*,\s*/).every((t) => Object.hasOwn(aliases2, skillKey(t)))) return null;
+    const using = q.match(/\busing (.+)$/);
+    if (using && !using[1].split(/\s+and\s+|\s*,\s*/).every((t) => Object.hasOwn(aliases2, skillKey(t)))) return null;
+    const themes = ["robot", "robotics", "electronics", "turbine", "boat", "tower", "launch", "display", "structural", "prototyping", "fabrication"];
+    const terms = [...requestedSkills, ...themes.filter((t) => q.includes(t))];
+    if (!terms.length && !/^(describe|summarize|tell us about|tell me about|give(?: us)? an example of|provide an example of) (?:your |a |an |one of your )?(?:engineering |technical |mechanical )?(?:project|projects|project experience|experience|work)(?: you (?:have )?(?:worked on|built|designed))?$/.test(q)) return null;
+    const ranked = knowledge.projects.filter((p2) => p2.claims.length).map((p2) => {
+      const toolKeys = p2.tools.map((t) => t.key);
+      const hay = key(p2.title + " " + p2.claims.map((c) => c.text).join(" ") + " " + p2.tools.map((t) => t.usage).join(" "));
+      const covers = (k) => toolKeys.includes(k) || k === "cad" && toolKeys.some((t) => ["solidworks", "onshape", "autocad"].includes(t)) || k === "fea" && p2.claims.some((c) => c.state === "simulated") && /analysis|stress|load/.test(hay) || domainRules.some(([name, , projectTest, claimTest]) => name === k && projectTest(p2) && p2.claims.some(claimTest));
+      if (requestedSkills.length && !requestedSkills.every(covers)) return null;
+      const score = requestedSkills.length * 10 + terms.reduce((n, t) => n + (hay.includes(t.replace("robotics", "robot")) ? 3 : 0), 0);
+      return { p: p2, score };
+    }).filter(Boolean).sort((a, b) => b.score - a.score);
+    if (!ranked.length || terms.length && ranked[0].score === 0) return null;
+    const p = ranked[0].p, tool = p.tools.find((t) => requestedSkills.includes(t.key));
+    const linked = tool ? p.claims.filter((c) => c.evidenceIds.some((id) => tool.evidenceIds.includes(id))) : [];
+    const claims = (linked.length ? linked : p.claims).slice(0, 2);
+    const status = p.completionState.replace(/-/g, " ");
+    const text = "My work on " + p.title + " included:\n" + claims.map((c) => "\u2022 " + c.text).join("\n") + (status ? "\nProject status: " + status + "." : "");
+    return answer(text, claims.flatMap((c) => c.sources));
+  }
+
+  // tools/application-helper/application-autofill.mjs?v=20261115.6
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -281,9 +389,9 @@
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
-          const aliases = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
-          if (options.length > 1 && aliases.length > 1) {
-            options.sort((a, b) => aliases.indexOf(norm(text(a))) - aliases.indexOf(norm(text(b))));
+          const aliases3 = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases3.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (options.length > 1 && aliases3.length > 1) {
+            options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
@@ -296,7 +404,7 @@
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
-            if (aliases.includes(norm(selectedValue(e)))) {
+            if (aliases3.includes(norm(selectedValue(e)))) {
               accepted = true;
               break;
             }
@@ -336,7 +444,7 @@
     })();
   }
 
-  // site/tools/application-helper/answer-memory.mjs?v=20261115.6
+  // tools/application-helper/answer-memory.mjs?v=20261115.6
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
@@ -374,9 +482,9 @@
     return { value: matches[0].answer, question: matches[0].question, reason: kind, requiresReview: reviewedIdentityQuestion(question) };
   }
 
-  // site/tools/application-helper/application-autofill.mjs
+  // tools/application-helper/application-autofill.mjs
   var normalize = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  function suggestField(field, profile, memory = [], origin = "", context = "") {
+  function suggestField(field, profile, memory = [], origin = "", context = "", portfolio = null) {
     if (!profile?.confirmed) return null;
     const label = normalize(field.label).replace(/\b(required|optional)\b/g, "").trim();
     const common = commonQuestion(label), background = backgroundAnswer(label, profile, memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context));
@@ -386,19 +494,30 @@
     if (!label || !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
-    const key = Object.keys(patterns).find((k) => patterns[k].test(label));
+    const key2 = Object.keys(patterns).find((k) => patterns[k].test(label));
     const custom = (profile.answers || []).filter((a) => normalize(a.question) === label || common && commonQuestion(a.question)?.question === common.question);
-    const remembered = !key ? memoryMatch(field.label, memory, origin, context) : null;
-    const value = rule?.value || (key === "fullName" ? [profile.values.firstName, profile.values.lastName].filter(Boolean).join(" ") : key ? profile.values[key] || background?.value : common?.question === "How did you hear about this position?" && remembered ? remembered.value : custom.length && new Set(custom.map((a) => a.answer.trim())).size === 1 ? custom[0].answer : background?.value || remembered?.value);
-    if (!value || field.maxLength > 0 && value.length > field.maxLength) return null;
+    const remembered = !key2 ? memoryMatch(field.label, memory, origin, context) : null;
+    const value = rule?.value || (key2 === "fullName" ? [profile.values.firstName, profile.values.lastName].filter(Boolean).join(" ") : key2 ? profile.values[key2] || background?.value : common?.question === "How did you hear about this position?" && remembered ? remembered.value : custom.length && new Set(custom.map((a) => a.answer.trim())).size === 1 ? custom[0].answer : background?.value || remembered?.value);
+    if (!value) {
+      const derived = portfolioAnswer(field, portfolio);
+      if (!derived) return null;
+      if (["select-one", "combobox", "radio-group"].includes(field.type)) {
+        if (derived.value !== "Yes") return null;
+        if (field.type === "combobox") return { ...derived, aliases: ["yes"] };
+        const matches = (field.options || []).filter((o) => !o.disabled && normalize(o.label) === "yes");
+        return matches.length === 1 ? { ...derived, value: matches[0].value, display: matches[0].label } : null;
+      }
+      return ["text", "textarea"].includes(field.type) ? derived : null;
+    }
+    if (field.maxLength > 0 && value.length > field.maxLength) return null;
     const confirmedMale = common?.question === "Sex" && normalize(value) === "male" && custom.length > 0 && new Set(custom.map((a) => normalize(a.answer))).size === 1;
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
-      const aliases = rule?.aliases || (key === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key === "country" || background?.value === "United States") && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
-      if (field.type === "combobox") return { value, display: value, aliases, ...review };
-      const matches = (field.options || []).filter((o) => !o.disabled && (aliases.includes(normalize(o.label)) || field.type !== "radio-group" && aliases.includes(normalize(o.value))));
+      const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
+      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...review };
+      const matches = (field.options || []).filter((o) => !o.disabled && (aliases3.includes(normalize(o.label)) || field.type !== "radio-group" && aliases3.includes(normalize(o.value))));
       if (rule?.aliases && matches.length > 1) {
-        matches.sort((a, b) => aliases.indexOf(normalize(a.label)) - aliases.indexOf(normalize(b.label)));
+        matches.sort((a, b) => aliases3.indexOf(normalize(a.label)) - aliases3.indexOf(normalize(b.label)));
         if (normalize(matches[0].label) !== normalize(matches[1].label)) matches.splice(1);
       }
       if (matches.length !== 1) return null;
@@ -559,9 +678,9 @@
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
-          const aliases = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
-          if (options.length > 1 && aliases.length > 1) {
-            options.sort((a, b) => aliases.indexOf(norm(text(a))) - aliases.indexOf(norm(text(b))));
+          const aliases3 = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases3.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (options.length > 1 && aliases3.length > 1) {
+            options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
@@ -574,7 +693,7 @@
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
-            if (aliases.includes(norm(selectedValue(e)))) {
+            if (aliases3.includes(norm(selectedValue(e)))) {
               accepted = true;
               break;
             }
@@ -616,7 +735,7 @@
   var scanForm = () => formBridge2({ action: "scan" });
   var fillForm = (options) => formBridge2({ ...options, action: "fill" });
 
-  // site/tools/application-helper/answer-memory.mjs
+  // tools/application-helper/answer-memory.mjs
   var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion2 = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion2 = (q) => !reviewedIdentityQuestion2(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
@@ -625,7 +744,7 @@
   }
   var scanAnsweredFields = () => formBridge({ action: "remember" });
 
-  // site/tools/application-helper/resume-attachment.mjs
+  // tools/application-helper/resume-attachment.mjs
   async function attachResume({ url, resume }) {
     if (location.href !== url) return { attached: false, message: "The page changed. Scan again before attaching." };
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
@@ -660,7 +779,7 @@
     }
   }
 
-  // site/tools/application-helper/memory-panel.mjs
+  // tools/application-helper/memory-panel.mjs
   function reviewAnswers(container, { origin, context, candidates, onSave, onCancel }) {
     const el = (tag, text) => {
       const n = document.createElement(tag);
@@ -720,7 +839,7 @@
     container.append(status, save, cancel);
   }
 
-  // site/tools/application-helper/assistant.mjs
+  // tools/application-helper/assistant.mjs
   if (!globalThis.__ducApplicationHelper) {
     let mount = function(next) {
       stop();
@@ -754,8 +873,9 @@
       memoryArea.className = "answers";
       memoryArea.hidden = true;
       const memoryNote = el("small", "Saved answers stay in this extension, even after clearing browser cache.");
-      style.textContent += " .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
-      content.append(job, company, status, list, footer, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
+      style.textContent += " .portfolio-evidence{font-size:12px;border:1px solid #384a48;border-radius:8px;padding:8px;margin:4px 0 12px}.portfolio-evidence a{color:#9dd4c7}.portfolio-evidence small{margin:5px 0 10px} .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
+      const portfolioNote = el("small", entry.portfolio?.knowledge ? "Portfolio: " + entry.portfolio.knowledge.projects.length + " projects \xB7 " + (entry.portfolio.state === "cached" ? "cached evidence" : "source-backed suggestions") : "Portfolio evidence unavailable; saved answers still work.");
+      content.append(job, company, portfolioNote, status, list, footer, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
       panel.append(header, content);
       root.append(style, panel);
       document.documentElement.append(host);
@@ -824,7 +944,7 @@
         if (automatic && signature === lastSignature) return;
         lastSignature = signature;
         review = { url: found.url, createdAt: Date.now(), fields: found.fields.flatMap((f) => {
-          const answer = suggestField({ ...f, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase());
+          const answer = suggestField({ ...f, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
           return answer ? [{ ...f, ...answer }] : [];
         }) };
         list.replaceChildren();
@@ -840,6 +960,7 @@
           if (f.reason) text.append(el("small", f.reason + " \xB7 " + f.sourceQuestion));
           label.append(check, text);
           list.append(label);
+          addPortfolioEvidence(list, f);
         }
         if (entry.resume && !entry.resumeUploaded) {
           const label = el("label");

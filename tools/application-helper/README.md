@@ -1,4 +1,4 @@
-# Application Helper 1.4.1 — Chrome and Edge
+# Application Helper 1.5.0 — Chrome and Edge
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -46,9 +46,16 @@ Profiles imported manually or received from Studio, plus saved answers, persist 
 
 Keep **Bring a resume tailored to this job** checked when starting from Studio. Studio builds from that posting’s description, preserves the original resume template, and sends the PDF with that job’s tab handoff. The PDF is not saved to the public website or backend. The handoff validates the job URL, PDF header, size and digest; the upload rechecks the digest. **Fill selected** attaches only to one clearly labelled resume/CV input that accepts PDF. Existing files, multiple ambiguous uploaders, cover letters and unsupported widgets are left alone. Some employers upload immediately when a file is selected. Final application submission remains yours.
 
-A popup opened on a different domain cannot use a previous employer’s PDF. Restart from Studio on the correct application URL, or download and attach the PDF manually. Profile-only imports do not include a resume. Update in place to 1.4.1 and refresh Studio; no new extension permissions are required.
+A popup opened on a different domain cannot use a previous employer’s PDF. Restart from Studio on the correct application URL, or download and attach the PDF manually. Profile-only imports do not include a resume. Update in place to 1.5.0 and refresh Studio; no new extension permissions are required.
 
 ## Dependent dropdowns and radio groups
 Version 1.4 uses the same control scanner for filling and remembering. It supports native radio groups and accessible custom dropdowns, including common Angular and Bootstrap-style controls. Fill the parent choice, then scan again to review any follow-up questions. Existing selections are preserved; the helper never clicks Continue or Submit.
 
 In Studio, use **Add my background answers** to add the supplied school, degree, employment, research and residence facts. Review, confirm, and save or download the updated profile. These answers remain editable. No work experience is not used to answer project-experience, prior-application, citizenship, sponsorship or legal-agreement questions.
+
+## Identity answers and connecting an open application
+Gender wording now matches the saved Sex answer. Paragraph-led radio groups and option descriptions are handled separately. Race/ethnicity and citizenship can be remembered only from answers you select and explicitly save; they are never inferred from residence. The explicitly requested Male answer is selected for filling when present in the confirmed profile. Remembered race and citizenship suggestions start unchecked for review. Generic country follow-ups without context are not reused as citizenship answers.
+
+Use **Connect a tailored resume** in the popup if an application was opened directly or moved to another employer domain. Allow access to that page, choose the same job in Studio, confirm it matches the open application, and connect its PDF. The application tab is preserved. The connection expires after 30 minutes and requires a fresh connection after expiry or a domain change.
+
+The connected job-specific PDF attaches once when a single supported empty resume file input appears. This includes hidden file inputs labelled by an Upload your resume page heading. Existing files, ambiguous upload controls and unsupported frames stay manual. A profile JSON alone does not contain a resume. No Continue or Submit button is clicked.

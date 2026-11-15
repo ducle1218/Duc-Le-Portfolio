@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
+import {makeResumeAttachment} from '../resume/generator/resume-attachment.mjs';
 import {prepareHandoff,studioURL,employerURL} from '../tools/application-helper/handoff-core.mjs';
 const payload={job:{url:'https://careers.example.com/apply/123',title:'Engineering Intern',company:'Example Engineering'},profile:{confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'}}};
 const studio={id:'helper',frameId:0,url:'https://ducle1218.github.io/Duc-Le-Portfolio/applications/',tab:{id:1}};
@@ -8,7 +9,7 @@ assert(studioURL(studio.url));assert(!studioURL('https://ducle1218.github.io/ano
 for(const url of ['http://careers.example.com','https://user:pass@careers.example.com','https://localhost','https://127.0.0.1','https://[::1]','file:///tmp/a','javascript:alert(1)'])assert.equal(employerURL(url),null,url);
 assert.throws(()=>prepareHandoff({...payload,profile:{confirmed:false}}));
 const local=new Map(),stored=new Map(),tabs=new Map(),grants=new Set(),injections=[],deliveries=[],badges=[];let messageListener,updateListener,removeListener,nextId=2;
-globalThis.chrome={runtime:{id:'helper',getURL:path=>'chrome-extension://helper/'+path,getManifest:()=>({version:'1.1.0'}),onMessage:{addListener:cb=>messageListener=cb}},storage:{local:{get:async key=>({[key]:local.get(key)}),set:async data=>Object.entries(data).forEach(([k,v])=>local.set(k,v))},session:{get:async key=>key===null?Object.fromEntries(stored):{[key]:stored.get(key)},set:async data=>Object.entries(data).forEach(([k,v])=>stored.set(k,v)),remove:async keys=>{for(const k of Array.isArray(keys)?keys:[keys])stored.delete(k);}}},permissions:{contains:async ({origins})=>origins.every(o=>grants.has(o))},tabs:{create:async data=>{const tab={id:nextId++,...data};tabs.set(tab.id,tab);return tab;},update:async(id,data)=>Object.assign(tabs.get(id),data),sendMessage:async(id,data)=>deliveries.push({id,data}),onUpdated:{addListener:cb=>updateListener=cb},onRemoved:{addListener:cb=>removeListener=cb}},scripting:{executeScript:async data=>injections.push(data)},action:{setBadgeText:async data=>badges.push(data)}};
+globalThis.chrome={runtime:{id:'helper',getURL:path=>'chrome-extension://helper/'+path,getManifest:()=>({version:'1.1.0'}),onMessage:{addListener:cb=>messageListener=cb}},storage:{local:{get:async key=>({[key]:local.get(key)}),set:async data=>Object.entries(data).forEach(([k,v])=>local.set(k,v))},session:{get:async key=>key===null?Object.fromEntries(stored):{[key]:stored.get(key)},set:async data=>Object.entries(data).forEach(([k,v])=>stored.set(k,v)),remove:async keys=>{for(const k of Array.isArray(keys)?keys:[keys])stored.delete(k);}}},permissions:{contains:async ({origins})=>origins.every(o=>grants.has(o))},tabs:{get:async id=>tabs.get(id),create:async data=>{const tab={id:nextId++,...data};tabs.set(tab.id,tab);return tab;},update:async(id,data)=>Object.assign(tabs.get(id),data),sendMessage:async(id,data)=>deliveries.push({id,data}),onUpdated:{addListener:cb=>updateListener=cb},onRemoved:{addListener:cb=>removeListener=cb}},scripting:{executeScript:async data=>injections.push(data)},action:{setBadgeText:async data=>badges.push(data)}};
 await import('../tools/application-helper/background.mjs');
 const send=(message,sender=studio)=>new Promise(resolve=>messageListener(message,sender,resolve));
 assert.equal((await send({type:'studio-hello'})).version,'1.1.0');
@@ -35,6 +36,20 @@ stored.get('handoff:2').expiresAt=Date.now()-1;assert.equal((await send({type:'g
 await send({type:'studio-start',payload});assert.equal(tabs.get(3).url,payload.job.url);removeListener(3);await new Promise(r=>setImmediate(r));assert(!stored.has('handoff:3'));
 await send({type:'studio-start',payload});await send({type:'stop-handoff',tabId:4},extension);assert(!stored.has('handoff:4'));
 stored.clear();assert.equal(local.get('profile').values.firstName,'Sample');assert.equal(local.get('answerMemory').length,3);
+// Connect a PDF to an explicitly selected existing application without navigating it.
+const target={id:50,url:'https://apply.example.com/application/step/resume'};tabs.set(50,target);
+assert.equal((await send({type:'link-current-application',tabId:50},extension)).ok,false);
+grants.add('https://apply.example.com/*');
+const connection=await send({type:'link-current-application',tabId:50},extension);assert(connection.ok);const targetToken=new URL(connection.url).searchParams.get('applicationTarget');
+const resume=await makeResumeAttachment(new TextEncoder().encode('%PDF-1.4\n'+'sample '.repeat(40)),payload.job.url,'Sample_Intern.pdf');
+const connectionPayload={...payload,resume,autoResume:true,targetToken};
+assert.equal((await send({type:'studio-start',payload:connectionPayload})).ok,false,'Matching-job confirmation is required');
+assert.equal((await send({type:'studio-start',payload:{...connectionPayload,confirmTarget:true}})).connected,true);
+assert.equal(tabs.get(50).url,target.url);assert.equal(stored.get('handoff:50').origin,'https://apply.example.com');assert.equal(stored.get('handoff:50').resume.jobUrl,payload.job.url);assert(stored.get('handoff:50').autoResume);
+assert.equal((await send({type:'studio-start',payload:{...connectionPayload,confirmTarget:true}})).ok,false,'Connection token cannot be replayed');
+assert.equal((await send({type:'resume-attached',tabId:50,sha256:'0'.repeat(64)},extension)).ok,false);
+assert.equal((await send({type:'resume-attached',tabId:50,sha256:resume.sha256},extension)).ok,true);assert(stored.get('handoff:50').resumeUploaded);
+const other=await send({type:'link-current-application',tabId:50},extension);target.url='https://elsewhere.example/application';assert.equal((await send({type:'studio-start',payload:{...connectionPayload,targetToken:new URL(other.url).searchParams.get('applicationTarget'),confirmTarget:true}})).ok,false,'Changed destination is rejected');
 // Exercise the real bridge in a fake page. Only same-window, exact-origin messages pass.
 const calls=[],replies=[];let receive;const win={addEventListener:(name,cb)=>receive=cb,postMessage:(data,origin)=>replies.push({data,origin})};
 const context={window:win,location:new URL(studio.url),chrome:{runtime:{sendMessage:async m=>{calls.push(m);return {ok:true,version:'1.1.0'};}}}};

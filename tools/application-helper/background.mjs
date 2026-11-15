@@ -22,7 +22,26 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
-   if(message.type==='studio-start')return launch(prepareHandoff(message.payload));
+   if(message.type==='studio-start'){
+    const entry=prepareHandoff(message.payload),token=message.payload?.targetToken;
+    if(!token)return launch(entry);
+    if(!/^[a-f0-9-]{36}$/.test(token)||message.payload.confirmTarget!==true||!entry.resume)throw new Error('Confirm the matching job and prepare its PDF before connecting this application.');
+    const targetKey='resume-target:'+token,target=(await chrome.storage.session.get(targetKey))[targetKey];
+    if(!target||target.expiresAt<Date.now())throw new Error('The application connection expired. Start from the helper again.');
+    const tab=await chrome.tabs.get(target.tabId);
+    if(!employerURL(tab?.url)||new URL(tab.url).origin!==target.origin||!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))throw new Error('The application changed or access is missing. Reconnect from its helper.');
+    entry.origin=target.origin;await chrome.storage.local.set({profile:entry.profile});await chrome.storage.session.set({[key(tab.id)]:entry});await chrome.storage.session.remove(targetKey);await attach(tab.id,tab);return {ok:true,started:true,connected:true};
+   }
+  }
+  if(message?.type==='resume-attached'){
+   const trusted=extensionPage(sender),id=trusted?Number(message.tabId):sender.tab?.id,entry=await record(id);
+   if(!entry?.resume||message.sha256!==entry.resume.sha256||(!trusted&&(sender.id!==chrome.runtime.id||sender.frameId!==0||!employerURL(sender.url)||new URL(sender.url).origin!==entry.origin)))throw new Error('Resume confirmation does not match this application.');
+   await chrome.storage.session.set({[key(id)]:{...entry,resumeUploaded:true}});return {ok:true};
+  }
+  if(message?.type==='link-current-application'&&extensionPage(sender)){
+   const tab=await chrome.tabs.get(Number(message.tabId));if(!employerURL(tab?.url)||!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))throw new Error('Allow access to this employer before connecting its resume.');
+   const token=crypto.randomUUID();await chrome.storage.session.set({['resume-target:'+token]:{tabId:tab.id,origin:new URL(tab.url).origin,expiresAt:Date.now()+30*60*1000}});
+   return {ok:true,url:'https://ducle1218.github.io/Duc-Le-Portfolio/applications/?applicationTarget='+token+'&applicationHost='+encodeURIComponent(new URL(tab.url).hostname)};
   }
   if(message?.type==='get-handoff'&&extensionPage(sender)){const id=Number(message.tabId??sender.tab?.id);const entry=await record(id);return {ok:true,entry};}
   if(['memory-list','memory-save','memory-delete'].includes(message?.type)){

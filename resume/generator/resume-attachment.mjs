@@ -15,11 +15,13 @@ export async function attachResume({url,resume}){
  if(location.href!==url)return {attached:false,message:'The page changed. Scan again before attaching.'};
  const text=e=>(e?.innerText||e?.textContent||'').trim();
  const label=e=>[...(e.labels||[])].map(text).join(' ')||e.getAttribute('aria-label')||(e.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>text(document.getElementById(id))).join(' ')||e.name||e.id||'';
- const candidates=[...document.querySelectorAll('input[type="file"]')].filter(e=>{
+ const inputs=[...document.querySelectorAll('input[type="file"]')];
+ const pageUpload=/upload (your |a )?(resume|résumé|cv)|resume upload/i.test([...document.querySelectorAll('h1,h2,h3,legend')].map(text).join(' '));
+ const candidates=inputs.filter(e=>{
   if(e.disabled||e.multiple)return false;
   const nearby=e.closest('fieldset')||e.closest('[role="group"]')||e.parentElement?.parentElement;
   const words=label(e)+' '+text(nearby).slice(0,500);
-  return /\b(resume|résumé|cv|curriculum vitae)\b/i.test(words)&&!/cover letter|transcript|passport|photo|certificate/i.test(words);
+  return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words)||(inputs.length===1&&pageUpload))&&!/cover letter|transcript|passport|photo|certificate/i.test(words);
  });
  if(candidates.length!==1)return {attached:false,message:'No single supported resume upload found. Use the PDF download to attach it manually.'};
  const input=candidates[0];if(input.files?.length)return {attached:false,message:'A file is already selected; it was left unchanged.'};

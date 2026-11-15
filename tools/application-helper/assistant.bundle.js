@@ -1,7 +1,9 @@
 (() => {
-  // tools/application-helper/common-questions.mjs?v=20261115.4
+  // tools/application-helper/common-questions.mjs?v=20261115.5
   var COMMON_QUESTIONS = [
-    { question: "Sex", options: ["Male", "Female", "I do not wish to self-identify"], aliases: ["sex", "what is your sex"], review: true },
+    { question: "Sex", options: ["Male", "Female", "I do not wish to self-identify"], aliases: ["sex", "what is your sex", "gender", "what is your gender"], review: true },
+    { question: "Race / ethnic background", aliases: ["race", "ethnicity", "race ethnicity", "race ethnic background", "what is your race ethnic background", "what is your race ethnicity", "what is your race", "what is your ethnicity", "what is your racial ethnic background"], review: true },
+    { question: "Country of citizenship", aliases: ["country of citizenship", "in which country region do you have citizenship", "in which country do you have citizenship", "which country are you a citizen of"], review: true },
     { question: "Preferred pronouns", options: ["He/Him/His", "She/Her/Hers", "They/Them/Theirs", "Prefer not to say"], aliases: ["preferred pronoun", "preferred pronouns", "pronouns", "what are your pronouns"], review: true },
     { question: "Preferred name", aliases: ["preferred name", "what is your preferred name", "what name do you prefer to go by"] },
     { question: "Are you 16 years or older?", options: ["Yes", "No"], aliases: ["are you 16 years or older", "are you at least 16 years old", "are you 16 years of age or older"], review: true },
@@ -38,7 +40,7 @@
     return null;
   }
 
-  // tools/application-helper/application-autofill.mjs?v=20261115.4
+  // tools/application-helper/application-autofill.mjs?v=20261115.5
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -67,21 +69,25 @@
     const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || []].map(labelText).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
-      for (let n = 0; n < 5 && parent && parent !== document.body; n++, parent = parent.parentElement) {
-        const groups = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
+      const members = radio(e) ? radios(e) : [];
+      for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
+        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
         if (radio(e)) {
-          if (groups.some((c) => !radio(c) || !radios(e).includes(c))) break;
-        } else if (groups.filter((c) => !radio(c)).length !== 1) break;
-        const heading = parent.querySelector("legend,label:not([for]),.control-label,.form-label,[data-question],h3,h4");
-        const value = labelText(heading);
-        if (value && !/^(yes|no)$/i.test(value)) return value;
+          if (contained.some((c) => !radio(c) || !members.includes(c))) break;
+          if (!members.length || !members.every((r) => parent.contains(r))) continue;
+        } else if (contained.filter((c) => !radio(c)).length !== 1) break;
+        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        for (const heading of candidates) {
+          const value = labelText(heading);
+          if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 250) return value;
+        }
       }
       return "";
     };
     const label = (e) => {
       if (radio(e)) {
-        const g = group(e);
-        return (g && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
+        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"]')].every((r) => radios(e).includes(r));
+        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
       }
       return (ownLabel(e) || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 250);
     };
@@ -96,7 +102,18 @@
       return (e.value || text(e)).trim();
     };
     const selectedRadio = (e) => radios(e).find((r) => r.checked || r.getAttribute("aria-checked") === "true");
-    const optionLabel = (e) => ownLabel(e) || text(e) || e.value || "";
+    const optionLabel = (e) => {
+      const associated = [...e.labels || []];
+      const root = associated[0] || e.closest("label");
+      if (root) {
+        const copy = root.cloneNode(true);
+        const described = (e.getAttribute("aria-describedby") || "").split(/\s+/);
+        for (const n of copy.querySelectorAll('input,[role="radio"],p,small,.description,.help-block,[id]')) if (n.matches('input,[role="radio"],p,small,.description,.help-block') || described.includes(n.id)) n.remove();
+        const value = text(copy).split("\n").map((s) => s.trim()).find(Boolean);
+        if (value) return value;
+      }
+      return ownLabel(e) || text(e) || e.value || "";
+    };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => radio(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
@@ -110,8 +127,8 @@
       const candidates = [];
       for (const e of elements()) {
         if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
-        const question = label(e);
-        if (!question || blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
+        const question = label(e), identity = /^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));
+        if (!question || /^(in )?(what|which) country( region)?$/.test(norm(question)) || !identity && blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
         const answer = radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
         if (!answer || answer.length > 1500 || placeholder(answer)) continue;
         candidates.push({ question, answer });
@@ -190,9 +207,10 @@
     })();
   }
 
-  // tools/application-helper/answer-memory.mjs?v=20261115.4
+  // tools/application-helper/answer-memory.mjs?v=20261115.5
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
-  var privateQuestion = (q) => /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
+  var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
+  var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
   var equivalents = [
     ["when can you start", "when are you available to start", "what is your earliest start date", "what is your earliest available start date", "earliest start date", "available start date", "availability to start", "when would you be available to start"],
     ["are you willing to relocate", "are you open to relocation", "would you be willing to relocate", "willing to relocate", "open to relocation"],
@@ -201,6 +219,7 @@
     ["what is your preferred contact method", "preferred contact method", "how do you prefer to be contacted"]
   ];
   function questionConcept(question) {
+    if (reviewedIdentityQuestion(question)) return "identity-" + commonQuestion(question).question;
     const q = normalizeQuestion(question);
     const i = equivalents.findIndex((group) => group.includes(q));
     return i < 0 ? null : "equivalent-" + i;
@@ -217,7 +236,7 @@
     const scoped = matches.filter((a) => a.scope === origin);
     if (scoped.length) matches = scoped;
     if (!matches.length || new Set(matches.map((a) => a.answer.trim())).size !== 1) return null;
-    return { value: matches[0].answer, question: matches[0].question, reason: kind };
+    return { value: matches[0].answer, question: matches[0].question, reason: kind, requiresReview: reviewedIdentityQuestion(question) };
   }
 
   // tools/application-helper/application-autofill.mjs
@@ -226,6 +245,7 @@
     if (!profile?.confirmed) return null;
     const label = normalize(field.label).replace(/\b(required|optional)\b/g, "").trim();
     const common = commonQuestion(label), background = backgroundAnswer(label, profile);
+    if (/^(in )?(what|which) country( region)?$/.test(label)) return null;
     if (!label || !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "number"].includes(field.type) || field.filled || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
@@ -234,7 +254,8 @@
     const remembered = !key ? memoryMatch(field.label, memory, origin, context) : null;
     const value = key === "fullName" ? [profile.values.firstName, profile.values.lastName].filter(Boolean).join(" ") : key ? profile.values[key] || background?.value : common?.question === "How did you hear about this position?" && remembered ? remembered.value : custom.length && new Set(custom.map((a) => a.answer.trim())).size === 1 ? custom[0].answer : background?.value || remembered?.value;
     if (!value || field.maxLength > 0 && value.length > field.maxLength) return null;
-    const review = { reason: background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !!common?.review || !!background };
+    const confirmedMale = common?.question === "Sex" && normalize(value) === "male" && custom.length > 0 && new Set(custom.map((a) => normalize(a.answer))).size === 1;
+    const review = { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
       const aliases = key === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : key === "country" && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)];
       if (field.type === "combobox") return { value, display: value, aliases, ...review };
@@ -272,21 +293,25 @@
     const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || []].map(labelText).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
-      for (let n = 0; n < 5 && parent && parent !== document.body; n++, parent = parent.parentElement) {
-        const groups = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
+      const members = radio(e) ? radios(e) : [];
+      for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
+        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
         if (radio(e)) {
-          if (groups.some((c) => !radio(c) || !radios(e).includes(c))) break;
-        } else if (groups.filter((c) => !radio(c)).length !== 1) break;
-        const heading = parent.querySelector("legend,label:not([for]),.control-label,.form-label,[data-question],h3,h4");
-        const value = labelText(heading);
-        if (value && !/^(yes|no)$/i.test(value)) return value;
+          if (contained.some((c) => !radio(c) || !members.includes(c))) break;
+          if (!members.length || !members.every((r) => parent.contains(r))) continue;
+        } else if (contained.filter((c) => !radio(c)).length !== 1) break;
+        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        for (const heading of candidates) {
+          const value = labelText(heading);
+          if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 250) return value;
+        }
       }
       return "";
     };
     const label = (e) => {
       if (radio(e)) {
-        const g = group(e);
-        return (g && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
+        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"]')].every((r) => radios(e).includes(r));
+        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
       }
       return (ownLabel(e) || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 250);
     };
@@ -301,7 +326,18 @@
       return (e.value || text(e)).trim();
     };
     const selectedRadio = (e) => radios(e).find((r) => r.checked || r.getAttribute("aria-checked") === "true");
-    const optionLabel = (e) => ownLabel(e) || text(e) || e.value || "";
+    const optionLabel = (e) => {
+      const associated = [...e.labels || []];
+      const root = associated[0] || e.closest("label");
+      if (root) {
+        const copy = root.cloneNode(true);
+        const described = (e.getAttribute("aria-describedby") || "").split(/\s+/);
+        for (const n of copy.querySelectorAll('input,[role="radio"],p,small,.description,.help-block,[id]')) if (n.matches('input,[role="radio"],p,small,.description,.help-block') || described.includes(n.id)) n.remove();
+        const value = text(copy).split("\n").map((s) => s.trim()).find(Boolean);
+        if (value) return value;
+      }
+      return ownLabel(e) || text(e) || e.value || "";
+    };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => radio(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
@@ -315,8 +351,8 @@
       const candidates = [];
       for (const e of elements()) {
         if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
-        const question = label(e);
-        if (!question || blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
+        const question = label(e), identity = /^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));
+        if (!question || /^(in )?(what|which) country( region)?$/.test(norm(question)) || !identity && blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
         const answer = radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
         if (!answer || answer.length > 1500 || placeholder(answer)) continue;
         candidates.push({ question, answer });
@@ -399,7 +435,8 @@
 
   // tools/application-helper/answer-memory.mjs
   var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
-  var privateQuestion2 = (q) => /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
+  var reviewedIdentityQuestion2 = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
+  var privateQuestion2 = (q) => !reviewedIdentityQuestion2(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
   function employerSpecific(question) {
     return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)|^if\b|please specify|how.*hear/i.test(question);
   }
@@ -410,11 +447,13 @@
     if (location.href !== url) return { attached: false, message: "The page changed. Scan again before attaching." };
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const label = (e) => [...e.labels || []].map(text).join(" ") || e.getAttribute("aria-label") || (e.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") || e.name || e.id || "";
-    const candidates = [...document.querySelectorAll('input[type="file"]')].filter((e) => {
+    const inputs = [...document.querySelectorAll('input[type="file"]')];
+    const pageUpload = /upload (your |a )?(resume|résumé|cv)|resume upload/i.test([...document.querySelectorAll("h1,h2,h3,legend")].map(text).join(" "));
+    const candidates = inputs.filter((e) => {
       if (e.disabled || e.multiple) return false;
       const nearby = e.closest("fieldset") || e.closest('[role="group"]') || e.parentElement?.parentElement;
       const words = label(e) + " " + text(nearby).slice(0, 500);
-      return /\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
+      return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) || inputs.length === 1 && pageUpload) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
     });
     if (candidates.length !== 1) return { attached: false, message: "No single supported resume upload found. Use the PDF download to attach it manually." };
     const input = candidates[0];
@@ -446,7 +485,7 @@
       return n;
     };
     container.replaceChildren();
-    const hint = el("p", "Choose answers to remember. Edit them now and choose where they may be reused. Nothing is saved until you click Save selected.");
+    const hint = el("p", "Choose answers to remember. Edit them now and choose where they may be reused. Identity answers start unchecked: select them explicitly to remember them. Nothing is saved until you click Save selected.");
     container.append(hint);
     const rows = [];
     for (const item of candidates.filter((a) => !privateQuestion2(a.question))) {
@@ -454,7 +493,7 @@
       row.className = "memory-row";
       const label = el("label"), check = el("input");
       check.type = "checkbox";
-      check.checked = true;
+      check.checked = !reviewedIdentityQuestion2(item.question);
       label.append(check, document.createTextNode(" " + item.question));
       const answer = el("textarea");
       answer.value = item.answer;
@@ -504,6 +543,8 @@
       stop();
       entry = next;
       remembering = false;
+      autoTried = /* @__PURE__ */ new WeakSet();
+      autoResumeBusy = false;
       lastSignature = "";
       if (entry.expiresAt <= Date.now() || location.origin !== entry.origin) return;
       host = el("div");
@@ -566,12 +607,36 @@
         chrome.runtime.sendMessage({ type: "stop-handoff" }).catch(() => {
         });
       };
+      async function autoResume() {
+        if (!entry?.autoResume || !entry.resume || entry.resumeUploaded || autoResumeBusy) return;
+        const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.multiple && !e.files?.length);
+        if (inputs.length !== 1 || autoTried.has(inputs[0])) return;
+        autoTried.add(inputs[0]);
+        autoResumeBusy = true;
+        const activeEntry = entry;
+        try {
+          const result = await attachResume({ url: location.href, resume: entry.resume });
+          if (entry !== activeEntry) return;
+          status.textContent = result.message + " Nothing was submitted.";
+          if (result.attached) {
+            entry.resumeUploaded = true;
+            list.querySelector('input[value="resume"]')?.closest("label").remove();
+            fill.hidden = !list.querySelector("input");
+            await chrome.runtime.sendMessage({ type: "resume-attached", sha256: entry.resume.sha256 });
+          }
+        } catch {
+          if (entry === activeEntry) status.textContent = "Automatic attachment could not finish. Use Fill selected to retry or attach the PDF manually.";
+        } finally {
+          autoResumeBusy = false;
+        }
+      }
       function scanNow(automatic = false) {
         if (!entry || Date.now() >= entry.expiresAt) {
           stop();
           return;
         }
         if (remembering || filling) return;
+        autoResume();
         const found = scanForm(), signature = JSON.stringify([found.url, found.fields]);
         if (automatic && signature === lastSignature) return;
         lastSignature = signature;
@@ -593,7 +658,7 @@
           label.append(check, text);
           list.append(label);
         }
-        if (entry.resume) {
+        if (entry.resume && !entry.resumeUploaded) {
           const label = el("label");
           label.className = "answer";
           const check = el("input");
@@ -605,7 +670,7 @@
           label.append(check, text);
           list.append(label);
         }
-        fill.hidden = !review.fields.length && !entry.resume;
+        fill.hidden = !review.fields.length && (!entry.resume || entry.resumeUploaded);
         status.textContent = review.fields.length ? `${review.fields.length} suggested answers. Review and uncheck any you don\u2019t want to fill.` : "Open the employer\u2019s application form or sign in. Supported empty fields will appear here.";
         if (found.embeddedForms) status.textContent += " Embedded forms may need opening directly and scanning with the extension button.";
       }
@@ -644,7 +709,7 @@
         clearTimeout(debounce);
         debounce = setTimeout(() => scanNow(true), 700);
       });
-      observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "disabled", "style", "aria-hidden"] });
       timer = setTimeout(() => {
         stop();
         chrome.runtime.sendMessage({ type: "stop-handoff" }).catch(() => {
@@ -652,7 +717,7 @@
       }, Math.max(0, entry.expiresAt - Date.now()));
     };
     globalThis.__ducApplicationHelper = true;
-    let entry, host, root, review, timer, observer, debounce, lastSignature = "", remembering = false, filling = false;
+    let entry, host, root, review, timer, observer, debounce, lastSignature = "", remembering = false, filling = false, autoResumeBusy = false, autoTried = /* @__PURE__ */ new WeakSet();
     const el = (tag, text) => {
       const n = document.createElement(tag);
       if (text) n.textContent = text;

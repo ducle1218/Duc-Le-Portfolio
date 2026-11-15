@@ -1,4 +1,4 @@
-# Application Helper 1.2 — Chrome and Edge
+# Application Helper 1.2.1 — Chrome and Edge
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -8,7 +8,7 @@
 
 To update from 1.0, replace the old extracted files, click **Reload** on its extension card, and refresh Application Studio. If an employer redirects to a different domain, click the extension icon and **Scan current form** there. No profile is automatically injected into a different origin. New tabs opened by an employer are not automatically linked: start that application URL from Studio, or use manual import.
 
-Connected profiles stay in extension session storage for 30 minutes, scoped to the launched tab. Closing that tab or ending the helper removes the handoff; browser restart or extension reload clears session storage. No library key is included. Suggestions are matched locally, not sent to an AI service. Filling writes only selected answers into the employer’s form. Employers may save entered fields before final submission.
+Your latest confirmed Studio profile is also saved in extension local storage, so it remains available after closing the browser or restarting the computer. The job-specific handoff stays in session storage for 30 minutes, scoped to its launched tab. Closing that tab or ending the helper removes the handoff; browser restart or extension reload clears session storage. No library key is included. Suggestions are matched locally, not sent to an AI service. Filling writes only selected answers into the employer’s form. Employers may save entered fields before final submission.
 
 Manual fallback: export your profile JSON from Studio and import it through the extension popup. Imported profiles remain in local extension storage until **Forget profile**. Re-export/import after changing your answers.
 
@@ -34,3 +34,10 @@ The updater remembers the folder; the browser may ask for write permission again
 This is an explicit drag-and-drop update flow. No Windows task, background downloader, enterprise policy, or remotely executed script is installed.
 
 The same updater is available at https://ducle1218.github.io/Duc-Le-Portfolio/applications/update/ for upgrading an older helper that does not yet have its own update screen. Select the existing loaded folder, drop the latest ZIP, replace, then use Reload on the browser extension card.
+
+
+## Which file goes where?
+
+The optional **Choose exported profile** control accepts **Duc_Application_Profile.json**, downloaded from Studio’s **Export profile (manual fallback)** button after saving your profile. `manifest.json` is extension configuration, not your profile. **Application-Helper.zip** belongs in **Update helper**. The normal connection flow needs no upload: open Studio, save your profile, and start an application.
+
+Profiles imported manually or received from Studio, plus saved answers, persist across computer restarts in this browser. The temporary connection to a particular application still expires. Keep the extension installed; uninstalling it clears its local data.

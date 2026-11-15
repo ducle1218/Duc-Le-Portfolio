@@ -1,4 +1,4 @@
-import {memoryMatch} from './answer-memory.mjs';
+import {memoryMatch} from './answer-memory.mjs?v=20261114.8';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context=''){
  if(!profile?.confirmed)return null;

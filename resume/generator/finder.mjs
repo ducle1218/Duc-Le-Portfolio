@@ -1,12 +1,14 @@
-import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.3';
-import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.3';
-import {importJob} from './job-api.mjs?v=20261114.3';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.3';
-import {makeZip} from './zip.mjs?v=20261114.3';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.3';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.3';
+import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.4';
+import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.4';
+import {importJob} from './job-api.mjs?v=20261114.4';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.4';
+import {makeZip} from './zip.mjs?v=20261114.4';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.4';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.4';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
+const insightCache=new WeakMap();
+function insights(job){let cached=insightCache.get(job);if(!cached||cached.profile!==profile){cached={profile,fit:matchResume(job,profile),pay:payDetails(job)};insightCache.set(job,cached);}return {fit:cached.fit,pay:cached.pay};}
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const date=value=>{if(/^\d{4}-\d{2}-\d{2}$/.test(value||''))return postingDate(value);const parsed=Date.parse(value);return Number.isFinite(parsed)?new Date(parsed).toLocaleString(): 'Unknown';};
 function readFilters(){return {...DEFAULTS,include:$('roles').value,locations:$('locations').value,exclude:$('exclude').value,companies:$('companies').value,terms:$('terms').value,remote:$('remote').checked,days:Number($('days').value),priorities:$('priorities').value};}
@@ -19,9 +21,9 @@ function selection(){
 function showJobs(){
  selected.clear();const filters=readFilters();try{localStorage.setItem(key,JSON.stringify(filters));}catch{}
  const isImported=$('result-scope').value==='imported',isEmployer=$('result-scope').value==='employer';
- const classified=all.filter(job=>(!isImported||imported.has(job.url))&&(!isEmployer||!sourceDetails(job).board)&&sourceDetails(job).allowed).map(job=>({job,...filterJob(job,filters),fresh:freshness(job),fit:matchResume(job,profile),company:companyDetails(job,registry,filters.priorities),pay:payDetails(job)})).filter(entry=>$('show-closed').checked||!entry.fresh.closed);
+ const classified=all.filter(job=>(!isImported||imported.has(job.url))&&(!isEmployer||!sourceDetails(job).board)&&sourceDetails(job).allowed).map(job=>({job,...filterJob(job,filters),fresh:freshness(job)})).filter(entry=>$('show-closed').checked||!entry.fresh.closed);
  const ready=classified.filter(j=>j.status==='ready'),review=classified.filter(j=>j.status==='review');
- visible=sortJobs([...ready,...($('show-review').checked?review:[])],$('sort-jobs').value);
+ visible=sortJobs([...ready,...($('show-review').checked?review:[])].map(entry=>({...entry,...insights(entry.job),company:companyDetails(entry.job,registry,filters.priorities)})),$('sort-jobs').value);
  $('match-count').textContent=ready.length+(isImported?' saved / imported jobs':isEmployer?' employer-site matches':' matches')+(review.length?' · '+review.length+' need a check':'');
  $('sort-note').textContent=$('sort-jobs').value==='newest-priority'?'Newest posting week first, then your priority companies and published company rank.':$('sort-jobs').value==='company'?'Priority employers first, then published Fortune 500 rank. Unknown rank is not low prestige.':$('sort-jobs').value==='newest'?'Newest publication dates first; closed postings stay last.':$('sort-jobs').value==='match'?'Freshness first, then documented skill overlap.':'Freshness first, then your favorites and verified Fortune 500 rank.';
  $('jobs').replaceChildren();

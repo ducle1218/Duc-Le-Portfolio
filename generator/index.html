@@ -3,16 +3,27 @@
 <head><base href="../resume/generator/">
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-  <title>Resume Studio — Duc Le</title>
+  <title>Application Studio — Duc Le</title>
   <script>try{document.documentElement.classList.toggle('dark',localStorage.getItem('portfolio-theme-v2')!=='light')}catch(e){}</script>
-  <link rel="stylesheet" href="../../src/styles/fonts.css"><link rel="stylesheet" href="studio.css?v=20261114.5">
-  <script type="module" src="studio.mjs?v=20261114.5"></script>
-  <script type="module" src="finder.mjs?v=20261114.5"></script>
+  <link rel="stylesheet" href="../../src/styles/fonts.css"><link rel="stylesheet" href="studio.css?v=20261114.6">
+  <script type="module" src="studio.mjs?v=20261114.6"></script>
+  <script type="module" src="applications.mjs?v=20261114.6"></script>
+  <script type="module" src="finder.mjs?v=20261114.6"></script>
 </head>
 <body>
   <header><a class="brand" href="../../">Duc Le<small>Mechanical engineering</small></a><div class="nav-actions"><a href="../../">← Portfolio</a><button id="theme" type="button">Light mode ☀</button></div></header>
   <main>
-    <div class="intro"><p class="eyebrow">APPLICATION WORKSPACE / 01</p><h1>Your next move.<br><span>Grounded in your experience.</span></h1><p>Find a role. See where you fit. Prepare a resume in your original template.</p></div>
+    <div class="intro"><p class="eyebrow">APPLICATION STUDIO / 01</p><h1>Your next move.<br><span>Grounded in your experience.</span></h1><p>Find a role. Prepare your answers. Apply with a little less repetition.</p></div>
+    <section class="panel application-home" aria-labelledby="application-home-heading">
+      <div class="application-home-heading"><div><p class="eyebrow">YOUR APPLICATION KIT</p><h2 id="application-home-heading">Ready before you click Apply.</h2><p class="hint">Confirmed answers, your original resume, and a private place to keep track.</p></div><button id="edit-profile" class="quiet" type="button">Review my profile ↗</button></div>
+      <details id="application-profile"><summary>Reusable profile <span class="hint">Private · saved online after owner unlock</span></summary>
+        <p id="profile-origin" class="hint"></p><form id="profile-form"><div id="app-profile-fields" class="app-profile-grid"></div><h3>Your reusable answers</h3><p class="hint">Add recurring questions in your own words, such as availability. Leave anything unknown blank. Do not store passwords or government ID numbers here.</p><div id="reusable-answers"></div><button id="add-answer" class="quiet" type="button">＋ Add a question & answer</button><label class="profile-confirm"><input id="profile-confirm" type="checkbox" required> I reviewed these details and answers and approve saving them to my private application kit.</label><button id="save-profile" class="primary" type="submit">Confirm & save profile <span>↗</span></button></form>
+        <p class="hint">Work authorization, sponsorship, GPA, availability and personal declarations are answered on the employer’s form. Nothing is inferred from your location or education.</p>
+      </details>
+      <details><summary>My applications <span id="application-count" class="hint">Owner access required</span></summary><div id="application-history"></div><button id="refresh-applications" class="quiet" type="button">Load saved applications</button></details>
+      <p id="application-status" class="hint" role="status">Public jobs load automatically. Unlock owner access in Online library below to use your private application workspace.</p>
+    </section>
+    <details class="panel extension-setup"><summary>Desktop autofill helper <span class="hint">Chrome / Edge · optional</span></summary><p>Use your confirmed profile on the employer’s actual application form. Review suggestions, then fill selected answers. Submission stays with you.</p><div class="extension-actions"><a class="quiet" href="downloads/Application-Helper.zip" download>Download extension ZIP ↓</a><button id="export-profile" class="quiet" type="button" disabled>Export for extension ↓</button></div><ol><li>Extract the ZIP. Open <code>chrome://extensions</code> or <code>edge://extensions</code>, enable Developer mode, choose <strong>Load unpacked</strong>, and select the extracted folder containing <code>manifest.json</code>.</li><li>Unlock your online library, review and save your profile, then export it using the button above.</li><li>Click the extension, import that profile JSON, and open the employer’s application form. Choose <strong>Scan current form</strong>, review the answers, then <strong>Fill selected answers</strong>.</li></ol><p class="hint">The extension keeps your imported profile on that device. Re-export after changing your answers. It handles standard fields; embedded forms, custom controls, uploads and sensitive questions may need manual entry. On your phone, use Application Studio’s copy buttons.</p></details>
     <section class="panel finder" aria-labelledby="finder-heading">
       <div class="finder-heading"><div><p class="eyebrow">01 / OPPORTUNITIES</p><h2 id="finder-heading">Find your fit.</h2></div><span class="tag">Free · No extension</span></div>
       <form id="filters">

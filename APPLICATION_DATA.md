@@ -1,8 +1,8 @@
 # Portfolio data for application tools
 
-## Resume Studio
+## Application Studio
 
-[Open Resume Studio](https://ducle1218.github.io/Duc-Le-Portfolio/generator/) to paste a job description or add screenshots, review tailored wording, and download a PDF in the original resume format. It follows the portfolio's dark/light theme.
+[Open Application Studio](https://ducle1218.github.io/Duc-Le-Portfolio/applications/) to paste a job description or add screenshots, review tailored wording, and download a PDF in the original resume format. It follows the portfolio's dark/light theme.
 
 The page is unlisted from the main navigation and marked noindex. Anyone with the link can open it. Job text and screenshots are processed in the browser and are not saved on the website. Screenshot recognition loads Tesseract.js and language files on demand. This tool selects reviewed, evidence-backed wording. It does not invent qualifications.
 
@@ -60,3 +60,5 @@ Generate tailored copies from an editable template; do not overwrite the public 
 ## Publishing
 
 Deployment stages `_site/` with `node scripts/prepare-pages.mjs`. It publishes only the current index, public data and filtered assets, excluding old resume exports, the outdated alternate PDF, obsolete project templates, archives and build scripts. Historical Git commits remain history. Check the result with `node scripts/check-pages-package.mjs` after vendoring PDF.js.
+
+Application Studio also keeps owner-confirmed profile answers and application status in the private cloud library. Copy buttons help reuse confirmed answers. Applications open on the original employer platform, where the owner completes and submits the form. Hosted browsing is not enabled. An optional Chrome/Edge helper fills reviewed common fields on the actual employer page using a locally imported confirmed profile; it never submits. The old `/generator/` link remains compatible.

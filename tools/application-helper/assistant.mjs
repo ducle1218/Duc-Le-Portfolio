@@ -1,0 +1,32 @@
+import {suggestField,scanForm,fillForm} from './application-autofill.mjs';
+// Runs in Chrome's isolated world, only in a tab started by Application Studio.
+if(!globalThis.__ducApplicationHelper){
+ globalThis.__ducApplicationHelper=true;
+ let entry,host,root,review,timer,observer,debounce,lastSignature='';
+ const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+ const stop=()=>{clearTimeout(timer);clearTimeout(debounce);observer?.disconnect();host?.remove();entry=null;review=null;};
+ function mount(next){
+  stop();entry=next;if(entry.expiresAt<=Date.now()||location.origin!==entry.origin)return;
+  host=el('div');host.style.cssText='position:fixed;bottom:20px;right:20px;z-index:2147483647;';root=host.attachShadow({mode:'closed'});
+  const style=el('style');style.textContent=`:host{all:initial}*{box-sizing:border-box}.panel{width:350px;max-width:calc(100vw - 32px);color:#f1f0ed;background:#151719;border:1px solid #62686c;border-radius:16px;box-shadow:0 12px 50px #0006;font:14px/1.5 system-ui;padding:18px}header{display:flex;align-items:center;gap:8px}header strong{flex:1}button{font:inherit;cursor:pointer;border:1px solid #555d62;background:#252a2e;color:inherit;border-radius:7px;padding:8px 12px}button:hover{background:#363e44}button:focus-visible{outline:2px solid #a9d5ed}button:disabled{opacity:.5;cursor:default}small{display:block;color:#b8bfc4}p{margin:10px 0}h3{font-size:15px;margin:12px 0 0}.answers{max-height:240px;overflow:auto;margin:12px 0}.answer{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #383e42}.answer span{overflow-wrap:anywhere}input{accent-color:#c4dbea}footer{display:flex;gap:8px}.fill{background:#edf1f3;color:#151719} [hidden]{display:none!important}`;
+  const panel=el('section');panel.className='panel';panel.setAttribute('aria-label','Application Helper');
+  const header=el('header'),title=el('strong','Application Helper'),minimize=el('button','−'),close=el('button','×');minimize.setAttribute('aria-label','Collapse application helper');close.setAttribute('aria-label','End application helper');header.append(title,minimize,close);
+  const content=el('div'),job=el('h3',entry.job.title),company=el('small',entry.job.company),status=el('p');status.setAttribute('role','status');const list=el('div');list.className='answers';const footer=el('footer'),scan=el('button','Scan form'),fill=el('button','Fill selected');fill.className='fill';fill.hidden=true;footer.append(scan,fill);
+  content.append(job,company,status,list,footer,el('small','Review every answer. Upload your PDF and submit on the employer’s form.'));panel.append(header,content);root.append(style,panel);document.documentElement.append(host);
+  minimize.onclick=()=>{content.hidden=!content.hidden;minimize.textContent=content.hidden?'+':'−';minimize.setAttribute('aria-label',content.hidden?'Expand application helper':'Collapse application helper');};
+  close.onclick=()=>{stop();chrome.runtime.sendMessage({type:'stop-handoff'}).catch(()=>{});};
+  function scanNow(automatic=false){
+   if(!entry||Date.now()>=entry.expiresAt){stop();return;}
+   const found=scanForm(),signature=JSON.stringify([found.url,found.fields]);if(automatic&&signature===lastSignature)return;lastSignature=signature;
+   review={url:found.url,createdAt:Date.now(),fields:found.fields.flatMap(f=>{const answer=suggestField(f,entry.profile);return answer?[{...f,...answer}]:[];})};
+   list.replaceChildren();for(const [i,f] of review.fields.entries()){const label=el('label');label.className='answer';const check=el('input');check.type='checkbox';check.checked=true;check.value=String(i);const text=el('span',f.label);text.append(el('small',f.display));label.append(check,text);list.append(label);}
+   fill.hidden=!review.fields.length;
+   status.textContent=review.fields.length?`${review.fields.length} suggested answers. Review and uncheck any you don’t want to fill.`:'Open the employer’s application form or sign in. Supported empty fields will appear here.';
+   if(found.embeddedForms)status.textContent+=' Embedded forms may need opening directly and scanning with the extension button.';
+  }
+  scan.onclick=()=>scanNow();fill.onclick=()=>{if(!review||Date.now()-review.createdAt>120000){scanNow();status.textContent='Suggestions refreshed. Review them again before filling.';return;}const fields=[...list.querySelectorAll('input:checked')].map(c=>review.fields[Number(c.value)]);if(!fields.length){status.textContent='Select an answer to fill.';return;}const result=fillForm({url:review.url,fields});list.replaceChildren();fill.hidden=true;review=null;status.textContent=result.changed?'The page changed. Scan the form again.':`${result.filled} answers filled; ${result.skipped} changed fields skipped. Check the form before continuing. Nothing was submitted.`;lastSignature=JSON.stringify([location.href,scanForm().fields]);};
+  scanNow();observer=new MutationObserver(()=>{clearTimeout(debounce);debounce=setTimeout(()=>scanNow(true),700);});observer.observe(document.body||document.documentElement,{childList:true,subtree:true});
+  timer=setTimeout(()=>{stop();chrome.runtime.sendMessage({type:'stop-handoff'}).catch(()=>{});},Math.max(0,entry.expiresAt-Date.now()));
+ }
+ chrome.runtime.onMessage.addListener((message,sender)=>{if(sender.id===chrome.runtime.id&&message?.type==='application-handoff')mount(message.entry);});
+}

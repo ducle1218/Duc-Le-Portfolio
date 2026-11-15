@@ -1,9 +1,13 @@
-import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261114.6';
-import {cloudRequest,connected} from './cloud.mjs?v=20261114.6';
-import {buildResume} from './studio.mjs?v=20261114.6';
-import {filename,canonical} from './job-core.mjs?v=20261114.6';
+import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261114.7';
+import {cloudRequest,connected} from './cloud.mjs?v=20261114.7';
+import {buildResume} from './studio.mjs?v=20261114.7';
+import {filename,canonical} from './job-core.mjs?v=20261114.7';
+import {helperRequest} from './extension-client.mjs?v=20261114.7';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;
+let helperReady=false;
+async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';}catch{helperReady=false;}const status=$('helper-connection');if(status)status.textContent=helperReady?'Extension connected · ready to start applications':'Install or reload Application Helper 1.1, then refresh this page to connect.';return helperReady;}
+if(typeof window!=='undefined'){detectHelper();window.addEventListener('focus',detectHelper);}
 const message=text=>{$('application-status').textContent=text;};
 function needOwner(){if(connected())return true;message('Unlock owner access in Online library to save your profile and applications.');const library=$('cloud-library');library.open=true;library.scrollIntoView({behavior:'smooth',block:'center'});$('cloud-key').focus();return false;}
 function addAnswer(question='',answer=''){
@@ -43,7 +47,17 @@ async function openApplication(job){
  const notesLabel=node('label','Private notes'),notes=node('textarea');notes.rows=3;notes.maxLength=3000;notes.value=app.notes||'';notesLabel.append(notes);stage.onchange=notes.oninput=()=>{dirty=true;};
  const save=node('button','Save draft online','quiet');save.onclick=async()=>{if(!connected()){status.textContent='Close this kit and unlock owner access in Online library to save your draft.';return;}save.disabled=true;try{const result=await cloudRequest('/applications','PUT',{...app,status:stage.value,notes:notes.value});applications=[result.application,...applications.filter(a=>a.url!==result.application.url)];dirty=false;discard.hidden=true;renderHistory();status.textContent=stage.value==='Submitted'?'Marked submitted based on your confirmation. Application Studio has not submitted anything.':'Draft saved online. It will be here after clearing browser data.';}catch(error){status.textContent=error.message;}finally{save.disabled=false;}};
  const original=node('a','Open employer application ↗','primary');original.href=job.url;original.target='_blank';original.rel='noopener noreferrer';
- kit.append(stageLabel,notesLabel,save,node('p','Only mark Submitted after the employer confirms receipt. Your notes and status remain private.','hint'),original,node('p','Opens the original platform. You review answers, attach your PDF and submit there.','hint'));
+ const helperHint=node('p',profile?'Checking for Application Helper…':'Save and confirm your profile to use the connected extension. You can still open the employer’s page.','hint');
+ const updateHelper=()=>{if(!profile)return;original.textContent=helperReady?'Start application with helper ↗':'Open employer application ↗';helperHint.textContent=helperReady?'Your confirmed profile follows this job. Review suggested answers on the employer’s form.':'Extension not connected. Install or reload Application Helper 1.1 and refresh this page, or open the employer normally.';};updateHelper();if(typeof window!=='undefined')detectHelper().then(updateHelper);
+ let starting=false;
+ original.onclick=async e=>{
+  if(!helperReady||!profile)return;e.preventDefault();if(starting)return;starting=true;original.setAttribute('aria-disabled','true');
+  try{status.textContent='Opening the employer with your confirmed profile…';await helperRequest('start',{job:{url:job.url,title:job.title,company:job.company},profile},15000);status.textContent='Application opened. Allow access to this employer if prompted, then review the helper’s suggestions. Attach your PDF and submit on the employer’s form.';
+   if(connected()){const nextStage=stage.value==='Preparing'?'In progress':stage.value;try{const result=await cloudRequest('/applications','PUT',{...app,status:nextStage,notes:notes.value});applications=[result.application,...applications.filter(a=>a.url!==result.application.url)];stage.value=nextStage;dirty=false;discard.hidden=true;renderHistory();}catch(error){status.textContent+=' Your draft could not be saved: '+error.message;}}
+  }catch(error){status.textContent=error.message+' You can use the original link below.';fallback.hidden=false;}finally{starting=false;original.removeAttribute('aria-disabled');}
+ };
+ const fallback=node('a','Open without helper ↗','quiet');fallback.href=job.url;fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.hidden=true;
+ kit.append(stageLabel,notesLabel,save,node('p','Only mark Submitted after the employer confirms receipt. Your notes and status remain private.','hint'),original,fallback,helperHint);
  answersPanel.append(node('h3','Answers, ready to use'),node('p','Copy a confirmed answer into the matching employer question. Check the question’s wording before using it.','hint'));
  const grid=node('div',undefined,'answer-grid');
  const copyAnswer=(label,value,wide=false)=>{const row=node('div',undefined,'answer-card'+(wide?' answer-wide':'')),text=node('div');text.append(node('small',label),node('p',value));const copy=node('button','Copy','quiet');copy.type='button';copy.setAttribute('aria-label','Copy '+label);copy.onclick=async()=>{try{await navigator.clipboard.writeText(value);status.textContent=label+' copied. Paste it into the matching employer field.';}catch{status.textContent='Select the answer text to copy it.';}};row.append(text,copy);grid.append(row);};

@@ -26,7 +26,7 @@ if(!globalThis.__ducApplicationHelper){
   async function autoResume(){
    if(!entry?.autoResume||!entry.resume||entry.resumeUploaded||autoResumeBusy)return;
    const inputs=[...document.querySelectorAll('input[type="file"]')].filter(e=>!e.disabled&&!e.multiple&&!e.files?.length);
-   if(inputs.length!==1||autoTried.has(inputs[0]))return;autoTried.add(inputs[0]);autoResumeBusy=true;const activeEntry=entry;
+   if(!inputs.length||inputs.every(input=>autoTried.has(input)))return;for(const input of inputs)autoTried.add(input);autoResumeBusy=true;const activeEntry=entry;
    try{const result=await attachResume({url:location.href,resume:entry.resume});if(entry!==activeEntry)return;status.textContent=result.message+' Nothing was submitted.';if(result.attached){entry.resumeUploaded=true;list.querySelector('input[value="resume"]')?.closest('label').remove();fill.hidden=!list.querySelector('input');await chrome.runtime.sendMessage({type:'resume-attached',sha256:entry.resume.sha256});}}
    catch{if(entry===activeEntry)status.textContent='Automatic attachment could not finish. Use Fill selected to retry or attach the PDF manually.';}finally{autoResumeBusy=false;}
   }

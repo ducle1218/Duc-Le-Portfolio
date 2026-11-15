@@ -43,16 +43,16 @@ let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastNam
 globalThis.fetch=async(input,options={})=>{const path=String(input);if(path==='./cloud-config.json')return Response.json({endpoint:'https://test.workers.dev'});if(path.endsWith('/application-profile')){if(options.method==='PUT')savedProfile=cleanProfile(JSON.parse(options.body));return Response.json({profile:savedProfile});}if(path.endsWith('/applications'))return Response.json({applications:[]});if(path.endsWith('/jobs'))return Response.json({jobs:[],searchEnabled:false});if(path.endsWith('/automation'))return Response.json({enabled:true});throw new Error('Unexpected test request');};
 const browserStore=new Map();globalThis.localStorage={getItem:key=>browserStore.get(key)||null,setItem:(key,value)=>browserStore.set(key,value)};
 await import('../resume/generator/applications.mjs');
-assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11,'Known cards appear on a fresh visit without clicking Add');
+assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Known cards appear on a fresh visit without clicking Add');
 // A profile file can be reviewed and downloaded without cloud credentials.
 const byId=id=>ui.document.getElementById(id),downloads=[];
 for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
 const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test-profile';};
-byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11);byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11,'Background defaults do not duplicate cards');
+byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18);byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Background defaults do not duplicate cards');
 assert.equal(byId('profile-confirm'),null,'The extra confirmation checkbox is removed');
 byId('app-firstName').value='';byId('download-profile').onclick();assert.equal(downloads.length,0,'Invalid profiles still cannot export');
 byId('app-firstName').value='Reviewed';byId('download-profile').onclick();assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.confirmed,true);assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
-const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261115.12');await setupCloud(()=>{});
+const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261115.13');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Reviewed');assert.equal(ui.document.getElementById('export-profile').disabled,false);
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';
@@ -83,17 +83,17 @@ console.log('PASS: persisted drafts and imports restored; duplicate imports pres
 browserStore.set('duc-application-draft-v1',JSON.stringify({values:{firstName:'My edited name',lastName:'Applicant'},answers:[{question:'Sex',answer:'Male'}]}));
 const legacy=dom.parseHTML(html);globalThis.document=legacy.document;
 await import('../resume/generator/applications.mjs?legacy-prefill');
-assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,11);
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,18);
 assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
 assert.equal(legacy.document.getElementById('profile-confirm'),null);
 savedProfile=cleanProfile({confirmed:true,values:{firstName:'Online',lastName:'Applicant'},answers:[{question:'Are you 18 years or older?',answer:'Yes'},{question:'Sex',answer:'Different saved value'}]});
 await legacy.document.getElementById('load-online-answers').onclick();
-assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,12);
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,19);
 assert.equal(legacy.document.querySelector('.answer-value').value,'Male','Existing answer wins over conflicting online value');
 assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
-assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,12);
+assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,19);
 // Once migrated, intentionally removed defaults stay removed after reload.
-browserStore.set('duc-application-draft-v1',JSON.stringify({starterAnswersVersion:1,values:{firstName:'Edited',lastName:'Applicant'},answers:[]}));
+browserStore.set('duc-application-draft-v1',JSON.stringify({starterAnswersVersion:1,educationAnswersVersion:1,values:{firstName:'Edited',lastName:'Applicant'},answers:[]}));
 const removed=dom.parseHTML(html);globalThis.document=removed.document;await import('../resume/generator/applications.mjs?removed-prefill');
 assert.equal(removed.document.querySelectorAll('.reusable-answer').length,0);
 console.log('PASS: automatic fresh-visit cards, old single-card draft migration, private online answer merge, preserved edits and intentional removals.');

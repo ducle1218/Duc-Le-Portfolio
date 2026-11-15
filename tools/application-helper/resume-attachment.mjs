@@ -16,11 +16,11 @@ export async function attachResume({url,resume}){
  const text=e=>(e?.innerText||e?.textContent||'').trim();
  const label=e=>[...(e.labels||[])].map(text).join(' ')||e.getAttribute('aria-label')||(e.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>text(document.getElementById(id))).join(' ')||e.name||e.id||'';
  const inputs=[...document.querySelectorAll('input[type="file"]')];
- const pageUpload=/upload (your |a )?(resume|résumé|cv)|resume upload/i.test([...document.querySelectorAll('h1,h2,h3,legend')].map(text).join(' '));
+ const pageUpload=/upload (your |a |either )?(resume|résumé|cv)|resume upload|resume label|uploading your resume/i.test(text(document.body));
+ const context=e=>{let node=e.parentElement,best=label(e);for(let n=0;n<6&&node&&node!==document.body;n++,node=node.parentElement){if(node.querySelectorAll('input[type="file"]').length>1)break;const words=text(node);if(words.length>3000)break;best+=' '+words;if(/\b(resume|résumé|cv|curriculum vitae)\b/i.test(best))break;}return best;};
  const candidates=inputs.filter(e=>{
   if(e.disabled||e.multiple)return false;
-  const nearby=e.closest('fieldset')||e.closest('[role="group"]')||e.parentElement?.parentElement;
-  const words=label(e)+' '+text(nearby).slice(0,500);
+  const words=context(e);
   return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words)||(inputs.length===1&&pageUpload))&&!/cover letter|transcript|passport|photo|certificate/i.test(words);
  });
  if(candidates.length!==1)return {attached:false,message:'No single supported resume upload found. Use the PDF download to attach it manually.'};
@@ -29,6 +29,9 @@ export async function attachResume({url,resume}){
  if(!resume||typeof resume.base64!=='string'||resume.base64.length>2_000_000)return {attached:false,message:'Start this job from Studio with its tailored PDF first.'};
  const bytes=Uint8Array.from(atob(resume.base64),c=>c.charCodeAt(0));const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');
  if(digest!==resume.sha256||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-')return {attached:false,message:'Resume verification failed. Prepare it again in Studio.'};
+ const sizeText=context(input)+(inputs.length===1?' '+text(document.body):'');
+ const limits=[...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map(m=>Number(m[1]||m[3])*((m[2]||m[4]).toUpperCase()==='MB'?1_000_000:1000));
+ if(limits.length&&bytes.length>Math.min(...limits))return {attached:false,message:'The tailored PDF exceeds this uploader’s file-size limit. Use a smaller PDF.'};
  if(location.href!==url||!input.isConnected||input.files?.length||input.disabled)return {attached:false,message:'The upload changed; no file was replaced.'};
- try{const transfer=new DataTransfer();transfer.items.add(new File([bytes],resume.name,{type:'application/pdf'}));input.files=transfer.files;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));return {attached:true,message:resume.name+' attached. Check the employer’s upload status before continuing.'};}catch{return {attached:false,message:'This uploader needs a manual file selection. Download the tailored PDF from Studio.'};}
+ try{const transfer=new DataTransfer();transfer.items.add(new File([bytes],resume.name,{type:'application/pdf'}));input.files=transfer.files;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));if(!input.files?.length)return {attached:false,message:'The employer cleared the file. Check upload errors or attach the PDF manually.'};return {attached:true,message:resume.name+' attached. Check the employer’s upload status before continuing.'};}catch{return {attached:false,message:'This uploader needs a manual file selection. Download the tailored PDF from Studio.'};}
 }

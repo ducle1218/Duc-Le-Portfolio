@@ -27,8 +27,16 @@
     container.append(details);
   }
 
-  // tools/application-helper/common-questions.mjs?v=20261115.12
+  // tools/application-helper/common-questions.mjs?v=20261115.13
   var COMMON_QUESTIONS = [
+    { question: "Street address", aliases: ["address", "address line", "address line 1", "street address", "street address line 1", "address 1"] },
+    { question: "Degree being pursued", aliases: ["degree being pursued", "current degree program", "what degree are you pursuing"], defaultAnswer: "Bachelor of Science in Mechanical Engineering" },
+    { question: "Current academic standing", aliases: ["current academic standing", "academic standing", "class standing", "current year of study", "please indicate your current academic standing select one"], defaultAnswer: "Freshman" },
+    { question: "Preferred work regions", aliases: ["preferred work regions", "in which of the following u s geographic locations are you willing to work"], defaultAnswer: "Northeast; Mid-Atlantic; Southeast" },
+    { question: "College GPA", aliases: ["college gpa", "university gpa", "current college gpa"], defaultAnswer: "Not available yet" },
+    { question: "College GPA scale", aliases: ["college gpa scale", "university gpa scale"], defaultAnswer: "4.0" },
+    { question: "High school GPA", aliases: ["high school gpa"], defaultAnswer: "4.2" },
+    { question: "Full-time student enrollment", aliases: ["full time student enrollment", "will you be enrolled full time in college university at the time of the internship or co op assignment"], options: ["Yes", "No"], defaultAnswer: "Yes", review: true },
     { question: "Summer internship start date", aliases: ["summer internship start date"], defaultAnswer: "2027-05-13" },
     { question: "Summer internship end date", aliases: ["summer internship end date"], defaultAnswer: "2027-08-31" },
     { question: "Full-time internship availability", aliases: ["full time internship availability"], defaultAnswer: "Summer only; not fall or winter" },
@@ -56,7 +64,12 @@
     { question: "Residence history", aliases: ["residence history", "describe your residence history", "where have you lived"], defaultAnswer: "I lived in Vietnam before moving to the United States in 2014. I have lived in New Jersey since then." }
   ];
   var questionKey = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
-  var commonQuestion = (q) => COMMON_QUESTIONS.find((item) => item.aliases.includes(questionKey(q)));
+  var commonQuestion = (q) => {
+    const key2 = questionKey(q);
+    if (/^do you have the legal right to work in the u s(?: note .*)?$/.test(key2)) return COMMON_QUESTIONS.find((item) => item.question === "Are you legally authorized to work in the United States?");
+    if (/^will you now or in the future require sponsorship of a temporary work visa(?: e g .*)?$/.test(key2)) return COMMON_QUESTIONS.find((item) => item.question === "Will you now or in the future require sponsorship for employment visa status?");
+    return COMMON_QUESTIONS.find((item) => item.aliases.includes(key2));
+  };
   function backgroundAnswer(question, profile, memory = []) {
     const q = questionKey(question), answers = [...profile.answers || [], ...memory];
     const fact = (canonical) => {
@@ -75,7 +88,7 @@
     if (residence === COMMON_QUESTIONS.find((a) => a.question === "Residence history").defaultAnswer && /^have you (ever )?lived in (the )?(united states|us|usa)$/.test(q)) return { value: "Yes", sourceQuestion: "Residence history: New Jersey since 2014 \u2192 United States" };
     if (residence === COMMON_QUESTIONS.find((a) => a.question === "Residence history").defaultAnswer && /^(current |home )?country( of residence)?$/.test(q)) return { value: "United States", sourceQuestion: "Residence history" };
     const noWork = questionKey(fact("Employment experience")) === "none", noResearch = questionKey(fact("Research positions")) === "none";
-    if (noWork && /^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed)$/.test(q)) return { value: "No", sourceQuestion: "Employment experience" };
+    if (noWork && /^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed( by [a-z0-9 ]+)?|do you have previous [a-z0-9 ]+ intern co op experience)$/.test(q)) return { value: "No", sourceQuestion: "Employment experience" };
     if (noWork && /^(years of (work|employment|professional work|professional) experience|how many years of (work|employment|professional work|professional) experience do you have)$/.test(q)) return { value: "0", sourceQuestion: "Employment experience" };
     if (noWork && /^(current employer|most recent employer|previous employer|current job title|most recent job title)$/.test(q)) return { value: "None", sourceQuestion: "Employment experience" };
     if (noResearch && /^(do you have (any )?research experience|have you (ever )?held (a |any )research positions?|do you (currently )?hold a research position)$/.test(q)) return { value: "No", sourceQuestion: "Research positions" };
@@ -94,7 +107,7 @@
     return seasons[0];
   }
 
-  // tools/application-helper/answer-rules.mjs?v=20261115.12
+  // tools/application-helper/answer-rules.mjs?v=20261115.13
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -120,11 +133,56 @@
   }
   function answerRule(field, profile, memory = [], origin = "", context = "", now = /* @__PURE__ */ new Date()) {
     const entries = [...profile.answers || [], ...memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context)];
-    const unique = (q) => {
-      const values = entries.filter((a) => questionKey(a.question) === questionKey(q)).map((a) => a.answer.trim());
+    const unique = (q2) => {
+      const values = entries.filter((a) => questionKey(a.question) === questionKey(q2)).map((a) => a.answer.trim());
       return new Set(values).size === 1 ? values[0] : null;
     };
     const result = (value, reason, aliases3) => ({ value, display: value, reason, sourceQuestion: "Saved preferences", requiresReview: false, ...aliases3 ? { aliases: aliases3 } : {} });
+    const q = questionKey(field.label), fact = (name) => {
+      const values = entries.filter((a) => commonQuestion(a.question)?.question === name).map((a) => a.answer.trim());
+      return new Set(values).size === 1 ? values[0] : null;
+    };
+    const address = fact("Street address"), city = profile.values?.city || "", state = profile.values?.state || "";
+    let street = address, zip = "";
+    if (address && city && state) {
+      const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const stateNames = questionKey(state) === "new jersey" ? "(?:NJ|New Jersey)" : escape(state);
+      const suffix = new RegExp("[,\\s]+" + escape(city) + "[,\\s]+" + stateNames + "[,\\s]+(\\d{5}(?:-\\d{4})?)$", "i");
+      const match = address.match(suffix);
+      if (match) {
+        street = address.slice(0, match.index).replace(/[,\s]+$/, "");
+        zip = match[1];
+      }
+    }
+    if (commonQuestion(field.label)?.question === "Street address" && address) {
+      if (/\b\d{5}(?:-\d{4})?$/.test(address) && !zip) return { blocked: true };
+      return result(street, "Street from your saved address");
+    }
+    if (/^(zip|postal|zip postal)( code)?$/.test(q) && zip) return result(zip, "ZIP from your saved address");
+    const pursued = fact("Degree being pursued"), school = questionKey(field.educationSchool), college = school && school === questionKey(profile.values?.school), highSchool = school && school === questionKey(fact("High school name"));
+    if (q === "degree" || q === "degree type" || commonQuestion(field.label)?.question === "Degree being pursued") {
+      if (highSchool) return result(fact("Highest completed degree"), "Completed high-school education", ["high school diploma ged", "high school diploma", "full high school education"]);
+      if (pursued && (college || commonQuestion(field.label)?.question === "Degree being pursued")) return result(pursued, "Degree in progress, not a completed degree", ["bachelors", "bachelor", "bachelor s", "bachelor degree", "bachelor s degree", "bachelor of science", "b s", "bs"]);
+      return { blocked: true };
+    }
+    if (/gpa|grade point average|overall result/.test(q)) {
+      if (/^(what is your )?(college |university )?gpa scale$/.test(q) && (college || /college|university/.test(q))) return result(fact("College GPA scale"), "University GPA scale");
+      if (highSchool && fact("High school GPA") && !/4 0 scale/.test(q)) return result(fact("High school GPA"), "High-school GPA only");
+      const gpa = fact("College GPA");
+      if (college && /^\d(?:\.\d+)?$/.test(gpa || "") && Number(gpa) <= 4) return result(gpa, "Confirmed college GPA");
+      if (gpa === "Not available yet" && (college || /college|university|cumulative/.test(q)) && ["select-one", "combobox"].includes(field.type)) return { ...result(gpa, "No college GPA yet; high-school GPA is separate", ["not available yet", "not available", "n a", "no gpa yet", "not applicable"]), requiresReview: true };
+      return { blocked: true };
+    }
+    if (commonQuestion(field.label)?.question === "Current academic standing" && fact("Current academic standing") === "Freshman") return result("Freshman", "Current standing; freshman year is not yet completed", ["freshman", "first year", "first year undergraduate", "freshman first year", "other please specify", "other"]);
+    if (/^(academic standing details|please specify|other please specify)$/.test(q) && commonQuestion(field.parentQuestion)?.question === "Current academic standing" && /other/.test(questionKey(field.parentAnswer)) && fact("Current academic standing")) return result(fact("Current academic standing"), "Current academic standing");
+    if (commonQuestion(field.label)?.question === "Preferred work regions" && fact("Preferred work regions")) return result(fact("Preferred work regions"), "Your preferred work regions");
+    if (/^are you available for a summer intern co op may aug$/.test(q) && unique("Full-time internship availability") === "Summer only; not fall or winter") return { ...result("Yes", "Available during summer break; check exact start/end dates"), requiresReview: true };
+    if (/^source details?$|^if .+ please specify$/.test(q) && unique("Preferred application source") === "Company website or university") {
+      const parent = questionKey(field.parentAnswer);
+      if (/university|college/.test(parent) && profile.values?.school) return result(profile.values.school, "Your university for the selected university source", [questionKey(profile.values.school), "rutgers university new brunswick", "rutgers university", "rutgers"]);
+      if (/website|career site|amazon career/.test(parent)) return result("Company Website", "Details for the selected company source", ["company website", "our website", "company careers website", "careers website", "amazon jobs"]);
+      return { blocked: true };
+    }
     if (/please indicate your availability for the internship.*select multiple/i.test(field.label) && unique("Summer internship end date")) return { blocked: true };
     const threshold = ageThreshold(field.label);
     if (threshold !== null) {
@@ -138,7 +196,7 @@
       if (["fall", "autumn", "winter"].includes(season)) return result("No", "Not available full-time in fall or winter");
       return { blocked: true };
     }
-    if (/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(questionKey(field.label)) && unique("Preferred application source") === "Company website or university") return result("Company Website", "Your preferred application source", ["company website", "company careers website", "company career site", "employer website", "amazon career site", "amazon jobs", "university college", "university", "university career center", "college university"]);
+    if (/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(questionKey(field.label)) && unique("Preferred application source") === "Company website or university") return result("Company Website", "Your preferred application source", ["company website", "our website", "company careers website", "company career site", "employer website", "amazon career site", "amazon jobs", "university college", "university recruiting", "university", "university career center", "college university"]);
     const date = dateConcept(field.label);
     if (date === "start" || date === "end") {
       if (field.applicationSeason && field.applicationSeason !== "summer-2027") return { blocked: true };
@@ -155,7 +213,7 @@
     return null;
   }
 
-  // tools/application-helper/portfolio-answers.mjs?v=20261115.12
+  // tools/application-helper/portfolio-answers.mjs?v=20261115.13
   var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
   var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
@@ -235,7 +293,7 @@
     return answer(text, claims.flatMap((c) => c.sources));
   }
 
-  // tools/application-helper/application-autofill.mjs?v=20261115.12
+  // tools/application-helper/application-autofill.mjs?v=20261115.13
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -256,12 +314,23 @@
     };
     const custom = (e) => e.tagName !== "SELECT" && e.matches(comboSelector);
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
-    const type = (e) => radio(e) ? "radio-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
+    const checkbox = (e) => e.type === "checkbox";
+    const choice = (e) => radio(e) || checkbox(e);
+    const type = (e) => radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
-    const group = (e) => e.closest('[role="radiogroup"],fieldset');
+    const group = (e) => {
+      const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
+      if (explicit || !checkbox(e)) return explicit;
+      let p = e.parentElement;
+      for (let i = 0; i < 6 && p && p !== document.body; i++, p = p.parentElement) {
+        if (p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length) break;
+        if (p.querySelectorAll('input[type="checkbox"]').length > 1 && p.querySelector("p,legend,.question-label,.form-label,.control-label")) return p;
+      }
+      return null;
+    };
     const radios = (e) => {
-      const g = group(e);
-      return [...(g || e.form || document).querySelectorAll('input[type="radio"],[role="radio"]')].filter((r) => g ? group(r) === g && (!e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
+      const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
+      return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
     const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
@@ -273,11 +342,11 @@
     const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
-      const members = radio(e) ? radios(e) : [];
+      const members = choice(e) ? radios(e) : [];
       for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
         const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
-        if (radio(e)) {
-          if (contained.some((c) => !radio(c) || !members.includes(c))) break;
+        if (choice(e)) {
+          if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
@@ -289,13 +358,13 @@
       return "";
     };
     const label = (e) => {
-      if (radio(e)) {
-        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"]')].every((r) => radios(e).includes(r));
+      if (choice(e)) {
+        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
         return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 250);
     };
-    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e, i, all) => !radio(e) || radios(e)[0] === e);
+    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     const selectedValue = (e) => {
       if (e.matches(".selectize-input,.ts-control,.ui-select-container")) {
         const items = [...e.querySelectorAll(".item,[data-item],.ui-select-match-item,.ui-select-match-text")].filter((n) => !n.parentElement?.closest(".item,[data-item],.ui-select-match-item"));
@@ -327,9 +396,40 @@
       return ownLabel(e) || text(e) || e.value || "";
     };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => radio(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : radio(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const valueText = (e) => e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e) : e.value || "";
+    const context = (e) => {
+      const q = norm(label(e));
+      if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      const all = elements(), before = all.slice(0, all.indexOf(e));
+      let parentAnswer = "", parentQuestion = "", educationSchool = "";
+      if (/^source details?$|^if .+ please specify$/.test(q)) {
+        const parents = before.filter((c) => /^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));
+        const last = parents.at(-1);
+        if (last && !empty(last)) parentAnswer = valueText(last);
+      }
+      if (/^(please specify|other please specify|academic standing details)$/.test(q)) {
+        const last = before.at(-1);
+        if (last && !empty(last) && /current academic standing/.test(norm(label(last)))) {
+          parentAnswer = valueText(last);
+          parentQuestion = label(last);
+        }
+      }
+      if (/degree|gpa|grade point|overall result|field of study/.test(q)) {
+        let container = e.parentElement;
+        for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
+          const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
+          if (schools.length > 1) break;
+          if (schools.length === 1) {
+            educationSchool = valueText(schools[0]);
+            break;
+          }
+        }
+      }
+      return { parentAnswer, parentQuestion, educationSchool };
+    };
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "scan") {
       const all = elements();
       return { url: location.href, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
@@ -338,10 +438,11 @@
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
       const candidates = [];
       for (const e of elements()) {
-        if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group", "date", "month"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
+        if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group", "checkbox-group", "date", "month"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
+        if (checkbox(e) && norm(label(e)) !== "in which of the following u s geographic locations are you willing to work") continue;
         const question = label(e), identity = /^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));
         if (!question || /^(in )?(what|which) country( region)?$/.test(norm(question)) || !identity && blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
-        const answer = radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
+        const answer = checkbox(e) ? radios(e).filter((r) => r.checked).map(optionLabel).join("; ") : radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
         if (!answer || answer.length > 1500 || placeholder(answer)) continue;
         candidates.push({ question, answer });
         if (candidates.length >= 100) break;
@@ -357,7 +458,22 @@
           skipped++;
           continue;
         }
-        if (radio(e)) {
+        const currentContext = context(e);
+        if (f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+          skipped++;
+          continue;
+        }
+        if (checkbox(e)) {
+          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && visible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
+          if (!labels.length || matching.length !== labels.length || new Set(matching.map((r) => norm(optionLabel(r)))).size !== labels.length) {
+            skipped++;
+            continue;
+          }
+          for (const r of matching) if (!r.checked) r.click();
+          await new Promise((r) => setTimeout(r, 60));
+          if (matching.every((r) => r.checked)) filled++;
+          else skipped++;
+        } else if (radio(e)) {
           const choices = radios(e), matching = choices.filter((r) => !disabled(r) && visible(r) && norm(optionLabel(r)) === norm(f.display));
           if (matching.length !== 1) {
             skipped++;
@@ -444,7 +560,7 @@
     })();
   }
 
-  // tools/application-helper/answer-memory.mjs?v=20261115.12
+  // tools/application-helper/answer-memory.mjs?v=20261115.13
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
@@ -491,9 +607,9 @@
     const rule = answerRule(field, profile, memory, origin, context);
     if (rule?.blocked) return null;
     if (/^(in )?(what|which) country( region)?$/.test(label)) return null;
-    if (!label || !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
-    if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
-    const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
+    if (!label || !rule && !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
+    if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
+    const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
     const key2 = Object.keys(patterns).find((k) => patterns[k].test(label));
     const custom = (profile.answers || []).filter((a) => normalize(a.question) === label || common && commonQuestion(a.question)?.question === common.question);
     const remembered = !key2 ? memoryMatch(field.label, memory, origin, context) : null;
@@ -510,6 +626,12 @@
       return ["text", "textarea"].includes(field.type) ? derived : null;
     }
     if (field.maxLength > 0 && value.length > field.maxLength) return null;
+    if (field.type === "checkbox-group") {
+      if (common?.question !== "Preferred work regions") return null;
+      const desired = value.split(";").map(normalize), matches = (field.options || []).filter((o) => !o.disabled && desired.includes(normalize(o.label)));
+      if (matches.length !== desired.length || new Set(matches.map((o) => normalize(o.label))).size !== desired.length) return null;
+      return { value: matches.map((o) => o.value), display: matches.map((o) => o.label).join("; "), selectedLabels: matches.map((o) => o.label), reason: "Your saved work-region preferences", requiresReview: false };
+    }
     const confirmedMale = common?.question === "Sex" && normalize(value) === "male" && custom.length > 0 && new Set(custom.map((a) => normalize(a.answer))).size === 1;
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
@@ -545,12 +667,23 @@
     };
     const custom = (e) => e.tagName !== "SELECT" && e.matches(comboSelector);
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
-    const type = (e) => radio(e) ? "radio-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
+    const checkbox = (e) => e.type === "checkbox";
+    const choice = (e) => radio(e) || checkbox(e);
+    const type = (e) => radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
-    const group = (e) => e.closest('[role="radiogroup"],fieldset');
+    const group = (e) => {
+      const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
+      if (explicit || !checkbox(e)) return explicit;
+      let p = e.parentElement;
+      for (let i = 0; i < 6 && p && p !== document.body; i++, p = p.parentElement) {
+        if (p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length) break;
+        if (p.querySelectorAll('input[type="checkbox"]').length > 1 && p.querySelector("p,legend,.question-label,.form-label,.control-label")) return p;
+      }
+      return null;
+    };
     const radios = (e) => {
-      const g = group(e);
-      return [...(g || e.form || document).querySelectorAll('input[type="radio"],[role="radio"]')].filter((r) => g ? group(r) === g && (!e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
+      const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
+      return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
     const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
@@ -562,11 +695,11 @@
     const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
-      const members = radio(e) ? radios(e) : [];
+      const members = choice(e) ? radios(e) : [];
       for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
         const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
-        if (radio(e)) {
-          if (contained.some((c) => !radio(c) || !members.includes(c))) break;
+        if (choice(e)) {
+          if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
@@ -578,13 +711,13 @@
       return "";
     };
     const label = (e) => {
-      if (radio(e)) {
-        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"]')].every((r) => radios(e).includes(r));
+      if (choice(e)) {
+        const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
         return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 250);
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 250);
     };
-    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e, i, all) => !radio(e) || radios(e)[0] === e);
+    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     const selectedValue = (e) => {
       if (e.matches(".selectize-input,.ts-control,.ui-select-container")) {
         const items = [...e.querySelectorAll(".item,[data-item],.ui-select-match-item,.ui-select-match-text")].filter((n) => !n.parentElement?.closest(".item,[data-item],.ui-select-match-item"));
@@ -616,9 +749,40 @@
       return ownLabel(e) || text(e) || e.value || "";
     };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => radio(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : radio(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const valueText = (e) => e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e) : e.value || "";
+    const context = (e) => {
+      const q = norm(label(e));
+      if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      const all = elements(), before = all.slice(0, all.indexOf(e));
+      let parentAnswer = "", parentQuestion = "", educationSchool = "";
+      if (/^source details?$|^if .+ please specify$/.test(q)) {
+        const parents = before.filter((c) => /^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));
+        const last = parents.at(-1);
+        if (last && !empty(last)) parentAnswer = valueText(last);
+      }
+      if (/^(please specify|other please specify|academic standing details)$/.test(q)) {
+        const last = before.at(-1);
+        if (last && !empty(last) && /current academic standing/.test(norm(label(last)))) {
+          parentAnswer = valueText(last);
+          parentQuestion = label(last);
+        }
+      }
+      if (/degree|gpa|grade point|overall result|field of study/.test(q)) {
+        let container = e.parentElement;
+        for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
+          const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
+          if (schools.length > 1) break;
+          if (schools.length === 1) {
+            educationSchool = valueText(schools[0]);
+            break;
+          }
+        }
+      }
+      return { parentAnswer, parentQuestion, educationSchool };
+    };
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "scan") {
       const all = elements();
       return { url: location.href, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
@@ -627,10 +791,11 @@
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
       const candidates = [];
       for (const e of elements()) {
-        if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group", "date", "month"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
+        if (!["text", "email", "tel", "url", "textarea", "select-one", "number", "combobox", "radio-group", "checkbox-group", "date", "month"].includes(type(e)) || disabled(e) || !visible(e) || empty(e)) continue;
+        if (checkbox(e) && norm(label(e)) !== "in which of the following u s geographic locations are you willing to work") continue;
         const question = label(e), identity = /^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));
         if (!question || /^(in )?(what|which) country( region)?$/.test(norm(question)) || !identity && blocked.test(question + " " + (e.name || "") + " " + e.id) || /one-time-code|cc-|current-password|new-password/.test(e.autocomplete || "")) continue;
-        const answer = radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
+        const answer = checkbox(e) ? radios(e).filter((r) => r.checked).map(optionLabel).join("; ") : radio(e) ? optionLabel(selectedRadio(e)) : custom(e) ? selectedValue(e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : e.value;
         if (!answer || answer.length > 1500 || placeholder(answer)) continue;
         candidates.push({ question, answer });
         if (candidates.length >= 100) break;
@@ -646,7 +811,22 @@
           skipped++;
           continue;
         }
-        if (radio(e)) {
+        const currentContext = context(e);
+        if (f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+          skipped++;
+          continue;
+        }
+        if (checkbox(e)) {
+          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && visible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
+          if (!labels.length || matching.length !== labels.length || new Set(matching.map((r) => norm(optionLabel(r)))).size !== labels.length) {
+            skipped++;
+            continue;
+          }
+          for (const r of matching) if (!r.checked) r.click();
+          await new Promise((r) => setTimeout(r, 60));
+          if (matching.every((r) => r.checked)) filled++;
+          else skipped++;
+        } else if (radio(e)) {
           const choices = radios(e), matching = choices.filter((r) => !disabled(r) && visible(r) && norm(optionLabel(r)) === norm(f.display));
           if (matching.length !== 1) {
             skipped++;
@@ -783,11 +963,21 @@
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const label = (e) => [...e.labels || []].map(text).join(" ") || e.getAttribute("aria-label") || (e.getAttribute("aria-labelledby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") || e.name || e.id || "";
     const inputs = [...document.querySelectorAll('input[type="file"]')];
-    const pageUpload = /upload (your |a )?(resume|résumé|cv)|resume upload/i.test([...document.querySelectorAll("h1,h2,h3,legend")].map(text).join(" "));
+    const pageUpload = /upload (your |a |either )?(resume|résumé|cv)|resume upload|resume label|uploading your resume/i.test(text(document.body));
+    const context = (e) => {
+      let node = e.parentElement, best = label(e);
+      for (let n = 0; n < 6 && node && node !== document.body; n++, node = node.parentElement) {
+        if (node.querySelectorAll('input[type="file"]').length > 1) break;
+        const words = text(node);
+        if (words.length > 3e3) break;
+        best += " " + words;
+        if (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(best)) break;
+      }
+      return best;
+    };
     const candidates = inputs.filter((e) => {
       if (e.disabled || e.multiple) return false;
-      const nearby = e.closest("fieldset") || e.closest('[role="group"]') || e.parentElement?.parentElement;
-      const words = label(e) + " " + text(nearby).slice(0, 500);
+      const words = context(e);
       return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) || inputs.length === 1 && pageUpload) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
     });
     if (candidates.length !== 1) return { attached: false, message: "No single supported resume upload found. Use the PDF download to attach it manually." };
@@ -799,6 +989,9 @@
     const bytes = Uint8Array.from(atob(resume.base64), (c) => c.charCodeAt(0));
     const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((v) => v.toString(16).padStart(2, "0")).join("");
     if (digest !== resume.sha256 || String.fromCharCode(...bytes.subarray(0, 5)) !== "%PDF-") return { attached: false, message: "Resume verification failed. Prepare it again in Studio." };
+    const sizeText = context(input) + (inputs.length === 1 ? " " + text(document.body) : "");
+    const limits = [...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map((m) => Number(m[1] || m[3]) * ((m[2] || m[4]).toUpperCase() === "MB" ? 1e6 : 1e3));
+    if (limits.length && bytes.length > Math.min(...limits)) return { attached: false, message: "The tailored PDF exceeds this uploader\u2019s file-size limit. Use a smaller PDF." };
     if (location.href !== url || !input.isConnected || input.files?.length || input.disabled) return { attached: false, message: "The upload changed; no file was replaced." };
     try {
       const transfer = new DataTransfer();
@@ -806,6 +999,7 @@
       input.files = transfer.files;
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+      if (!input.files?.length) return { attached: false, message: "The employer cleared the file. Check upload errors or attach the PDF manually." };
       return { attached: true, message: resume.name + " attached. Check the employer\u2019s upload status before continuing." };
     } catch {
       return { attached: false, message: "This uploader needs a manual file selection. Download the tailored PDF from Studio." };
@@ -1020,8 +1214,8 @@
       async function autoResume() {
         if (!entry?.autoResume || !entry.resume || entry.resumeUploaded || autoResumeBusy) return;
         const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.multiple && !e.files?.length);
-        if (inputs.length !== 1 || autoTried.has(inputs[0])) return;
-        autoTried.add(inputs[0]);
+        if (!inputs.length || inputs.every((input) => autoTried.has(input))) return;
+        for (const input of inputs) autoTried.add(input);
         autoResumeBusy = true;
         const activeEntry = entry;
         try {

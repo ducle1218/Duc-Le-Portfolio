@@ -1,6 +1,14 @@
 // Explicitly confirmed answers only. Different age thresholds and sponsorship
 // timeframes intentionally remain separate questions.
 export const COMMON_QUESTIONS=[
+ {question:'Street address',aliases:['address','address line','address line 1','street address','street address line 1','address 1']},
+ {question:'Degree being pursued',aliases:['degree being pursued','current degree program','what degree are you pursuing'],defaultAnswer:'Bachelor of Science in Mechanical Engineering'},
+ {question:'Current academic standing',aliases:['current academic standing','academic standing','class standing','current year of study','please indicate your current academic standing select one'],defaultAnswer:'Freshman'},
+ {question:'Preferred work regions',aliases:['preferred work regions','in which of the following u s geographic locations are you willing to work'],defaultAnswer:'Northeast; Mid-Atlantic; Southeast'},
+ {question:'College GPA',aliases:['college gpa','university gpa','current college gpa'],defaultAnswer:'Not available yet'},
+ {question:'College GPA scale',aliases:['college gpa scale','university gpa scale'],defaultAnswer:'4.0'},
+ {question:'High school GPA',aliases:['high school gpa'],defaultAnswer:'4.2'},
+ {question:'Full-time student enrollment',aliases:['full time student enrollment','will you be enrolled full time in college university at the time of the internship or co op assignment'],options:['Yes','No'],defaultAnswer:'Yes',review:true},
  {question:'Summer internship start date',aliases:['summer internship start date'],defaultAnswer:'2027-05-13'},
  {question:'Summer internship end date',aliases:['summer internship end date'],defaultAnswer:'2027-08-31'},
  {question:'Full-time internship availability',aliases:['full time internship availability'],defaultAnswer:'Summer only; not fall or winter'},
@@ -28,7 +36,12 @@ export const COMMON_QUESTIONS=[
  {question:'Residence history',aliases:['residence history','describe your residence history','where have you lived'],defaultAnswer:'I lived in Vietnam before moving to the United States in 2014. I have lived in New Jersey since then.'},
 ];
 export const questionKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
-export const commonQuestion=q=>COMMON_QUESTIONS.find(item=>item.aliases.includes(questionKey(q)));
+export const commonQuestion=q=>{
+ const key=questionKey(q);
+ if(/^do you have the legal right to work in the u s(?: note .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Are you legally authorized to work in the United States?');
+ if(/^will you now or in the future require sponsorship of a temporary work visa(?: e g .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Will you now or in the future require sponsorship for employment visa status?');
+ return COMMON_QUESTIONS.find(item=>item.aliases.includes(key));
+};
 
 // Derivations are deliberately narrow. No employment does not mean no projects,
 // no prior applications, no agreements, or any particular legal eligibility.
@@ -47,7 +60,7 @@ export function backgroundAnswer(question,profile,memory=[]){
  if(residence===COMMON_QUESTIONS.find(a=>a.question==='Residence history').defaultAnswer&&/^have you (ever )?lived in (the )?(united states|us|usa)$/.test(q))return {value:'Yes',sourceQuestion:'Residence history: New Jersey since 2014 → United States'};
  if(residence===COMMON_QUESTIONS.find(a=>a.question==='Residence history').defaultAnswer&&/^(current |home )?country( of residence)?$/.test(q))return {value:'United States',sourceQuestion:'Residence history'};
  const noWork=questionKey(fact('Employment experience'))==='none',noResearch=questionKey(fact('Research positions'))==='none';
- if(noWork&&/^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed)$/.test(q))return {value:'No',sourceQuestion:'Employment experience'};
+ if(noWork&&/^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed( by [a-z0-9 ]+)?|do you have previous [a-z0-9 ]+ intern co op experience)$/.test(q))return {value:'No',sourceQuestion:'Employment experience'};
  if(noWork&&/^(years of (work|employment|professional work|professional) experience|how many years of (work|employment|professional work|professional) experience do you have)$/.test(q))return {value:'0',sourceQuestion:'Employment experience'};
  if(noWork&&/^(current employer|most recent employer|previous employer|current job title|most recent job title)$/.test(q))return {value:'None',sourceQuestion:'Employment experience'};
  if(noResearch&&/^(do you have (any )?research experience|have you (ever )?held (a |any )research positions?|do you (currently )?hold a research position)$/.test(q))return {value:'No',sourceQuestion:'Research positions'};

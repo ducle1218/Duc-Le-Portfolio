@@ -1,3 +1,4 @@
+import {formBridge} from './application-autofill.mjs?v=20261115.4';
 export const normalizeQuestion=value=>String(value||'').toLowerCase().replace(/[’']/g,'').replace(/\+/g,' plus ').replace(/#/g,' sharp ').replace(/%/g,' percent ').replace(/-(?=\d)/g,' minus ').replace(/(\d)\.(?=\d)/g,'$1 decimal ').replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
 export const privateQuestion=q=>/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
 // Deliberately small equivalence groups. Do not infer similarity from shared keywords:
@@ -10,7 +11,7 @@ const equivalents=[
  ['what is your preferred contact method','preferred contact method','how do you prefer to be contacted'],
 ];
 export function questionConcept(question){const q=normalizeQuestion(question);const i=equivalents.findIndex(group=>group.includes(q));return i<0?null:'equivalent-'+i;}
-export function employerSpecific(question){return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)/i.test(question);}
+export function employerSpecific(question){return /\b(this|our|your) (company|organization|organisation|role|position|team)|why.*(join|work|interested)|how.*hear|job.*(id|reference)|^if\b|please specify|how.*hear/i.test(question);}
 export function cleanMemory(input){
  if(!Array.isArray(input)||input.length>200)throw new Error('Keep up to 200 saved answers.');
  return input.map(item=>{
@@ -34,17 +35,5 @@ export function memoryMatch(question,entries,origin,context=''){
  if(!matches.length||new Set(matches.map(a=>a.answer.trim())).size!==1)return null;
  return {value:matches[0].answer,question:matches[0].question,reason:kind};
 }
-// This function is injected alone by the popup: keep dependencies inside it.
-export function scanAnsweredFields(){
- const blocked=/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
- const candidates=[];
- for(const e of document.querySelectorAll('input,textarea,select')){
-  const type=e.type||e.tagName.toLowerCase();if(!['text','email','tel','url','textarea','select-one','number'].includes(type)||e.disabled||e.readOnly||!e.getClientRects().length||getComputedStyle(e).visibility==='hidden')continue;
-  const question=([...(e.labels||[])].map(l=>l.innerText).join(' ')||e.getAttribute('aria-label')||(e.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>document.getElementById(id)?.innerText||'').join(' ')||e.placeholder||'').trim();
-  if(!question||question.length>250||blocked.test(question+' '+e.name+' '+e.id)||/one-time-code|cc-|current-password|new-password/.test(e.autocomplete||''))continue;
-  const answer=(e.tagName==='SELECT'?e.selectedOptions[0]?.textContent:e.value||'')?.trim();
-  if(!answer||answer.length>1500||(e.tagName==='SELECT'&&(!e.value||/^(select|choose|please select)/i.test(answer))))continue;
-  candidates.push({question,answer});if(candidates.length>=100)break;
- }
- return {url:location.href,origin:location.origin,candidates};
-}
+// Shared control detection keeps remembering and filling in sync.
+export const scanAnsweredFields=()=>formBridge({action:'remember'});

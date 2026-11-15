@@ -1,14 +1,14 @@
-import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261115.2';
-import {cloudRequest,connected} from './cloud.mjs?v=20261115.2';
-import {buildResume} from './studio.mjs?v=20261115.2';
-import {filename,canonical} from './job-core.mjs?v=20261115.2';
-import {helperRequest} from './extension-client.mjs?v=20261115.2';
-import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261115.2';
-import {makeResumeAttachment} from './resume-attachment.mjs?v=20261115.2';
-import {importAnswers} from './answer-import.mjs?v=20261115.2';
+import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261115.4';
+import {cloudRequest,connected} from './cloud.mjs?v=20261115.4';
+import {buildResume} from './studio.mjs?v=20261115.4';
+import {filename,canonical} from './job-core.mjs?v=20261115.4';
+import {helperRequest} from './extension-client.mjs?v=20261115.4';
+import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261115.4';
+import {makeResumeAttachment} from './resume-attachment.mjs?v=20261115.4';
+import {importAnswers} from './answer-import.mjs?v=20261115.4';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;
-let helperReady=false,helperResumeReady=false;
+let helperReady=false,helperResumeReady=false,helperControlReady=false;
 let profileEdited=false;
 const exportStatus=text=>{$('profile-download-status').textContent=text;};
 function reviewForDownload(){
@@ -24,7 +24,7 @@ function downloadProfile(confirmed){
  $('profile-download-status').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function readProfile(){return cleanProfile({values:Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value])),answers:[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value})),confirmed:$('profile-confirm').checked});}
-async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';const [major,minor]=result.version.split('.').map(Number);helperResumeReady=major>1||major===1&&minor>=3;}catch{helperReady=helperResumeReady=false;}const status=$('helper-connection');if(status)status.textContent=helperResumeReady?'Extension connected · dropdowns and tailored PDF ready':helperReady?'Extension connected · update to 1.3 for dropdowns and tailored PDF attachment':'Install or reload Application Helper 1.3, then refresh this page to connect.';return helperReady;}
+async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';const [major,minor]=result.version.split('.').map(Number);helperResumeReady=major>1||major===1&&minor>=3;helperControlReady=major>1||major===1&&minor>=4;}catch{helperReady=helperResumeReady=helperControlReady=false;}const status=$('helper-connection');if(status)status.textContent=helperControlReady?'Helper 1.4 connected · dropdowns, radio groups and tailored PDF ready':helperReady?'Extension connected · update to 1.4 for radio groups and remembered dropdown answers':'Install or reload Application Helper 1.4, then refresh this page to connect.';return helperReady;}
 if(typeof window!=='undefined'){detectHelper();window.addEventListener('focus',detectHelper);}
 const message=text=>{$('application-status').textContent=text;};
 function needOwner(){if(connected())return true;message('Unlock owner access in Online library to save your profile and applications.');const library=$('cloud-library');library.open=true;library.scrollIntoView({behavior:'smooth',block:'center'});$('cloud-key').focus();return false;}
@@ -44,9 +44,9 @@ function fillProfile(){
  exportStatus(profileEdited?'Review the new Sex: Male answer below, then confirm your updated profile.':profile?'Your confirmed profile is ready to download.':'First time? Review your details, confirm, and download. No owner key needed.');
 }
 for(const [key,label] of PROFILE_FIELDS){const wrap=node('label',label),input=node('input');input.id='app-'+key;input.name=key;input.maxLength=220;input.type=key==='email'?'email':['portfolio','linkedin','github'].includes(key)?'url':'text';input.autocomplete='off';wrap.append(input);$('app-profile-fields').append(wrap);}
-fillProfile();$('add-answer').onclick=()=>{addAnswer();saveDraft();};
+fillProfile();$('add-background').onclick=()=>{let added=0;for(const item of COMMON_QUESTIONS.filter(q=>q.defaultAnswer)){if($('reusable-answers').children.length>=12)break;if([...$('reusable-answers').children].some(row=>commonQuestion(row.querySelector('.answer-question').value)?.question===item.question))continue;addAnswer(item.question,item.defaultAnswer);added++;}profileEdited=true;$('profile-confirm').checked=false;saveDraft();$('background-status').textContent=added+' background answers added. Existing answers were kept. Review the cards, then confirm and save online.';};$('add-answer').onclick=()=>{addAnswer();saveDraft();};
 for(const item of COMMON_QUESTIONS){const option=node('option',item.question);option.value=item.question;$('common-question').append(option);}
-$('add-common-question').onclick=()=>{const question=$('common-question').value;if(!question)return;const existing=[...$('reusable-answers').children].find(row=>commonQuestion(row.querySelector('.answer-question').value)?.question===question);if(existing){existing.querySelector('.answer-value').focus();return;}addAnswer(question,question==='Sex'?'Male':'');profileEdited=true;saveDraft();};
+$('add-common-question').onclick=()=>{const question=$('common-question').value;if(!question)return;const existing=[...$('reusable-answers').children].find(row=>commonQuestion(row.querySelector('.answer-question').value)?.question===question);if(existing){existing.querySelector('.answer-value').focus();return;}addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();};
 $('export-profile').onclick=$('download-profile').onclick=()=>{if(profile&&!profileEdited)downloadProfile(profile);else reviewForDownload();};
 $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();});$('profile-form').addEventListener('change',()=>{profileEdited=true;saveDraft();});
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});

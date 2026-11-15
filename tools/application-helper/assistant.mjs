@@ -35,7 +35,7 @@ if(!globalThis.__ducApplicationHelper){
    const checked=[...list.querySelectorAll('input:checked')],fields=checked.filter(c=>c.value!=='resume').map(c=>review.fields[Number(c.value)]),withResume=checked.some(c=>c.value==='resume');
    if(!fields.length&&!withResume){status.textContent='Select an answer or the tailored PDF.';return;}
    filling=true;fill.disabled=scan.disabled=remember.disabled=true;
-   try{const result=await fillForm({url:review.url,fields});const upload=withResume&&entry?.resume?await attachResume({url:review.url,resume:entry.resume}):null;list.replaceChildren();fill.hidden=true;review=null;status.textContent=result.changed?'The page changed. Scan again.':`${result.filled} answers filled; ${result.skipped} skipped. ${upload?.message||''} Nothing was submitted.`;lastSignature=JSON.stringify([location.href,scanForm().fields]);}
+   try{const result=await fillForm({url:review.url,fields});const upload=withResume&&entry?.resume?await attachResume({url:review.url,resume:entry.resume}):null;list.replaceChildren();fill.hidden=true;review=null;status.textContent=result.changed?'The page changed. Scan again.':`${result.filled} answers filled; ${result.skipped} skipped. ${upload?.message||''} Scan again for newly revealed follow-up questions. Nothing was submitted.`;lastSignature=JSON.stringify([location.href,scanForm().fields]);}
    catch{status.textContent='Some controls need manual entry. Check the form and scan again.';}
    finally{filling=false;fill.disabled=scan.disabled=remember.disabled=false;}
   };

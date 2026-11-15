@@ -1,4 +1,4 @@
-# Application Helper 1.8.0 — Chrome and Edge
+# Application Helper 1.8.1 — Chrome and Edge
 
 Version 1.8 removes the fixed answer-count caps. Website profile and imported-answer cards appear ten per page; saving and exporting includes every page. A 1 MB document-size guard remains. **Remember my answers** shows only new or changed detected answers by default; **Show all detected answers** also reveals existing matches. Saved profile answers and employer-specific memory are included in the comparison.
 

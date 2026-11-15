@@ -9,7 +9,8 @@ const profile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'
 assert.equal(JSON.parse(JSON.stringify(profile)).answers.length,35);
 const nav=document.createElement('nav'),rows=profile.answers.map(a=>{const row=document.createElement('textarea');row.value=a.answer;return row;}),state={page:1};
 paginateAnswers(rows,nav,state);assert.equal(rows.filter(r=>!r.hidden).length,10);
-nav.lastElementChild.onclick();assert.equal(state.page,2);rows[12].value='Edited on page two';
+let scrolledRow;rows.forEach((row,i)=>{row.scrollIntoView=()=>{scrolledRow=i;};});
+nav.lastElementChild.onclick();assert.equal(state.page,2);assert.equal(scrolledRow,10);rows[12].value='Edited on page two';
 nav.lastElementChild.onclick();nav.lastElementChild.onclick();assert.equal(rows.filter(r=>!r.hidden).length,5);assert(nav.lastElementChild.disabled);
 paginateAnswers(rows.slice(0,20),nav,state);assert.equal(state.page,2);assert.equal(rows[12].value,'Edited on page two');
 const origin='https://employer.example',context='company a',memory=[{question:'Preferred contact method',answer:'Email',scope:'*',sourceOrigin:origin}];

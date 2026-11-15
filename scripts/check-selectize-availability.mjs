@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import {formBridge,suggestField} from '../resume/generator/application-autofill.mjs';
 import {cleanMemory,memoryMatch} from '../resume/generator/answer-memory.mjs';
-import {PREFERENCE_ANSWERS,dateConcept} from '../resume/generator/answer-rules.mjs';
+import {PREFERENCE_ANSWERS,dateConcept,answerRule} from '../resume/generator/answer-rules.mjs';
+// Daily deployment runs this check after summer 2027 too. Freeze the fixture's
+// present and test expiry separately, instead of letting CI age with the dates.
+const RealDate=Date;
+globalThis.Date=class extends RealDate {constructor(...args){super(...(args.length?args:['2026-11-15T12:00:00Z']));}static now(){return new RealDate('2026-11-15T12:00:00Z').getTime();}};
 let dom;try{dom=await import('linkedom');}catch{dom=await import('../../tmp/job-tests/node_modules/linkedom/esm/index.js');}
 const profile={confirmed:true,values:{},answers:[{question:'Are you 18 years of age or older?',answer:'Yes'}]};
 const memory=cleanMemory(PREFERENCE_ANSWERS.map(a=>({...a,scope:'*'})));
@@ -27,6 +31,7 @@ assert.equal(suggestField({...full,applicationSeason:'summer-2028'},profile,stal
 const start='What is your earliest possible start date for an internship? For example, a date after your academic term ends and you will be available to begin employment. Date: Year-Month-Day';
 assert.equal(dateConcept(start),'start');
 assert.equal(suggestField(field(start,'date'),profile,memory).value,'2027-05-13');
+assert.equal(answerRule(field(start,'date'),profile,memory,'','',new RealDate('2028-01-01')).blocked,true);
 assert.equal(suggestField({...field(start,'date'),applicationSeason:'winter'},profile,memory),null);
 assert.equal(suggestField(field('What is your latest possible end date for an internship?','date'),profile,memory).value,'2027-08-31');
 assert.equal(suggestField(field('What is your graduation date?','date'),profile,memory),null);

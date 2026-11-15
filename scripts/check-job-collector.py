@@ -59,3 +59,32 @@ if node:
     assert sorted(job['url'] for job in collector.discovery_index(current)['jobs']) == expected
 print('PASS: employer normalization, HTML decoding, internship scope, publication-date honesty, and source failure isolation.')
 print('PASS: compact regional discovery, uncertain-location exclusion, full descriptions, and filtered-index closure protection.')
+
+# Workday pagination retains the first total even when later pages report zero.
+wd = {'provider':'workday','board':'External','tenant':'intel','company':'Intel','careersUrl':'https://intel.wd1.myworkdayjobs.com/External'}
+def wd_detail(i):
+    return {'title':'Mechanical Engineering Intern', 'jobDescription':job['content'], 'location':'Newark, NJ',
+        'additionalLocations':['New York, NY'], 'country':{'descriptor':'United States'}, 'jobReqId':'JR'+str(i),
+        'startDate':'2026-11-13','externalUrl':wd['careersUrl']+'/job/Test/Intern_JR'+str(i), 'canApply':True,'posted':True}
+def wd_fetch(url, body=None):
+    if body is None: return {'jobPostingInfo':wd_detail(int(url.rsplit('JR',1)[1]))}
+    if not body['appliedFacets']: return {'facets':[{'facetParameter':'workerSubType','values':[{'id':'intern','descriptor':'Intern (Fixed Term)'}]}]}
+    offset=body['offset']
+    return {'total':41 if offset==0 else 0,'jobPostings':[{'title':'Mechanical Engineering Intern','externalPath':'/job/Test/Intern_JR'+str(i)} for i in range(offset,min(offset+20,41))]}
+status, jobs=collector.collect_source(wd,'2026-11-14T12:00:00Z',wd_fetch)
+assert status['status']=='ok' and len(jobs)==41
+assert jobs[-1]['datePosted']=='2026-11-13' and 'New York, NY' in jobs[-1]['location']
+assert collector.direct_job(dict(wd_detail(1),canApply=False),wd,'checked')['closed']
+assert collector.direct_job(dict(wd_detail(1),canApply=None),wd,'checked')['availability']=='unknown'
+try: collector.direct_job(dict(wd_detail(1),externalUrl='https://evil.example/job/1'),wd,'checked'); raise AssertionError('off-domain accepted')
+except ValueError: pass
+lm={'provider':'eightfold','board':'lockheedmartin','company':'Lockheed Martin','careersUrl':'https://lockheedmartin.eightfold.ai/careers'}
+lm_item={'id':123,'name':'Engineering Intern','jobDescription':job['content'],'standardizedLocations':['Moorestown, NJ, US'],'postedTs':1794601470,'positionUserActions':{'applyAction':{'status':'allowed'}}}
+def lm_fetch(url, body=None):
+    if 'position_details' in url: return {'data':lm_item}
+    return {'data':{'count':2,'positions':[lm_item,dict(lm_item,id=456,name='Materials Engineer - E2')]}}
+status,jobs=collector.collect_source(lm,'checked',lm_fetch)
+assert status['status']=='ok' and len(jobs)==1 and jobs[0]['url'].endswith('?pid=123')
+assert jobs[0]['availability']=='active' and collector.discovery_candidate(jobs[0])
+assert jobs[0]['datePosted'].startswith('2026-11-13')
+print('PASS: direct employer pagination, detail identity, original dates, multiple locations, closed roles and internship-only titles.')

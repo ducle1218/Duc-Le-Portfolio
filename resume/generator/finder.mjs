@@ -1,10 +1,10 @@
-import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.1';
-import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261114.1';
-import {importJob} from './job-api.mjs?v=20261114.1';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.1';
-import {makeZip} from './zip.mjs?v=20261114.1';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.1';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.1';
+import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.2';
+import {DEFAULTS,filterJob,canonical,filename,validateJob} from './job-core.mjs?v=20261114.2';
+import {importJob} from './job-api.mjs?v=20261114.2';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.2';
+import {makeZip} from './zip.mjs?v=20261114.2';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.2';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.2';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -18,11 +18,11 @@ function selection(){
 }
 function showJobs(){
  selected.clear();const filters=readFilters();try{localStorage.setItem(key,JSON.stringify(filters));}catch{}
- const isImported=$('result-scope').value==='imported';
- const classified=all.filter(job=>(!isImported||imported.has(job.url))&&sourceDetails(job).allowed).map(job=>({job,...filterJob(job,filters),fresh:freshness(job),fit:matchResume(job,profile),company:companyDetails(job,registry,filters.priorities),pay:payDetails(job)})).filter(entry=>$('show-closed').checked||!entry.fresh.closed);
+ const isImported=$('result-scope').value==='imported',isEmployer=$('result-scope').value==='employer';
+ const classified=all.filter(job=>(!isImported||imported.has(job.url))&&(!isEmployer||!sourceDetails(job).board)&&sourceDetails(job).allowed).map(job=>({job,...filterJob(job,filters),fresh:freshness(job),fit:matchResume(job,profile),company:companyDetails(job,registry,filters.priorities),pay:payDetails(job)})).filter(entry=>$('show-closed').checked||!entry.fresh.closed);
  const ready=classified.filter(j=>j.status==='ready'),review=classified.filter(j=>j.status==='review');
  visible=sortJobs([...ready,...($('show-review').checked?review:[])],$('sort-jobs').value);
- $('match-count').textContent=ready.length+(isImported?' saved / imported jobs':' matches')+(review.length?' · '+review.length+' need a check':'');
+ $('match-count').textContent=ready.length+(isImported?' saved / imported jobs':isEmployer?' employer-site matches':' matches')+(review.length?' · '+review.length+' need a check':'');
  $('sort-note').textContent=$('sort-jobs').value==='newest-priority'?'Newest posting week first, then your priority companies and published company rank.':$('sort-jobs').value==='company'?'Priority employers first, then published Fortune 500 rank. Unknown rank is not low prestige.':$('sort-jobs').value==='newest'?'Newest publication dates first; closed postings stay last.':$('sort-jobs').value==='match'?'Freshness first, then documented skill overlap.':'Freshness first, then your favorites and verified Fortune 500 rank.';
  $('jobs').replaceChildren();
  if(!visible.length)$('jobs').append(node('p',all.length?'No matches in the connected feeds. Try broader keywords or locations, or import a posting below.':'No postings loaded yet. You can still paste a job description below.','muted'));
@@ -80,7 +80,7 @@ async function load(){
   all=[...dedup.values()];const unavailable=index.sources.filter(s=>s.status!=='ok');
   const stale=!Number.isFinite(Date.parse(index.checkedAt))||Date.now()-Date.parse(index.checkedAt)>36*3600000;
   $('feed-status').textContent=(stale?'Index may be out of date. ':'')+'Last checked '+date(index.checkedAt)+' · '+all.length+' internships across '+index.sources.length+' employer feeds'+(unavailable.length?' · '+unavailable.length+' incomplete or unavailable feeds':'')+'.';
-  for(const s of index.sources)$('sources').append(node('p',s.company+' — '+(s.status==='ok'?s.count+' internships':s.status==='partial'?s.count+' internships; '+s.omitted+' unreadable':'unavailable')));
+  for(const s of index.sources)$('sources').append(node('p',s.company+' — '+(s.status==='ok'?s.count+' internships':s.status==='partial'?s.count+' internships; '+s.omitted+' unreadable'+(s.truncated?'; listing limit reached':''):'unavailable')));
   showJobs();
  }catch(error){$('feed-status').textContent=error.message;}
 }
@@ -119,7 +119,7 @@ $('batch').onclick=async()=>{
  finally{lockStudio(false);lock(false);$('cancel-batch').hidden=true;}
 };
 await load();
-const mergeJobs=jobs=>{for(const job of jobs){try{const valid=validateJob(job),entry={...job,...valid},existing=all.findIndex(j=>j.url===valid.url);if(existing<0)all.push(entry);else all[existing]=mergeJobState(all[existing],entry);imported.add(valid.url);}catch{}}if(jobs.length)$('result-scope').value='imported';showJobs();};
+const mergeJobs=jobs=>{for(const job of jobs){try{const valid=validateJob(job),entry={...job,...valid},existing=all.findIndex(j=>j.url===valid.url);if(existing<0)all.push(entry);else all[existing]=mergeJobState(all[existing],entry);imported.add(valid.url);}catch{}}showJobs();};
 await setupCloud(mergeJobs);
 $('cloud-save-current').onclick=async()=>{const jobs=all.filter(j=>imported.has(j.url));try{for(let i=0;i<jobs.length;i+=20)await saveJobs(jobs.slice(i,i+20));$('cloud-status').textContent=jobs.length+' imported jobs saved online.';}catch(error){$('cloud-status').textContent=error.message;}};
 $('online-search').onclick=async()=>{if(running)return;lock(true);$('cloud-status').textContent='Searching job boards…';try{const result=await searchOnline(readFilters());mergeJobs(result.jobs);$('result-scope').value='discovered';showJobs();for(let i=0;i<result.jobs.length;i+=20)await saveJobs(result.jobs.slice(i,i+20));$('cloud-status').textContent=result.jobs.length+' search results saved online. Active filters apply to the combined results below. '+result.coverage;}catch(error){$('cloud-status').textContent=error.message;}finally{lock(false);}};

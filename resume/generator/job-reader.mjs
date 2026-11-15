@@ -1,5 +1,5 @@
-import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.1';
-const BOARDS=['linkedin.com','indeed.com','glassdoor.com','ziprecruiter.com','myworkdayjobs.com','myworkdaysite.com','smartrecruiters.com','workable.com','icims.com','usajobs.gov','amazon.jobs','jobs.ashbyhq.com','jobs.jobvite.com','careers.microsoft.com','jobs.apple.com','careers.google.com','careers.spacex.com','careers.boeing.com'];
+import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.2';
+const BOARDS=['lockheedmartin.eightfold.ai','linkedin.com','indeed.com','glassdoor.com','ziprecruiter.com','myworkdayjobs.com','myworkdaysite.com','smartrecruiters.com','workable.com','icims.com','usajobs.gov','amazon.jobs','jobs.ashbyhq.com','jobs.jobvite.com','careers.microsoft.com','jobs.apple.com','careers.google.com','careers.spacex.com','careers.boeing.com'];
 export function readerUrl(value){
  const u=safeUrl(value);if(!u||!BOARDS.some(h=>u.hostname===h||u.hostname.endsWith('.'+h)))return null;
  if([...u.searchParams.keys()].some(k=>/token|password|session|secret|auth|email/i.test(k)))return null;

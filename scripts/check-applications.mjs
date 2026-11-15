@@ -43,6 +43,7 @@ let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastNam
 globalThis.fetch=async(input,options={})=>{const path=String(input);if(path==='./cloud-config.json')return Response.json({endpoint:'https://test.workers.dev'});if(path.endsWith('/application-profile')){if(options.method==='PUT')savedProfile=cleanProfile(JSON.parse(options.body));return Response.json({profile:savedProfile});}if(path.endsWith('/applications'))return Response.json({applications:[]});if(path.endsWith('/jobs'))return Response.json({jobs:[],searchEnabled:false});if(path.endsWith('/automation'))return Response.json({enabled:true});throw new Error('Unexpected test request');};
 const browserStore=new Map();globalThis.localStorage={getItem:key=>browserStore.get(key)||null,setItem:(key,value)=>browserStore.set(key,value)};
 await import('../resume/generator/applications.mjs');
+assert.equal(ui.document.querySelectorAll('.reusable-answer').length,11,'Known cards appear on a fresh visit without clicking Add');
 // A profile file can be reviewed and downloaded without cloud credentials.
 const byId=id=>ui.document.getElementById(id),downloads=[];
 for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
@@ -78,3 +79,22 @@ byId('answer-import-file').files=[{size:1000,text:async()=>JSON.stringify(backup
 const {importAnswers}=await import('../resume/generator/answer-import.mjs');const first=importAnswers(backup);assert.equal(importAnswers(backup,first.items).added,0);assert.equal(importAnswers({...backup,items:[{...backup.items[0],answer:'changed'}]},first.items).items[0].answer,'June 1');assert.throws(()=>importAnswers({format:'wrong',items:[]}));
 const restored=dom.parseHTML(html);globalThis.document=restored.document;await import('../resume/generator/applications.mjs?restore-test');assert.equal(restored.document.getElementById('app-firstName').value,'Latest edit');assert.equal(restored.document.getElementById('imported-answer-list').children.length,2);assert.equal(restored.document.getElementById('profile-confirm').checked,false);
 console.log('PASS: persisted drafts and imports restored; duplicate imports preserve edits; employer-specific answers cannot enter the global profile.');
+
+// Upgrade the old single-Sex draft without overwriting its edited contact details.
+browserStore.set('duc-application-draft-v1',JSON.stringify({values:{firstName:'My edited name',lastName:'Applicant'},answers:[{question:'Sex',answer:'Male'}]}));
+const legacy=dom.parseHTML(html);globalThis.document=legacy.document;
+await import('../resume/generator/applications.mjs?legacy-prefill');
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,11);
+assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
+assert.equal(legacy.document.getElementById('profile-confirm').checked,false);
+savedProfile=cleanProfile({confirmed:true,values:{firstName:'Online',lastName:'Applicant'},answers:[{question:'Are you 18 years or older?',answer:'Yes'},{question:'Sex',answer:'Different saved value'}]});
+await legacy.document.getElementById('load-online-answers').onclick();
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,12);
+assert.equal(legacy.document.querySelector('.answer-value').value,'Male','Existing answer wins over conflicting online value');
+assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
+assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,12);
+// Once migrated, intentionally removed defaults stay removed after reload.
+browserStore.set('duc-application-draft-v1',JSON.stringify({starterAnswersVersion:1,values:{firstName:'Edited',lastName:'Applicant'},answers:[]}));
+const removed=dom.parseHTML(html);globalThis.document=removed.document;await import('../resume/generator/applications.mjs?removed-prefill');
+assert.equal(removed.document.querySelectorAll('.reusable-answer').length,0);
+console.log('PASS: automatic fresh-visit cards, old single-card draft migration, private online answer merge, preserved edits and intentional removals.');

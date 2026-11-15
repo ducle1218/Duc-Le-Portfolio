@@ -11,3 +11,10 @@ console.log('PASS source allowlist, redirect/repost exclusion, same-week company
 assert(sourceDetails({url:'https://lockheedmartin.eightfold.ai/careers?pid=996477737507'}).allowed);
 assert(!sourceDetails({url:'https://lockheedmartin.eightfold.ai/careers'}).allowed);
 assert(!sourceDetails({url:'https://other.eightfold.ai/careers?pid=123'}).allowed);
+
+const {postingDate}=await import('../resume/generator/job-core.mjs');
+const previousTZ=process.env.TZ;process.env.TZ='America/New_York';
+assert.equal(postingDate('2026-11-13','en-US'),'11/13/2026');
+assert.equal(postingDate('not-a-date','en-US'),'Unknown');
+if(previousTZ===undefined)delete process.env.TZ;else process.env.TZ=previousTZ;
+console.log('PASS employer calendar dates do not shift to the previous day in New York.');

@@ -1,10 +1,11 @@
-import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.4';
-import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.4';
-import {importJob} from './job-api.mjs?v=20261114.4';
-import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.4';
-import {makeZip} from './zip.mjs?v=20261114.4';
-import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.4';
-import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.4';
+import {sourceDetails,DEFAULT_PRIORITIES} from './job-source.mjs?v=20261114.5';
+import {companyBrand} from './company-brand.mjs?v=20261114.5';
+import {DEFAULTS,filterJob,canonical,filename,validateJob,postingDate} from './job-core.mjs?v=20261114.5';
+import {importJob} from './job-api.mjs?v=20261114.5';
+import {buildResume,lockStudio,previewJob} from './studio.mjs?v=20261114.5';
+import {makeZip} from './zip.mjs?v=20261114.5';
+import {matchResume,freshness,payDetails,companyDetails,sortJobs} from './job-insights.mjs?v=20261114.5';
+import {setupCloud,connected,saveJobs,searchOnline,mergeJobState} from './cloud.mjs?v=20261114.5';
 const $=id=>document.getElementById(id),key='resume-studio-filters-v1';
 let all=[],visible=[],selected=new Set(),imported=new Set(),running=false,cancelled=false,zipURL=null,profile=null,registry=null;
 const insightCache=new WeakMap();
@@ -29,10 +30,17 @@ function showJobs(){
  $('jobs').replaceChildren();
  if(!visible.length)$('jobs').append(node('p',all.length?'No matches in the connected feeds. Try broader keywords or locations, or import a posting below.':'No postings loaded yet. You can still paste a job description below.','muted'));
  for(const {job,status,reason,fresh,fit,company,pay} of visible){
-  const row=node('article',undefined,'job-row');
+  const brand=companyBrand(job.company);
+  const row=node('article',undefined,'job-row'+(brand.featured?' featured-employer':''));
   const check=node('input');check.type='checkbox';check.value=job.url;check.setAttribute('aria-label','Select '+job.title+' at '+job.company);check.disabled=!!fresh.closed;check.dataset.inactive=String(!!fresh.closed);
   check.onchange=()=>{if(check.checked&&selected.size>=15){check.checked=false;$('batch-status').textContent='Select up to 15 jobs per batch.';return;}if(check.checked)selected.add(job.url);else selected.delete(job.url);selection();};
-  const content=node('div',undefined,'job-content');content.append(node('p',job.company,'eyebrow'),node('h4',job.title),node('p',job.location||'Location not provided','muted'));
+  const content=node('div',undefined,'job-content'),heading=node('div',undefined,'employer-heading');
+  const logo=node('span',undefined,'employer-logo');logo.setAttribute('aria-hidden','true');
+  const monogram=node('span',brand.initials);logo.append(monogram);
+  if(brand.logo){const image=node('img');image.src=brand.logo;image.alt='';image.width=48;image.height=48;image.loading='lazy';image.decoding='async';image.onload=()=>{monogram.hidden=true;};image.onerror=()=>{image.remove();monogram.hidden=false;};logo.append(image);}
+  const identity=node('div',undefined,'employer-identity'),name=node('span',job.company,'employer-name');
+  if(brand.featured){name.title='Highlighted '+brand.sector.toLowerCase()+' employer — visual preference, not availability verification';name.append(node('span','✦','employer-star'));}
+  identity.append(name,node('h4',job.title));heading.append(logo,identity);content.append(heading,node('p',job.location||'Location not provided','muted'));
   if(status==='review')content.append(node('p',reason+' — select only after checking the source.','review-note'));
   const chips=node('div',undefined,'job-chips');
   chips.append(node('span',sourceDetails(job).label,'source-chip'),node('span',job.datePosted?(job.dateApproximate?'Approx. posted ':'Posted ')+postingDate(job.datePosted):'Posting date unavailable','date-chip'));

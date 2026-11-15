@@ -88,3 +88,35 @@ assert status['status']=='ok' and len(jobs)==1 and jobs[0]['url'].endswith('?pid
 assert jobs[0]['availability']=='active' and collector.discovery_candidate(jobs[0])
 assert jobs[0]['datePosted'].startswith('2026-11-13')
 print('PASS: direct employer pagination, detail identity, original dates, multiple locations, closed roles and internship-only titles.')
+
+# Public Google pages contain full JSON data, not executable code for us to run.
+google={'provider':'google','board':'google','company':'Google','careersUrl':'https://www.google.com/about/careers/applications/jobs/results/'}
+record=['123','Mechanical Engineering Intern',None,[None,job['content']],[None,'Required: mechanical engineering.'],None,None,'Google',None,[['Seattle, WA, USA'],['New York, NY, USA']],[None,'Overview.'],None,[123],None,None,[None,'Apply early.']]
+page="<script>AF_initDataCallback({key: 'ds:1', data:"+json.dumps([[record],None,1,20])+", sideChannel: {}});</script><a href=\"jobs/results/123-mechanical-intern?q=intern\">Details</a>"
+status,jobs=collector.collect_source(google,'checked',fetch_text=lambda url:page)
+assert status['status']=='ok' and len(jobs)==1
+assert jobs[0]['datePosted']=='' and jobs[0]['location'].startswith('New York')
+assert 'Required:' in jobs[0]['description'] and jobs[0]['url']==google['careersUrl']+'123-mechanical-intern'
+try: collector.google_listing('<html>Verify you are human</html>'); raise AssertionError('Blocked page accepted')
+except ValueError: pass
+amazon={'provider':'amazon','board':'amazon','company':'Amazon','careersUrl':'https://www.amazon.jobs/en/search'}
+amazon_item={'id_icims':'55','title':'Robotics Engineering Intern','job_path':'/en/jobs/55/robotics-intern',
+ 'description':job['content'],'basic_qualifications':'CAD required','preferred_qualifications':'Python preferred',
+ 'location':'US, NJ, Newark','posted_date':'November 14, 2026','locations':[]}
+def amazon_fetch(url):
+ from urllib.parse import parse_qs,urlparse
+ offset=int(parse_qs(urlparse(url).query)['offset'][0])
+ return {'hits':2,'jobs':[dict(amazon_item,id_icims=str(55+offset),job_path='/en/jobs/'+str(55+offset)+'/intern')]}
+status,jobs=collector.collect_source(amazon,'checked',amazon_fetch)
+assert status['status']=='ok' and len(jobs)==2 and jobs[0]['datePosted']=='2026-11-14'
+assert 'CAD required' in jobs[0]['description'] and 'Python preferred' in jobs[0]['description']
+bad=dict(amazon_item,job_path='https://evil.test/55')
+status,jobs=collector.collect_source(amazon,'checked',lambda url:{'hits':1,'jobs':[bad]})
+assert status['status']=='partial' and not jobs
+ms=dict(lm,board='microsoft',company='Microsoft',domain='microsoft.com',careersUrl='https://apply.careers.microsoft.com/careers')
+def ms_fetch(url,body=None):
+ assert url.startswith('https://apply.careers.microsoft.com/api/pcsx/') and 'domain=microsoft.com' in url
+ return lm_fetch(url,body)
+status,jobs=collector.collect_source(ms,'checked',ms_fetch)
+assert status['status']=='ok' and jobs[0]['url']=='https://apply.careers.microsoft.com/careers?pid=123'
+print('PASS: Google embedded JSON, full descriptions, honest unknown dates, Amazon pagination and original dates, off-domain rejection, Microsoft identity.')

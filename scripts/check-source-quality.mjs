@@ -18,3 +18,11 @@ assert.equal(postingDate('2026-11-13','en-US'),'11/13/2026');
 assert.equal(postingDate('not-a-date','en-US'),'Unknown');
 if(previousTZ===undefined)delete process.env.TZ;else process.env.TZ=previousTZ;
 console.log('PASS employer calendar dates do not shift to the previous day in New York.');
+
+for(const url of ['https://apply.careers.microsoft.com/careers?pid=123','https://www.amazon.jobs/en/jobs/123/engineering-intern','https://www.google.com/about/careers/applications/jobs/results/123-engineering-intern'])assert(sourceDetails({url}).allowed,url);
+for(const url of ['https://www.amazon.jobs/en/search','https://www.google.com/url?q=https://evil.test','https://apply.careers.microsoft.com/careers','https://apply.careers.microsoft.com.evil.test/careers?pid=123'])assert(!sourceDetails({url}).allowed,url);
+const {companyBrand}=await import('../resume/generator/company-brand.mjs');
+for(const company of ['Lockheed Martin','Raytheon','RTX','Google LLC','Microsoft Corporation','Amazon.com Services LLC','NVIDIA'])assert(companyBrand(company).featured,company);
+for(const company of ['Google Staffing Partner','Lockheed Martin Recruitment Agency','Small engineering firm'])assert(!companyBrand(company).featured,company);
+for(const company of ['Lockheed Martin','RTX','Google','Amazon','Microsoft','NVIDIA'])await (await import('node:fs/promises')).access(new URL(companyBrand(company).logo));
+console.log('PASS: reviewed tech posting URLs, exact employer branding, and local logo assets.');

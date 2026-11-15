@@ -14,7 +14,7 @@ const send=(message,sender=studio)=>new Promise(resolve=>messageListener(message
 assert.equal((await send({type:'studio-hello'})).version,'1.1.0');
 for(const sender of [{...studio,url:'https://evil.example/'},{...studio,frameId:1},{...studio,id:'other'}])assert.equal((await send({type:'studio-start',payload},sender)).ok,false);
 assert.equal(tabs.size,0);assert.equal((await send({type:'studio-start',payload:{...payload,profile:{confirmed:false}}})).ok,false);
-assert.equal((await send({type:'studio-start',payload})).ok,true);assert.equal(tabs.get(2).url,'chrome-extension://helper/launch.html?ready=1');assert.equal(stored.get('handoff:2').profile.values.firstName,'Sample');assert(!JSON.stringify([...tabs.values()]).includes('sample@example.com'));
+assert.equal((await send({type:'studio-start',payload})).ok,true);assert.equal(tabs.get(2).url,'chrome-extension://helper/launch.html?ready=1');assert.equal(stored.get('handoff:2').profile.values.firstName,'Sample');assert.equal(local.get('profile').values.firstName,'Sample');assert(!JSON.stringify([...tabs.values()]).includes('sample@example.com'));
 const extension={id:'helper',url:'chrome-extension://helper/launch.html'};
 assert.equal((await send({type:'get-handoff',tabId:2},studio)).ok,false);
 assert.equal((await send({type:'open-handoff',tabId:2},extension)).ok,false);assert(tabs.get(2).url.startsWith('chrome-extension:'));
@@ -34,6 +34,7 @@ updateListener(2,{status:'complete'},{url:'https://different.example.com/form'})
 stored.get('handoff:2').expiresAt=Date.now()-1;assert.equal((await send({type:'get-handoff',tabId:2},extension)).entry,null);assert(!stored.has('handoff:2'));
 await send({type:'studio-start',payload});assert.equal(tabs.get(3).url,payload.job.url);removeListener(3);await new Promise(r=>setImmediate(r));assert(!stored.has('handoff:3'));
 await send({type:'studio-start',payload});await send({type:'stop-handoff',tabId:4},extension);assert(!stored.has('handoff:4'));
+stored.clear();assert.equal(local.get('profile').values.firstName,'Sample');assert.equal(local.get('answerMemory').length,3);
 // Exercise the real bridge in a fake page. Only same-window, exact-origin messages pass.
 const calls=[],replies=[];let receive;const win={addEventListener:(name,cb)=>receive=cb,postMessage:(data,origin)=>replies.push({data,origin})};
 const context={window:win,location:new URL(studio.url),chrome:{runtime:{sendMessage:async m=>{calls.push(m);return {ok:true,version:'1.1.0'};}}}};

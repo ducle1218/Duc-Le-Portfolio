@@ -8,6 +8,8 @@ const extensionPage=sender=>sender.id===chrome.runtime.id&&sender.url?.startsWit
 async function record(id){const entry=(await chrome.storage.session.get(key(id)))[key(id)];if(!entry||entry.expiresAt<Date.now()){await chrome.storage.session.remove(key(id));return null;}return entry;}
 async function clearExpired(){const all=await chrome.storage.session.get(null);await chrome.storage.session.remove(Object.entries(all).filter(([k,v])=>k.startsWith('handoff:')&&v.expiresAt<Date.now()).map(([k])=>k));}
 async function launch(entry){
+ // Confirmed Studio profiles remain available after the temporary tab session ends.
+ await chrome.storage.local.set({profile:entry.profile});
  await clearExpired();const tab=await chrome.tabs.create({url:chrome.runtime.getURL('launch.html')});
  await chrome.storage.session.set({[key(tab.id)]:entry});
  // navigate only after the session record exists, avoiding races with the destination load

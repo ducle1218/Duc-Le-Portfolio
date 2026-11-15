@@ -45,6 +45,10 @@
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],.dropdown-toggle,.ng-select,.select2-selection,mat-select';
     const controls = "input,select,textarea," + comboSelector + ',[role="radio"]';
+    const activate = (e) => {
+      e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
+      e.click();
+    };
     const custom = (e) => e.tagName !== "SELECT" && e.matches(comboSelector);
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
     const type = (e) => radio(e) ? "radio-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
@@ -139,7 +143,7 @@
           const optionSelector = '[role="option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           e.focus();
-          e.click();
+          activate(e);
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
           for (let attempt = 0; attempt < 15; attempt++) {
@@ -156,7 +160,7 @@
             skipped++;
             continue;
           }
-          options[0].click();
+          activate(options[0]);
           let accepted = false;
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
@@ -246,6 +250,10 @@
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],.dropdown-toggle,.ng-select,.select2-selection,mat-select';
     const controls = "input,select,textarea," + comboSelector + ',[role="radio"]';
+    const activate = (e) => {
+      e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
+      e.click();
+    };
     const custom = (e) => e.tagName !== "SELECT" && e.matches(comboSelector);
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
     const type = (e) => radio(e) ? "radio-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
@@ -340,7 +348,7 @@
           const optionSelector = '[role="option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           e.focus();
-          e.click();
+          activate(e);
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
           for (let attempt = 0; attempt < 15; attempt++) {
@@ -357,7 +365,7 @@
             skipped++;
             continue;
           }
-          options[0].click();
+          activate(options[0]);
           let accepted = false;
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));

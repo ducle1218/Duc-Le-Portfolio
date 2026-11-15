@@ -28,6 +28,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
  const visible=e=>!!e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden';
  const comboSelector='[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],.dropdown-toggle,.ng-select,.select2-selection,mat-select';
  const controls='input,select,textarea,'+comboSelector+',[role="radio"]';
+ const activate=e=>{e.addEventListener('click',event=>event.preventDefault(),{once:true,capture:true});e.click();};
  const custom=e=>e.tagName!=='SELECT'&&e.matches(comboSelector);
  const radio=e=>e.type==='radio'||e.getAttribute('role')==='radio';
  const type=e=>radio(e)?'radio-group':custom(e)?'combobox':e.type||e.tagName.toLowerCase();
@@ -72,7 +73,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
     const boxSelector='[role="listbox"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu';
     const optionSelector='[role="option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a';
     const before=new Set([...document.querySelectorAll(boxSelector)].filter(visible));
-    e.focus();e.click();if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
+    e.focus();activate(e);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
     let boxes=[];
     for(let attempt=0;attempt<15;attempt++){
      if(location.href!==url||!e.isConnected)break;
@@ -85,7 +86,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
     const aliases=f.aliases||[norm(f.value)],options=boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')&&aliases.includes(norm(text(o)))):[];
     // An open menu's option text must not be mistaken for an existing selection.
     if(location.href!==url||!e.isConnected||options.length!==1){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));skipped++;continue;}
-    options[0].click();let accepted=false;
+    activate(options[0]);let accepted=false;
     for(let attempt=0;attempt<10;attempt++){await new Promise(r=>setTimeout(r,80));if(location.href!==url||!e.isConnected)break;if(aliases.includes(norm(selectedValue(e)))){accepted=true;break;}}
     if(accepted)filled++;else skipped++;
    }else{

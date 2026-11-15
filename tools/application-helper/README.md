@@ -1,4 +1,4 @@
-# Application Helper 1.4.0 — Chrome and Edge
+# Application Helper 1.4.1 — Chrome and Edge
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -46,7 +46,7 @@ Profiles imported manually or received from Studio, plus saved answers, persist 
 
 Keep **Bring a resume tailored to this job** checked when starting from Studio. Studio builds from that posting’s description, preserves the original resume template, and sends the PDF with that job’s tab handoff. The PDF is not saved to the public website or backend. The handoff validates the job URL, PDF header, size and digest; the upload rechecks the digest. **Fill selected** attaches only to one clearly labelled resume/CV input that accepts PDF. Existing files, multiple ambiguous uploaders, cover letters and unsupported widgets are left alone. Some employers upload immediately when a file is selected. Final application submission remains yours.
 
-A popup opened on a different domain cannot use a previous employer’s PDF. Restart from Studio on the correct application URL, or download and attach the PDF manually. Profile-only imports do not include a resume. Update in place to 1.4.0 and refresh Studio; no new extension permissions are required.
+A popup opened on a different domain cannot use a previous employer’s PDF. Restart from Studio on the correct application URL, or download and attach the PDF manually. Profile-only imports do not include a resume. Update in place to 1.4.1 and refresh Studio; no new extension permissions are required.
 
 ## Dependent dropdowns and radio groups
 Version 1.4 uses the same control scanner for filling and remembering. It supports native radio groups and accessible custom dropdowns, including common Angular and Bootstrap-style controls. Fill the parent choice, then scan again to review any follow-up questions. Existing selections are preserved; the helper never clicks Continue or Submit.

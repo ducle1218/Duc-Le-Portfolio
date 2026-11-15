@@ -1,0 +1,26 @@
+{
+  "version": "1.2.0",
+  "sha256": "5ce23a46477c88cf2a5076a39e211d6680d2c6ed4cadaabc9288575ee4c87699",
+  "files": [
+    "manifest.json",
+    "popup.html",
+    "popup.css",
+    "popup.mjs",
+    "application-core.mjs",
+    "application-autofill.mjs",
+    "answer-memory.mjs",
+    "memory-panel.mjs",
+    "memory.html",
+    "memory.mjs",
+    "update.html",
+    "update.mjs",
+    "update-core.mjs",
+    "README.md",
+    "background.mjs",
+    "bridge.js",
+    "handoff-core.mjs",
+    "launch.html",
+    "launch.mjs",
+    "assistant.bundle.js"
+  ]
+}

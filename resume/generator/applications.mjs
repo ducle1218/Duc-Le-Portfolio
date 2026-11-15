@@ -1,12 +1,12 @@
-import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261114.7';
-import {cloudRequest,connected} from './cloud.mjs?v=20261114.7';
-import {buildResume} from './studio.mjs?v=20261114.7';
-import {filename,canonical} from './job-core.mjs?v=20261114.7';
-import {helperRequest} from './extension-client.mjs?v=20261114.7';
+import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261114.8';
+import {cloudRequest,connected} from './cloud.mjs?v=20261114.8';
+import {buildResume} from './studio.mjs?v=20261114.8';
+import {filename,canonical} from './job-core.mjs?v=20261114.8';
+import {helperRequest} from './extension-client.mjs?v=20261114.8';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;
 let helperReady=false;
-async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';}catch{helperReady=false;}const status=$('helper-connection');if(status)status.textContent=helperReady?'Extension connected · ready to start applications':'Install or reload Application Helper 1.1, then refresh this page to connect.';return helperReady;}
+async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';}catch{helperReady=false;}const status=$('helper-connection');if(status)status.textContent=helperReady?'Extension connected · ready to start applications':'Install or reload Application Helper 1.2, then refresh this page to connect.';return helperReady;}
 if(typeof window!=='undefined'){detectHelper();window.addEventListener('focus',detectHelper);}
 const message=text=>{$('application-status').textContent=text;};
 function needOwner(){if(connected())return true;message('Unlock owner access in Online library to save your profile and applications.');const library=$('cloud-library');library.open=true;library.scrollIntoView({behavior:'smooth',block:'center'});$('cloud-key').focus();return false;}
@@ -48,7 +48,7 @@ async function openApplication(job){
  const save=node('button','Save draft online','quiet');save.onclick=async()=>{if(!connected()){status.textContent='Close this kit and unlock owner access in Online library to save your draft.';return;}save.disabled=true;try{const result=await cloudRequest('/applications','PUT',{...app,status:stage.value,notes:notes.value});applications=[result.application,...applications.filter(a=>a.url!==result.application.url)];dirty=false;discard.hidden=true;renderHistory();status.textContent=stage.value==='Submitted'?'Marked submitted based on your confirmation. Application Studio has not submitted anything.':'Draft saved online. It will be here after clearing browser data.';}catch(error){status.textContent=error.message;}finally{save.disabled=false;}};
  const original=node('a','Open employer application ↗','primary');original.href=job.url;original.target='_blank';original.rel='noopener noreferrer';
  const helperHint=node('p',profile?'Checking for Application Helper…':'Save and confirm your profile to use the connected extension. You can still open the employer’s page.','hint');
- const updateHelper=()=>{if(!profile)return;original.textContent=helperReady?'Start application with helper ↗':'Open employer application ↗';helperHint.textContent=helperReady?'Your confirmed profile follows this job. Review suggested answers on the employer’s form.':'Extension not connected. Install or reload Application Helper 1.1 and refresh this page, or open the employer normally.';};updateHelper();if(typeof window!=='undefined')detectHelper().then(updateHelper);
+ const updateHelper=()=>{if(!profile)return;original.textContent=helperReady?'Start application with helper ↗':'Open employer application ↗';helperHint.textContent=helperReady?'Your confirmed profile follows this job. Review suggested answers on the employer’s form.':'Extension not connected. Install or reload Application Helper 1.2 and refresh this page, or open the employer normally.';};updateHelper();if(typeof window!=='undefined')detectHelper().then(updateHelper);
  let starting=false;
  original.onclick=async e=>{
   if(!helperReady||!profile)return;e.preventDefault();if(starting)return;starting=true;original.setAttribute('aria-disabled','true');

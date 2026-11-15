@@ -1,18 +1,20 @@
+import {memoryMatch} from './answer-memory.mjs';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-export function suggestField(field,profile){
+export function suggestField(field,profile,memory=[],origin='',context=''){
  if(!profile?.confirmed)return null;
  const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
- if(!label||/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|referr|manager|supervisor/.test(label))return null;
+ if(!label||/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label))return null;
  if(!['text','email','tel','url','textarea','select-one','number'].includes(field.type)||field.filled||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
  const key=Object.keys(patterns).find(k=>patterns[k].test(label));const custom=(profile.answers||[]).filter(a=>normalize(a.question)===label);
- const value=key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?profile.values[key]:custom.length===1?custom[0].answer:null;
+ const remembered=!key&&!custom.length?memoryMatch(field.label,memory,origin,context):null;
+ const value=key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?profile.values[key]:custom.length===1?custom[0].answer:remembered?.value;
  if(!value||(field.maxLength>0&&value.length>field.maxLength))return null;
  if(field.type==='select-one'){
   const aliases=key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:key==='country'&&['us','usa','united states'].includes(normalize(value))?['united states','united states of america','us','usa']:[normalize(value)];
-  const matches=(field.options||[]).filter(o=>!o.disabled&&(aliases.includes(normalize(o.label))||aliases.includes(normalize(o.value))));if(matches.length!==1)return null;return {value:matches[0].value,display:matches[0].label};
+  const matches=(field.options||[]).filter(o=>!o.disabled&&(aliases.includes(normalize(o.label))||aliases.includes(normalize(o.value))));if(matches.length!==1)return null;return {value:matches[0].value,display:matches[0].label,reason:remembered?.reason,sourceQuestion:remembered?.question};
  }
- return {value,display:value};
+ return {value,display:value,reason:remembered?.reason,sourceQuestion:remembered?.question};
 }
 export function scanForm(){
  const label=e=>([...(e.labels||[])].map(l=>l.innerText).join(' ')||e.getAttribute('aria-label')||(e.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>document.getElementById(id)?.innerText||'').join(' ')||e.placeholder||'').trim().slice(0,250);

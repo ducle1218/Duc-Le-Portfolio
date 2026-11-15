@@ -27,7 +27,7 @@ const manifest=JSON.parse(await readFile(new URL('../tools/application-helper/ma
 assert.deepEqual(manifest.permissions,['activeTab','scripting','storage']);assert(!manifest.host_permissions);
 assert.deepEqual(manifest.optional_host_permissions,['https://*/*']);assert.equal(manifest.background.service_worker,'background.mjs');
 assert.deepEqual(manifest.content_scripts[0].matches,['https://ducle1218.github.io/Duc-Le-Portfolio/applications/*','https://ducle1218.github.io/Duc-Le-Portfolio/generator/*','https://ducle1218.github.io/Duc-Le-Portfolio/resume/generator/*']);
-for(const file of ['application-core.mjs','application-autofill.mjs'])assert.equal(await readFile(new URL('../tools/application-helper/'+file,import.meta.url),'utf8'),await readFile(new URL('../resume/generator/'+file,import.meta.url),'utf8'));
+for(const file of ['application-core.mjs','application-autofill.mjs','answer-memory.mjs'])assert.equal(await readFile(new URL('../tools/application-helper/'+file,import.meta.url),'utf8'),await readFile(new URL('../resume/generator/'+file,import.meta.url),'utf8'));
 let dom;try{dom=await import('linkedom');}catch{dom=await import('../../tmp/job-tests/node_modules/linkedom/esm/index.js');}
 const {document,window}=dom.parseHTML('<html><body><input type="text" aria-label="First name"><input type="text" aria-label="Last name"><input type="text" aria-label="GPA"><input type="text" aria-label="Signature"><button type="submit">Submit</button></body></html>');
 Object.assign(globalThis,{document,HTMLInputElement:window.HTMLInputElement,HTMLTextAreaElement:window.HTMLTextAreaElement,HTMLSelectElement:window.HTMLSelectElement,Event:window.Event,location:{href:'https://employer.example/apply'},getComputedStyle:()=>({visibility:'visible'})});
@@ -42,7 +42,7 @@ const ui=dom.parseHTML(html);globalThis.document=ui.document;globalThis.Event=ui
 let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[]});
 globalThis.fetch=async(input,options={})=>{const path=String(input);if(path==='./cloud-config.json')return Response.json({endpoint:'https://test.workers.dev'});if(path.endsWith('/application-profile')){if(options.method==='PUT')savedProfile=cleanProfile(JSON.parse(options.body));return Response.json({profile:savedProfile});}if(path.endsWith('/applications'))return Response.json({applications:[]});if(path.endsWith('/jobs'))return Response.json({jobs:[],searchEnabled:false});if(path.endsWith('/automation'))return Response.json({enabled:true});throw new Error('Unexpected test request');};
 await import('../resume/generator/applications.mjs');
-const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261114.7');await setupCloud(()=>{});
+const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261114.8');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Sample');assert.equal(ui.document.getElementById('export-profile').disabled,false);
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.answer-question').value='When can you start?';ui.document.querySelector('.answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;

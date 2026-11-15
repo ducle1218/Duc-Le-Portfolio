@@ -6,6 +6,21 @@ import {helperRequest} from './extension-client.mjs?v=20261114.8';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;
 let helperReady=false;
+let profileEdited=false;
+const exportStatus=text=>{$('profile-download-status').textContent=text;};
+function reviewForDownload(){
+ $('application-profile').open=true;
+ exportStatus('Review your details below, check the confirmation box, then choose Confirm & download. No owner key needed.');
+ $('application-profile').scrollIntoView({behavior:'smooth',block:'start'});
+ $('app-firstName').focus();
+}
+function downloadProfile(confirmed){
+ const url=URL.createObjectURL(new Blob([JSON.stringify({format:'duc-application-profile-v1',exportedAt:new Date().toISOString(),profile:confirmed},null,2)],{type:'application/json'}));
+ const link=node('a');link.href=url;link.download='Duc_Application_Profile.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ exportStatus('Downloaded Duc_Application_Profile.json. In the helper, open Profile settings → Choose exported profile and select this file.');
+ $('profile-download-status').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function readProfile(){return cleanProfile({values:Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value])),answers:[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value})),confirmed:$('profile-confirm').checked});}
 async function detectHelper(){try{const result=await helperRequest('hello');helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';}catch{helperReady=false;}const status=$('helper-connection');if(status)status.textContent=helperReady?'Extension connected · ready to start applications':'Install or reload Application Helper 1.2, then refresh this page to connect.';return helperReady;}
 if(typeof window!=='undefined'){detectHelper();window.addEventListener('focus',detectHelper);}
 const message=text=>{$('application-status').textContent=text;};
@@ -15,11 +30,14 @@ function addAnswer(question='',answer=''){
  const row=node('div',undefined,'reusable-answer');const qLabel=node('label','Question'),q=node('input');q.className='answer-question';q.value=question;q.maxLength=160;q.placeholder='e.g. When are you available to start?';qLabel.append(q);
  const aLabel=node('label','Your answer'),a=node('textarea');a.className='answer-value';a.value=answer;a.maxLength=1500;a.rows=2;aLabel.append(a);const remove=node('button','Remove','quiet');remove.type='button';remove.onclick=()=>row.remove();row.append(qLabel,aLabel,remove);$('reusable-answers').append(row);
 }
-function fillProfile(){for(const [key,,seed] of PROFILE_FIELDS)$('app-'+key).value=profile?.values[key]??seed;$('profile-confirm').checked=false;$('export-profile').disabled=!profile;$('reusable-answers').replaceChildren();for(const answer of profile?.answers||[])addAnswer(answer.question,answer.answer);$('profile-origin').textContent=profile?'Saved online · confirmed '+new Date(profile.confirmedAt).toLocaleDateString():'Starting values come from your published resume. Review them before using them.';}
+function fillProfile(){for(const [key,,seed] of PROFILE_FIELDS)$('app-'+key).value=profile?.values[key]??seed;$('profile-confirm').checked=false;$('reusable-answers').replaceChildren();for(const answer of profile?.answers||[])addAnswer(answer.question,answer.answer);profileEdited=false;$('profile-origin').textContent=profile?'Saved online · confirmed '+new Date(profile.confirmedAt).toLocaleDateString():'Starting values come from your published resume. Review them before using them.';exportStatus(profile?'Your confirmed profile is ready to download.':'First time? Review your details, confirm, and download. No owner key needed.');}
 for(const [key,label] of PROFILE_FIELDS){const wrap=node('label',label),input=node('input');input.id='app-'+key;input.name=key;input.maxLength=220;input.type=key==='email'?'email':['portfolio','linkedin','github'].includes(key)?'url':'text';input.autocomplete='off';wrap.append(input);$('app-profile-fields').append(wrap);}
 fillProfile();$('add-answer').onclick=()=>addAnswer();
-$('export-profile').onclick=()=>{if(!profile)return;const url=URL.createObjectURL(new Blob([JSON.stringify({format:'duc-application-profile-v1',exportedAt:new Date().toISOString(),profile},null,2)],{type:'application/json'}));const link=node('a');link.href=url;link.download='Duc_Application_Profile.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Private profile export ready. Import it into Application Helper. Export a new copy after changing your answers.');};
-$('profile-form').onsubmit=async e=>{e.preventDefault();if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const values=Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value])),answers=[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value}));const result=await cloudRequest('/application-profile','PUT',cleanProfile({values,answers,confirmed:$('profile-confirm').checked}));profile=result.profile;fillProfile();message('Profile and reusable answers saved online. They are ready in each application kit.');}catch(error){message(error.message);}finally{button.disabled=false;}};
+$('export-profile').onclick=$('download-profile').onclick=()=>{if(profile&&!profileEdited)downloadProfile(profile);else reviewForDownload();};
+$('profile-form').addEventListener('input',()=>{profileEdited=true;});
+$('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
+$('add-answer').addEventListener('click',()=>{profileEdited=true;});
+$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){try{downloadProfile(readProfile());}catch(error){message(error.message);exportStatus(error.message);}return;}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;fillProfile();message('Profile and reusable answers saved online. They are ready in each application kit.');}catch(error){message(error.message);}finally{button.disabled=false;}};
 function renderHistory(){const container=$('application-history');container.replaceChildren();$('application-count').textContent=connected()?applications.length+' saved applications':'Owner access required';if(!applications.length)container.append(node('p','Choose “Prepare application” beside a job to start. Save drafts here to find them again on your phone.','hint'));
  for(const app of applications){const row=node('div',undefined,'application-history-row'),text=node('div');text.append(node('strong',app.title),node('p',app.company+' · '+app.status+' · '+new Date(app.updatedAt).toLocaleDateString(),'hint'));const open=node('button','Continue ↗','quiet');open.onclick=()=>openApplication(app);row.append(text,open);container.append(row);}}
 async function refresh(){if(!connected()){profile=null;applications=[];fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);profile=p.profile;applications=a.applications;fillProfile();renderHistory();message('Private application workspace connected.');}catch(error){message(error.message);}}

@@ -24,7 +24,7 @@ assert.equal(suggestField(field('State',{type:'select-one',options:[{label:'New 
 const custom=cleanProfile({...profile,answers:[{question:'When can you start?',answer:'June 1, 2027'}]});assert.equal(suggestField(field('When can you start?',{type:'textarea'}),custom).value,'June 1, 2027');
 assert.equal(suggestField(field('When can you start work?',{type:'textarea'}),custom),null);
 const manifest=JSON.parse(await readFile(new URL('../tools/application-helper/manifest.json',import.meta.url)));
-assert.deepEqual(manifest.permissions,['activeTab','scripting','storage']);assert(!manifest.host_permissions);
+assert.deepEqual(manifest.permissions,['activeTab','scripting','storage']);assert.deepEqual(manifest.host_permissions,['https://ducle1218.github.io/*']);
 assert.deepEqual(manifest.optional_host_permissions,['https://*/*']);assert.equal(manifest.background.service_worker,'background.mjs');
 assert.deepEqual(manifest.content_scripts[0].matches,['https://ducle1218.github.io/Duc-Le-Portfolio/applications/*','https://ducle1218.github.io/Duc-Le-Portfolio/generator/*','https://ducle1218.github.io/Duc-Le-Portfolio/resume/generator/*']);
 for(const file of ['application-core.mjs','application-autofill.mjs','answer-memory.mjs'])assert.equal(await readFile(new URL('../tools/application-helper/'+file,import.meta.url),'utf8'),await readFile(new URL('../resume/generator/'+file,import.meta.url),'utf8'));

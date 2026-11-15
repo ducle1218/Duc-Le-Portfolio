@@ -1,4 +1,4 @@
-# Application Helper 1.6.0 — Chrome and Edge
+# Application Helper 1.7.0 — Chrome and Edge
 
 1. Download the ZIP from Application Studio and extract it.
 2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose **Load unpacked**, and select the extracted folder containing `manifest.json`.
@@ -12,7 +12,7 @@ Your latest confirmed Studio profile is also saved in extension local storage, s
 
 Manual fallback: export your profile JSON from Studio and import it through the extension popup. Imported profiles remain in local extension storage until **Forget profile**. Re-export/import after changing your answers.
 
-Permissions are `activeTab`, `scripting` and `storage`, with a content script restricted to Application Studio on ducle1218.github.io. Optional HTTPS host access is declared for employer forms, but requested only for the single origin selected at launch. There is no blanket access request. Revoke individual site grants in the browser’s extension settings. This does not use a remote browser service.
+Permissions are `activeTab`, `scripting` and `storage`, plus access to `https://ducle1218.github.io/*` for the public portfolio, with a content script restricted to Application Studio on ducle1218.github.io. Optional HTTPS host access is declared for employer forms, but requested only for the single origin selected at launch. There is no blanket access request. Revoke individual site grants in the browser’s extension settings. This does not use a remote browser service.
 
 Supported: visible text fields, textareas, native selects and accessible custom comboboxes with exact, unambiguous options. Existing values and selected files are preserved. Common answers saved in Studio support sex, pronouns, separate age thresholds, US work authorization, sponsorship, referral source, relocation, travel, enrollment and availability. Demographic and eligibility answers start unchecked for per-application review; nothing is inferred. Passwords, signatures, legal attestations, arbitrary checkboxes and submission controls are never filled. Inaccessible widgets and embedded cross-origin frames may require manual entry. Chrome/Edge desktop support unpacked extensions; normal mobile browsers do not.
 
@@ -67,3 +67,13 @@ Selectize, Tom Select, and UI Select controls are treated as dropdown widgets, w
 Choose the application season before scanning a full-time question. Summer 2027 is full-time; fall/winter are not. Unknown seasons stay manual. Summer dates and preferred application source are editable under Saved answers and included in exports. The summer dates expire instead of rolling forward silently.
 
 Inference uses confirmed facts and shows its source: 18+ can meet a 16+ minimum; New Jersey residence implies United States residence. Conflicting facts, citizenship/work authorization, and unproven higher age thresholds stay manual. Availability ranges that overlap a semester need manual review.
+
+## Version 1.7 — Portfolio knowledge
+
+The helper fetches the portfolio’s public structured project data and matching resume skill index. A confirmed profile is still required, but questions about documented skills, education and relevant project work can now be answered without adding them to the question bank. Saved answers take priority.
+
+New portfolio suggestions start unchecked. Expand **Why this answer · portfolio sources** to review supporting quotations and project links, then select the answer to fill. Project drafts preserve individual contributions and unfinished status. Unknown skills, years of experience, certifications and legal or identity facts are not guessed. This is local evidence-based inference, not an external AI service. No form answers or private profile are sent to the portfolio.
+
+The popup shows **Portfolio knowledge** with a refresh button. Public facts refresh after six hours; offline copies expire after seven days. The source review date is shown separately from the fetch date. Existing profile and saved answers continue working when the portfolio is unavailable.
+
+Update using the latest ZIP in the same extension folder, reload the helper and refresh the employer form. Chrome may ask you to allow the new portfolio-site permission.

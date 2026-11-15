@@ -1,8 +1,9 @@
 import {memoryMatch} from './answer-memory.mjs?v=20261115.6';
 import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.6';
 import {answerRule} from './answer-rules.mjs?v=20261115.6';
+import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.6';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-export function suggestField(field,profile,memory=[],origin='',context=''){
+export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
  if(!profile?.confirmed)return null;
  const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
  const common=commonQuestion(label),background=backgroundAnswer(label,profile,memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context));
@@ -14,7 +15,17 @@ export function suggestField(field,profile,memory=[],origin='',context=''){
  const key=Object.keys(patterns).find(k=>patterns[k].test(label));const custom=(profile.answers||[]).filter(a=>normalize(a.question)===label||(common&&commonQuestion(a.question)?.question===common.question));
  const remembered=!key?memoryMatch(field.label,memory,origin,context):null;
  const value=rule?.value||(key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?(profile.values[key]||background?.value):common?.question==='How did you hear about this position?'&&remembered?remembered.value:custom.length&&new Set(custom.map(a=>a.answer.trim())).size===1?custom[0].answer:background?.value||remembered?.value);
- if(!value||(field.maxLength>0&&value.length>field.maxLength))return null;
+ if(!value){
+  const derived=portfolioAnswer(field,portfolio);if(!derived)return null;
+  if(['select-one','combobox','radio-group'].includes(field.type)){
+   if(derived.value!=='Yes')return null;
+   if(field.type==='combobox')return {...derived,aliases:['yes']};
+   const matches=(field.options||[]).filter(o=>!o.disabled&&normalize(o.label)==='yes');
+   return matches.length===1?{...derived,value:matches[0].value,display:matches[0].label}:null;
+  }
+  return ['text','textarea'].includes(field.type)?derived:null;
+ }
+ if(field.maxLength>0&&value.length>field.maxLength)return null;
  const confirmedMale=common?.question==='Sex'&&normalize(value)==='male'&&custom.length>0&&new Set(custom.map(a=>normalize(a.answer))).size===1;
  const review=rule?{reason:rule.reason,sourceQuestion:rule.sourceQuestion,requiresReview:rule.requiresReview}:{reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){

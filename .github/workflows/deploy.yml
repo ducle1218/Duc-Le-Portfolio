@@ -44,6 +44,7 @@ jobs:
           node scripts/check-portfolio-data.mjs
           node scripts/check-resume-generator.mjs
           node scripts/build-application-helper.mjs
+          node scripts/check-portfolio-answers.mjs
           node scripts/check-applications.mjs
           node scripts/check-dropdown-resume.mjs
           node scripts/check-selectize-availability.mjs

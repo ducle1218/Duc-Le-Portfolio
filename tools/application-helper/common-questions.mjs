@@ -1,7 +1,9 @@
 // Explicitly confirmed answers only. Different age thresholds and sponsorship
 // timeframes intentionally remain separate questions.
 export const COMMON_QUESTIONS=[
- {question:'Sex',options:['Male','Female','I do not wish to self-identify'],aliases:['sex','what is your sex'],review:true},
+ {question:'Sex',options:['Male','Female','I do not wish to self-identify'],aliases:['sex','what is your sex','gender','what is your gender'],review:true},
+ {question:'Race / ethnic background',aliases:['race','ethnicity','race ethnicity','race ethnic background','what is your race ethnic background','what is your race ethnicity','what is your race','what is your ethnicity','what is your racial ethnic background'],review:true},
+ {question:'Country of citizenship',aliases:['country of citizenship','in which country region do you have citizenship','in which country do you have citizenship','which country are you a citizen of'],review:true},
  {question:'Preferred pronouns',options:['He/Him/His','She/Her/Hers','They/Them/Theirs','Prefer not to say'],aliases:['preferred pronoun','preferred pronouns','pronouns','what are your pronouns'],review:true},
  {question:'Preferred name',aliases:['preferred name','what is your preferred name','what name do you prefer to go by']},
  {question:'Are you 16 years or older?',options:['Yes','No'],aliases:['are you 16 years or older','are you at least 16 years old','are you 16 years of age or older'],review:true},

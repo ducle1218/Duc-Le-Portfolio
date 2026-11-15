@@ -4,7 +4,7 @@ import {makeResumeAttachment,validateResumeAttachment,attachResume} from '../res
 import {prepareHandoff} from '../tools/application-helper/handoff-core.mjs';
 const profile={confirmed:true,values:{firstName:'Sample',lastName:'Applicant'},answers:[{question:'Sex',answer:'Male'},{question:'Are you 16 years or older?',answer:'Yes'},{question:'How did you hear about this position?',answer:'LinkedIn'},{question:'Preferred pronouns',answer:'He/Him/His'}]};
 const combo=label=>({label,type:'combobox',filled:false});
-assert.equal(suggestField(combo('Sex *'),profile).value,'Male');assert.equal(suggestField(combo('Sex *'),profile).requiresReview,true);
+assert.equal(suggestField(combo('Sex *'),profile).value,'Male');assert.equal(suggestField(combo('Sex *'),profile).requiresReview,false);
 assert.equal(suggestField(combo('Are you at least 16 years old?'),profile).value,'Yes');assert.equal(suggestField(combo('Are you 18 years or older?'),profile),null);
 assert.equal(suggestField(combo('Are you legally authorized to work in the United States?'),profile),null);
 assert.equal(suggestField(combo('Preferred Pronoun'),profile).value,'He/Him/His');

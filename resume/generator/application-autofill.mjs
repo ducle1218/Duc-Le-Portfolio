@@ -1,10 +1,11 @@
-import {memoryMatch} from './answer-memory.mjs?v=20261115.4';
-import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.4';
+import {memoryMatch} from './answer-memory.mjs?v=20261115.5';
+import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.5';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context=''){
  if(!profile?.confirmed)return null;
  const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
  const common=commonQuestion(label),background=backgroundAnswer(label,profile);
+ if(/^(in )?(what|which) country( region)?$/.test(label))return null;
  if(!label||(!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
  if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','number'].includes(field.type)||field.filled||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
@@ -12,7 +13,8 @@ export function suggestField(field,profile,memory=[],origin='',context=''){
  const remembered=!key?memoryMatch(field.label,memory,origin,context):null;
  const value=key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?(profile.values[key]||background?.value):common?.question==='How did you hear about this position?'&&remembered?remembered.value:custom.length&&new Set(custom.map(a=>a.answer.trim())).size===1?custom[0].answer:background?.value||remembered?.value;
  if(!value||(field.maxLength>0&&value.length>field.maxLength))return null;
- const review={reason:background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!!common?.review||!!background};
+ const confirmedMale=common?.question==='Sex'&&normalize(value)==='male'&&custom.length>0&&new Set(custom.map(a=>normalize(a.answer))).size===1;
+ const review={reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){
   const aliases=key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:key==='country'&&['us','usa','united states'].includes(normalize(value))?['united states','united states of america','us','usa']:common?.question==='Highest completed degree'&&normalize(value)==='high school diploma'?['high school diploma','high school diploma or equivalent','high school diploma ged','high school or equivalent']:[normalize(value)];
   if(field.type==='combobox')return {value,display:value,aliases,...review};
@@ -37,12 +39,20 @@ export function formBridge({action='scan',url,fields=[]}={}){
  const radios=e=>{const g=group(e);return [...(g||e.form||document).querySelectorAll('input[type="radio"],[role="radio"]')].filter(r=>g?group(r)===g&&(!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"]'))control.remove();return text(copy);};
  const ownLabel=e=>(e.getAttribute('aria-label')||labelled(e)||[...(e.labels||[])].map(labelText).join(' ')||labelText(e.closest('label'))||'').trim();
- const nearbyLabel=e=>{let parent=e.parentElement;for(let n=0;n<5&&parent&&parent!==document.body;n++,parent=parent.parentElement){const groups=[...parent.querySelectorAll(controls)].filter(c=>!c.parentElement?.closest(comboSelector));if(radio(e)){if(groups.some(c=>!radio(c)||!radios(e).includes(c)))break;}else if(groups.filter(c=>!radio(c)).length!==1)break;const heading=parent.querySelector('legend,label:not([for]),.control-label,.form-label,[data-question],h3,h4');const value=labelText(heading);if(value&&!/^(yes|no)$/i.test(value))return value;}return '';};
- const label=e=>{if(radio(e)){const g=group(e);return (g&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,250);}return (ownLabel(e)||nearbyLabel(e)||e.placeholder||'').trim().slice(0,250);};
+ const nearbyLabel=e=>{let parent=e.parentElement;const members=radio(e)?radios(e):[];
+  for(let n=0;n<8&&parent&&parent!==document.body;n++,parent=parent.parentElement){
+   const contained=[...parent.querySelectorAll(controls)].filter(c=>!c.parentElement?.closest(comboSelector));
+   if(radio(e)){if(contained.some(c=>!radio(c)||!members.includes(c)))break;if(!members.length||!members.every(r=>parent.contains(r)))continue;}
+   else if(contained.filter(c=>!radio(c)).length!==1)break;
+   const candidates=[...parent.querySelectorAll('legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label')].filter(h=>!h.querySelector(controls)&&!members.some(r=>r.closest('label')?.contains(h)||[...(r.labels||[])].some(l=>l.contains(h))));
+   for(const heading of candidates){const value=labelText(heading);if(value&&!/^(yes|no|male|female)$/i.test(value)&&value.length<=250)return value;}
+  }return '';
+ };
+ const label=e=>{if(radio(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,250);}return (ownLabel(e)||nearbyLabel(e)||e.placeholder||'').trim().slice(0,250);};
  const elements=()=>[...document.querySelectorAll(controls)].filter(e=>!e.parentElement?.closest(comboSelector)).filter((e,i,all)=>!radio(e)||radios(e)[0]===e);
  const selectedValue=e=>{let parent=e;for(let n=0;n<4&&parent;n++,parent=parent.parentElement){if(parent!==e&&parent.querySelectorAll(comboSelector).length>1)break;const selected=parent.querySelector('[class*="singleValue"],[data-selected-value],.ng-value-label,.select2-selection__rendered,.mat-select-value-text');if(selected)return text(selected);}return (e.value||text(e)).trim();};
  const selectedRadio=e=>radios(e).find(r=>r.checked||r.getAttribute('aria-checked')==='true');
- const optionLabel=e=>ownLabel(e)||text(e)||e.value||'';
+ const optionLabel=e=>{const associated=[...(e.labels||[])];const root=associated[0]||e.closest('label');if(root){const copy=root.cloneNode(true);const described=(e.getAttribute('aria-describedby')||'').split(/\s+/);for(const n of copy.querySelectorAll('input,[role="radio"],p,small,.description,.help-block,[id]'))if(n.matches('input,[role="radio"],p,small,.description,.help-block')||described.includes(n.id))n.remove();const value=text(copy).split('\n').map(s=>s.trim()).find(Boolean);if(value)return value;}return ownLabel(e)||text(e)||e.value||'';};
  const placeholder=value=>!value||/^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
  const empty=e=>radio(e)?!selectedRadio(e):custom(e)?placeholder(selectedValue(e)):!e.value||(e.tagName==='SELECT'&&e.selectedIndex===0&&/select|choose|please/i.test(text(e.options[0])));
  const disabled=e=>e.disabled||e.readOnly&&!custom(e)||e.getAttribute('aria-disabled')==='true';
@@ -53,7 +63,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
   const candidates=[];
   for(const e of elements()){
    if(!['text','email','tel','url','textarea','select-one','number','combobox','radio-group'].includes(type(e))||disabled(e)||!visible(e)||empty(e))continue;
-   const question=label(e);if(!question||blocked.test(question+' '+(e.name||'')+' '+e.id)||/one-time-code|cc-|current-password|new-password/.test(e.autocomplete||''))continue;
+   const question=label(e),identity=/^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));if(!question||/^(in )?(what|which) country( region)?$/.test(norm(question))||(!identity&&blocked.test(question+' '+(e.name||'')+' '+e.id))||/one-time-code|cc-|current-password|new-password/.test(e.autocomplete||''))continue;
    const answer=radio(e)?optionLabel(selectedRadio(e)):custom(e)?selectedValue(e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):e.value;
    if(!answer||answer.length>1500||placeholder(answer))continue;
    candidates.push({question,answer});if(candidates.length>=100)break;

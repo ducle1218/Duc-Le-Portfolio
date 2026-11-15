@@ -6,6 +6,6 @@ export function employerURL(value){try{const u=new URL(value);const host=u.hostn
 export function prepareHandoff(input){
  const url=employerURL(input?.job?.url);if(!url)throw new Error('Choose a public HTTPS employer application link.');
  const title=String(input.job.title||'').trim().slice(0,220),company=String(input.job.company||'').trim().slice(0,160);if(!title||!company)throw new Error('Job details are missing.');
- return {job:{url,title,company},profile:cleanProfile(input.profile),...(input.resume?{resume:validateResumeAttachment(input.resume,url)}:{}),origin:new URL(url).origin,createdAt:Date.now(),expiresAt:Date.now()+30*60*1000};
+ return {job:{url,title,company},profile:cleanProfile(input.profile),...(input.resume?{resume:validateResumeAttachment(input.resume,url),autoResume:input.autoResume===true}:{}),origin:new URL(url).origin,createdAt:Date.now(),expiresAt:Date.now()+30*60*1000};
 }
 export const originPattern=url=>new URL(url).origin+'/*';

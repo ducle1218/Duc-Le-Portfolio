@@ -1,8 +1,13 @@
 import {copyFile,mkdir,readFile,writeFile} from 'node:fs/promises';
 import {makeZip} from '../resume/generator/zip.mjs';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+const require=createRequire(import.meta.url);
+const {build}=require(require.resolve('esbuild',{paths:[fileURLToPath(new URL('../',import.meta.url)),fileURLToPath(new URL('../../tmp/cloud-tools/node_modules/',import.meta.url))]}));
 const root=new URL('../tools/application-helper/',import.meta.url);
 for(const file of ['application-core.mjs','application-autofill.mjs'])await copyFile(new URL('../resume/generator/'+file,import.meta.url),new URL(file,root));
-const names=['manifest.json','popup.html','popup.css','popup.mjs','application-core.mjs','application-autofill.mjs','README.md'];
+await build({entryPoints:[fileURLToPath(new URL('assistant.mjs',root))],outfile:fileURLToPath(new URL('assistant.bundle.js',root)),bundle:true,format:'iife',platform:'browser',target:'chrome120'});
+const names=['manifest.json','popup.html','popup.css','popup.mjs','application-core.mjs','application-autofill.mjs','README.md','background.mjs','bridge.js','handoff-core.mjs','launch.html','launch.mjs','assistant.bundle.js'];
 const files=await Promise.all(names.map(async name=>({name,data:await readFile(new URL(name,root))})));
 const output=new URL('../resume/generator/downloads/',import.meta.url);await mkdir(output,{recursive:true});await writeFile(new URL('Application-Helper.zip',output),makeZip(files));
 console.log('Application Helper ZIP prepared, with no profile data or credentials.');

@@ -1,4 +1,4 @@
-import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.6';
+import {canonical,safeUrl,validateJob} from './job-core.mjs?v=20261114.7';
 const BOARDS=['lockheedmartin.eightfold.ai','apply.careers.microsoft.com','www.amazon.jobs','linkedin.com','indeed.com','glassdoor.com','ziprecruiter.com','myworkdayjobs.com','myworkdaysite.com','smartrecruiters.com','workable.com','icims.com','usajobs.gov','amazon.jobs','jobs.ashbyhq.com','jobs.jobvite.com','careers.microsoft.com','jobs.apple.com','careers.google.com','careers.spacex.com','careers.boeing.com'];
 export function readerUrl(value){
  const u=safeUrl(value);if(!u)return null;

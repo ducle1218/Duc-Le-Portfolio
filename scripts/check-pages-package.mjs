@@ -28,6 +28,7 @@ export const REQUIRED_FILES = Object.freeze([
   'generator/index.html',
   'applications/index.html',
   'resume/generator/applications.mjs',
+  'resume/generator/extension-client.mjs',
   'resume/generator/application-core.mjs',
   'resume/generator/downloads/Application-Helper.zip',
   'resume/generator/finder.mjs',

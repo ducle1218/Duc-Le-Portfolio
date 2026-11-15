@@ -1,5 +1,5 @@
-import {canonical,validateJob,safeUrl} from './job-core.mjs?v=20261114.6';
-import {readPublicJob} from './job-reader.mjs?v=20261114.6';
+import {canonical,validateJob,safeUrl} from './job-core.mjs?v=20261114.7';
+import {readPublicJob} from './job-reader.mjs?v=20261114.7';
 export function apiEndpoint(value){
  const url=safeUrl(value);if(!url)return null;
  const parts=url.pathname.split('/').filter(Boolean);

@@ -42,10 +42,20 @@ const ui=dom.parseHTML(html);globalThis.document=ui.document;globalThis.Event=ui
 let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[]});
 globalThis.fetch=async(input,options={})=>{const path=String(input);if(path==='./cloud-config.json')return Response.json({endpoint:'https://test.workers.dev'});if(path.endsWith('/application-profile')){if(options.method==='PUT')savedProfile=cleanProfile(JSON.parse(options.body));return Response.json({profile:savedProfile});}if(path.endsWith('/applications'))return Response.json({applications:[]});if(path.endsWith('/jobs'))return Response.json({jobs:[],searchEnabled:false});if(path.endsWith('/automation'))return Response.json({enabled:true});throw new Error('Unexpected test request');};
 await import('../resume/generator/applications.mjs');
+// A profile file can be reviewed and downloaded without cloud credentials.
+const byId=id=>ui.document.getElementById(id),downloads=[];
+for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
+const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test-profile';};
+byId('download-profile').onclick();assert.equal(byId('application-profile').open,true);assert.match(byId('profile-download-status').textContent,/No owner key/);assert.equal(downloads.length,0);
+await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,0,'Unconfirmed defaults must not export');
+byId('app-firstName').value='Reviewed';byId('profile-confirm').checked=true;
+await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(downloads.length,1);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
 const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261114.8');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Sample');assert.equal(ui.document.getElementById('export-profile').disabled,false);
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.answer-question').value='When can you start?';ui.document.querySelector('.answer-value').value='June 1, 2027';ui.document.getElementById('profile-confirm').checked=true;
 await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers[0].answer,'June 1, 2027');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
+byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
+byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,2,'Unsaved edits require review rather than exporting stale saved data');byId('profile-confirm').checked=true;await byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');URL.createObjectURL=originalCreate;
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');
-console.log('PASS: profile UI unlock, private load, reusable answer editing, save and export availability.');
+console.log('PASS: profile download without owner access, required confirmation, one-click saved export, unsaved-edit review, private load and online save.');

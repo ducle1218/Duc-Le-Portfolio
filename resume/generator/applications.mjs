@@ -1,11 +1,11 @@
 import {paginateAnswers} from './answer-pagination.mjs?v=20261115.10';
 import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261115.10';
-import {cloudRequest,connected} from './cloud.mjs?v=20261115.6';
-import {buildResume} from './studio.mjs?v=20261115.6';
-import {filename,canonical} from './job-core.mjs?v=20261115.6';
-import {helperRequest} from './extension-client.mjs?v=20261115.6';
-import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261115.6';
-import {makeResumeAttachment} from './resume-attachment.mjs?v=20261115.6';
+import {cloudRequest,connected} from './cloud.mjs?v=20261115.10';
+import {buildResume} from './studio.mjs?v=20261115.10';
+import {filename,canonical} from './job-core.mjs?v=20261115.10';
+import {helperRequest} from './extension-client.mjs?v=20261115.10';
+import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261115.10';
+import {makeResumeAttachment} from './resume-attachment.mjs?v=20261115.10';
 import {importAnswers} from './answer-import.mjs?v=20261115.10';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;

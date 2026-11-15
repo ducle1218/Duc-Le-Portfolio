@@ -1,6 +1,10 @@
 // Explicitly confirmed answers only. Different age thresholds and sponsorship
 // timeframes intentionally remain separate questions.
 export const COMMON_QUESTIONS=[
+ {question:'Summer internship start date',aliases:['summer internship start date'],defaultAnswer:'2027-05-13'},
+ {question:'Summer internship end date',aliases:['summer internship end date'],defaultAnswer:'2027-08-31'},
+ {question:'Full-time internship availability',aliases:['full time internship availability'],defaultAnswer:'Summer only; not fall or winter'},
+ {question:'Preferred application source',aliases:['preferred application source'],defaultAnswer:'Company website or university'},
  {question:'Sex',options:['Male','Female','I do not wish to self-identify'],aliases:['sex','what is your sex','gender','what is your gender'],review:true},
  {question:'Race / ethnic background',aliases:['race','ethnicity','race ethnicity','race ethnic background','what is your race ethnic background','what is your race ethnicity','what is your race','what is your ethnicity','what is your racial ethnic background'],review:true},
  {question:'Country of citizenship',aliases:['country of citizenship','in which country region do you have citizenship','in which country do you have citizenship','which country are you a citizen of'],review:true},
@@ -14,7 +18,8 @@ export const COMMON_QUESTIONS=[
  {question:'Are you willing to travel?',options:['Yes','No'],aliases:['are you willing to travel','are you open to travel','would you be willing to travel']},
  {question:'When are you available to start?',aliases:['when are you available to start','when can you start','earliest start date','what is your earliest available start date']},
  {question:'How did you hear about this position?',options:['LinkedIn','Indeed','Company careers website','University career center','Employee referral','Other'],aliases:['how did you hear about this position','how did you hear about this job','how did you hear about us','how did you hear about this role'],review:true},
- {question:'Are you currently enrolled in a university?',options:['Yes','No'],aliases:['are you currently enrolled in a university','are you currently enrolled in college'],review:true},
+ {question:'Are you currently enrolled in a university?',options:['Yes','No'],aliases:['are you currently enrolled in a university','are you currently enrolled in college','are you currently enrolled at a university'],review:true},
+ {question:'Current university',aliases:['current university','which university are you currently attending','what university do you currently attend']},
  {question:'High school name',aliases:['high school name','name of high school','which high school did you graduate from'],defaultAnswer:'Atlantic County Institute of Technology'},
  {question:'High school graduation year',aliases:['high school graduation year','year of high school graduation','what year did you graduate from high school'],defaultAnswer:'2026'},
  {question:'Highest completed degree',aliases:['highest completed degree','highest degree earned','highest degree obtained','highest level of education completed','what is your highest completed degree'],options:['High school diploma','Associate degree','Bachelor degree','Master degree','Doctorate'],defaultAnswer:'High school diploma'},
@@ -27,10 +32,19 @@ export const commonQuestion=q=>COMMON_QUESTIONS.find(item=>item.aliases.includes
 
 // Derivations are deliberately narrow. No employment does not mean no projects,
 // no prior applications, no agreements, or any particular legal eligibility.
-export function backgroundAnswer(question,profile){
- const q=questionKey(question),answers=profile.answers||[];
+export function backgroundAnswer(question,profile,memory=[]){
+ const q=questionKey(question),answers=[...(profile.answers||[]),...memory];
  const fact=canonical=>{const matches=answers.filter(a=>commonQuestion(a.question)?.question===canonical);return matches.length&&new Set(matches.map(a=>a.answer.trim())).size===1?matches[0].answer:null;};
  const residence=fact('Residence history');
+ const states=[profile.values?.state,...answers.filter(a=>/^(state|province state|state province|current state|state of residence)$/.test(questionKey(a.question))).map(a=>a.answer)].filter(Boolean).map(questionKey);
+ const countries=[profile.values?.country,...answers.filter(a=>/^(country|country region|country of residence)$/.test(questionKey(a.question))).map(a=>a.answer)].filter(Boolean).map(questionKey);
+ const inNJ=states.length>0&&states.every(s=>['nj','new jersey'].includes(s));
+ const noCountryConflict=countries.every(c=>['us','usa','united states','united states of america'].includes(c));
+ if(inNJ&&noCountryConflict){
+  if(/^(country( region| of residence)?|current country|home country|what country do you (live|reside) in|in (what|which) country do you (live|reside)|where do you currently reside country)$/.test(q))return {value:'United States',sourceQuestion:'Confirmed state: New Jersey → United States'};
+  if(/^(do you (currently )?(live|reside) in (the )?(united states|us|usa)|are you (currently )?(living|located|residing) in (the )?(united states|us|usa)|have you (ever )?lived in (the )?(united states|us|usa))$/.test(q))return {value:'Yes',sourceQuestion:'Confirmed state: New Jersey → United States'};
+ }
+ if(residence===COMMON_QUESTIONS.find(a=>a.question==='Residence history').defaultAnswer&&/^have you (ever )?lived in (the )?(united states|us|usa)$/.test(q))return {value:'Yes',sourceQuestion:'Residence history: New Jersey since 2014 → United States'};
  if(residence===COMMON_QUESTIONS.find(a=>a.question==='Residence history').defaultAnswer&&/^(current |home )?country( of residence)?$/.test(q))return {value:'United States',sourceQuestion:'Residence history'};
  const noWork=questionKey(fact('Employment experience'))==='none',noResearch=questionKey(fact('Research positions'))==='none';
  if(noWork&&/^(do you have (any )?(work|employment|professional work|professional) experience|have you (ever |previously )?been employed( by [a-z0-9 ]+)?|are you currently employed)$/.test(q))return {value:'No',sourceQuestion:'Employment experience'};

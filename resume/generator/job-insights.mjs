@@ -1,4 +1,4 @@
-import {list} from './job-core.mjs?v=20261115.5';
+import {list} from './job-core.mjs?v=20261115.6';
 const DAY=86400000;
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const wordMatchers=new Map();

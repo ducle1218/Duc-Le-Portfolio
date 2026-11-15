@@ -9,7 +9,7 @@ assert(studioURL(studio.url));assert(!studioURL('https://ducle1218.github.io/ano
 for(const url of ['http://careers.example.com','https://user:pass@careers.example.com','https://localhost','https://127.0.0.1','https://[::1]','file:///tmp/a','javascript:alert(1)'])assert.equal(employerURL(url),null,url);
 assert.throws(()=>prepareHandoff({...payload,profile:{confirmed:false}}));
 const local=new Map(),stored=new Map(),tabs=new Map(),grants=new Set(),injections=[],deliveries=[],badges=[];let messageListener,updateListener,removeListener,nextId=2;
-globalThis.chrome={runtime:{id:'helper',getURL:path=>'chrome-extension://helper/'+path,getManifest:()=>({version:'1.1.0'}),onMessage:{addListener:cb=>messageListener=cb}},storage:{local:{get:async key=>({[key]:local.get(key)}),set:async data=>Object.entries(data).forEach(([k,v])=>local.set(k,v))},session:{get:async key=>key===null?Object.fromEntries(stored):{[key]:stored.get(key)},set:async data=>Object.entries(data).forEach(([k,v])=>stored.set(k,v)),remove:async keys=>{for(const k of Array.isArray(keys)?keys:[keys])stored.delete(k);}}},permissions:{contains:async ({origins})=>origins.every(o=>grants.has(o))},tabs:{get:async id=>tabs.get(id),create:async data=>{const tab={id:nextId++,...data};tabs.set(tab.id,tab);return tab;},update:async(id,data)=>Object.assign(tabs.get(id),data),sendMessage:async(id,data)=>deliveries.push({id,data}),onUpdated:{addListener:cb=>updateListener=cb},onRemoved:{addListener:cb=>removeListener=cb}},scripting:{executeScript:async data=>injections.push(data)},action:{setBadgeText:async data=>badges.push(data)}};
+globalThis.chrome={runtime:{id:'helper',getURL:path=>'chrome-extension://helper/'+path,getManifest:()=>({version:'1.1.0'}),onMessage:{addListener:cb=>messageListener=cb}},storage:{local:{get:async key=>Object.fromEntries((Array.isArray(key)?key:[key]).map(k=>[k,local.get(k)])),set:async data=>Object.entries(data).forEach(([k,v])=>local.set(k,v))},session:{get:async key=>key===null?Object.fromEntries(stored):{[key]:stored.get(key)},set:async data=>Object.entries(data).forEach(([k,v])=>stored.set(k,v)),remove:async keys=>{for(const k of Array.isArray(keys)?keys:[keys])stored.delete(k);}}},permissions:{contains:async ({origins})=>origins.every(o=>grants.has(o))},tabs:{get:async id=>tabs.get(id),create:async data=>{const tab={id:nextId++,...data};tabs.set(tab.id,tab);return tab;},update:async(id,data)=>Object.assign(tabs.get(id),data),sendMessage:async(id,data)=>deliveries.push({id,data}),onUpdated:{addListener:cb=>updateListener=cb},onRemoved:{addListener:cb=>removeListener=cb}},scripting:{executeScript:async data=>injections.push(data)},action:{setBadgeText:async data=>badges.push(data)}};
 await import('../tools/application-helper/background.mjs');
 const send=(message,sender=studio)=>new Promise(resolve=>messageListener(message,sender,resolve));
 assert.equal((await send({type:'studio-hello'})).version,'1.1.0');
@@ -25,17 +25,17 @@ assert.equal((await send({type:'memory-save',items:[remembered]},studio)).ok,fal
 assert.equal((await send({type:'memory-list'},studio)).ok,false);
 assert.equal((await send({type:'memory-save',items:[remembered]},extension)).ok,true);
 const employerSender={id:'helper',frameId:0,url:payload.job.url,tab:{id:2}};
-assert.equal((await send({type:'memory-list'},employerSender)).items[0].answer,'June 1');
+assert.equal((await send({type:'memory-list'},employerSender)).items.find(a=>a.question===remembered.question).answer,'June 1');
 assert.equal((await send({type:'memory-save',items:[{...remembered,sourceOrigin:'https://other.example.com'}]},employerSender)).ok,false);
 assert.equal((await send({type:'memory-save',items:[{...remembered,scope:'https://careers.example.com',context:'different company'}]},employerSender)).ok,false);
 await Promise.all([send({type:'memory-save',items:[{...remembered,question:'Preferred name',answer:'Sam'}]},extension),send({type:'memory-save',items:[{...remembered,question:'Willing to relocate',answer:'Yes'}]},extension)]);
-assert.equal((await send({type:'memory-list'},extension)).items.length,3);
+assert.equal((await send({type:'memory-list'},extension)).items.length,7);
 updateListener(2,{status:'complete'},tabs.get(2));await new Promise(r=>setTimeout(r,20));assert.equal(injections.length,1);assert.equal(deliveries[0].data.entry.profile.values.email,'sample@example.com');
 updateListener(2,{status:'complete'},{url:'https://different.example.com/form'});await new Promise(r=>setTimeout(r,20));assert.equal(injections.length,1);assert.equal(deliveries.length,1);
 stored.get('handoff:2').expiresAt=Date.now()-1;assert.equal((await send({type:'get-handoff',tabId:2},extension)).entry,null);assert(!stored.has('handoff:2'));
 await send({type:'studio-start',payload});assert.equal(tabs.get(3).url,payload.job.url);removeListener(3);await new Promise(r=>setImmediate(r));assert(!stored.has('handoff:3'));
 await send({type:'studio-start',payload});await send({type:'stop-handoff',tabId:4},extension);assert(!stored.has('handoff:4'));
-stored.clear();assert.equal(local.get('profile').values.firstName,'Sample');assert.equal(local.get('answerMemory').length,3);
+stored.clear();assert.equal(local.get('profile').values.firstName,'Sample');assert.equal(local.get('answerMemory').length,7);
 // Connect a PDF to an explicitly selected existing application without navigating it.
 const target={id:50,url:'https://apply.example.com/application/step/resume'};tabs.set(50,target);
 assert.equal((await send({type:'link-current-application',tabId:50},extension)).ok,false);

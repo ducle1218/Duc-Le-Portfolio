@@ -1,4 +1,5 @@
 import {fillWithFollowups} from './fill-sequence.mjs';
+import {setupAccounts} from './account-panel.mjs';
 import {addPortfolioEvidence} from './portfolio-ui.mjs';
 import {applicationSeason} from './answer-rules.mjs';
 import {cleanProfile} from './application-core.mjs';
@@ -6,6 +7,7 @@ import {suggestField,formBridge} from './application-autofill.mjs';
 import {attachResume} from './resume-attachment.mjs';
 import {reviewAnswers} from './memory-panel.mjs';
 const $=id=>document.getElementById(id);let profile=null,review=null,employerContext='',activeApplicationTab=null;
+setupAccounts(()=>profile?.values.email,()=>employerContext);
 $('prepare-resume').onclick=async()=>{try{const tab=activeApplicationTab;if(!tab?.id||!/^https:\/\//.test(tab.url||''))throw new Error('Open the employer application first.');const origin=new URL(tab.url).origin+'/*';if(!await chrome.permissions.request({origins:[origin]}))throw new Error('Access was not granted. You can still attach a PDF manually.');const result=await chrome.runtime.sendMessage({type:'link-current-application',tabId:tab.id});if(!result.ok)throw new Error(result.error);await chrome.tabs.create({url:result.url});}catch(error){say(error.message);}};
 const say=text=>{$('status').textContent=text;};
 let portfolioState=null;

@@ -1,11 +1,14 @@
 {
-  "version": "1.9.6",
-  "sha256": "ded5583b7f5ff16569867f7be7548589c10422abf631a1d901cc09c9a7b9bfb1",
+  "version": "1.10.0",
+  "sha256": "e620e09eae972a800cf06004defc7d0999dd5478fd30ada36f3c84947b29668f",
   "files": [
     "manifest.json",
     "popup.html",
     "popup.css",
     "popup.mjs",
+    "account-form.mjs",
+    "account-panel.mjs",
+    "account-vault.mjs",
     "fill-sequence.mjs",
     "application-core.mjs",
     "application-autofill.mjs",

@@ -28,3 +28,32 @@ const {addPortfolioEvidence}=await import('../tools/application-helper/portfolio
 addPortfolioEvidence($('suggestions'),{portfolioDerived:true,sources:[{title:'<img src=x>',quote:'<script>bad()</script>',url:'https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-12'}]});
 assert.equal($('suggestions').querySelector('script'),null);assert.equal($('suggestions').querySelector('img'),null);
 console.log('PASS: empty-bank portfolio inference reaches popup, citations are escaped, suggestions start selected and only explicitly selected suggestions fill.');
+const {accountCredential}=await import('../tools/application-helper/account-vault.mjs');
+const origin='https://careers.example',email='candidate@example.com',phrase='sample vault passphrase',sitePassword='Fixture-only-42!';
+const credentials={origin,email,employer:'First employer',phrase,repeat:phrase,sitePassword,signup:true};
+assert.equal(await accountCredential(chrome.storage.local,credentials),sitePassword);
+const other={...credentials,origin:'https://second.example',employer:'Second employer',sitePassword:''};
+assert.equal(await accountCredential(chrome.storage.local,other),sitePassword);
+for(const record of [credentials,other]){
+ assert.equal(await accountCredential(chrome.storage.local,{...record,signup:false}),sitePassword);
+}
+assert(!JSON.stringify(local.get('employer-vault-v1')).includes(sitePassword));
+await assert.rejects(accountCredential(chrome.storage.local,{...credentials,phrase:'wrong passphrase',signup:false}),/unlock/);
+await assert.rejects(accountCredential(chrome.storage.local,{...credentials,origin:'https://third.example',signup:false}),/No saved login/);
+await assert.rejects(accountCredential(chrome.storage.local,{...credentials,employer:'Another tenant',signup:false}),/No saved login/);
+
+const {employerAccountForm}=await import('../tools/application-helper/account-form.mjs');
+const formDOM=dom.parseHTML('<html><body><form><input type="email"><input type="password"><input type="password"><button type="submit">Create account</button></form></body></html>');
+Object.assign(globalThis,{document:formDOM.document,location:new URL(origin+'/signup'),getComputedStyle:()=>({visibility:'visible'}),HTMLInputElement:formDOM.window.HTMLInputElement,Event:formDOM.window.Event});
+const form=document.querySelector('form'),button=form.querySelector('button'),inputs=[...form.querySelectorAll('input')];
+for(const el of [...inputs,button]){el.getClientRects=()=>[{}];Object.defineProperty(el,'form',{value:form});}
+let registrations=0;button.onclick=()=>registrations++;form.checkValidity=()=>true;
+const action={url:location.href,email,signup:true,password:sitePassword};
+assert.equal(employerAccountForm({...action,inspectOnly:true}),true);
+assert(inputs.every(el=>!el.value));assert.equal(registrations,0);
+assert.match(employerAccountForm(action),/Registration requested/);
+assert.deepEqual(inputs.map(el=>el.value),[email,sitePassword,sitePassword]);assert.equal(registrations,1);
+button.textContent='Submit application';employerAccountForm(action);assert.equal(registrations,1);
+inputs[2].remove();assert.match(employerAccountForm({...action,signup:false}),/Saved login filled/);assert.equal(registrations,1);
+assert.match(employerAccountForm({...action,url:other.origin}).error,/page changed/);
+console.log('PASS: shared encrypted employer password, origin and employer matching, registration, confirmation field and returning sign-in.');

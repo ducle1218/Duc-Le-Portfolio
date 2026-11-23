@@ -65,6 +65,13 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
  ];
  const confirmed=(value,sourceQuestion,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion,requiresReview:true});
+ const employment=q.replace(/ this does not include contractor consultant or vendor roles$/,'');
+ if(/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment)&&
+    !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
+  return confirmed('No','Employment experience');
+ const sms='SMS contact about my job application';
+ if(/\b(?:sms|text messages?)\b/.test(q)&&/\b(?:application|recruiting|recruitment)\b/.test(q)&&/\b(?:approve|consent|agree|opt in|permission|receive|may we|can we)\b/.test(q)&&!/\b(?:opt out|decline|marketing|advertising|not|sales)\b/.test(q)&&unique(sms))
+  return confirmed(unique(sms),sms);
  const active='Active security clearance',previous='Previous security clearance';
  const clearanceLevel=/^security clearance (active|inactive within (the past )?2 years)$/.exec(q);
  if(clearanceLevel){
@@ -105,6 +112,14 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  if(/^are you (a |an )?(u s|us|united states) citizen$/.test(q)&&citizen)return confirmed('Yes','Citizenships');
  const auth='Are you legally authorized to work in the United States?';
+ const proof='Can provide a valid US passport, US birth certificate or certificate of naturalization on request';
+ if(/\bexport control(?:led)?\b/.test(q)&&/\b(?:select|choose) (?:among |one of )?(?:the following|an option|which statement)/.test(q)){
+  if(!citizen||unique(proof)!=='Yes')return {blocked:true};
+  const option='I am a US Person and can provide a valid, unexpired US Passport or US birth certificate or certificate of naturalization upon request.';
+  return confirmed(option,proof,[questionKey(option),questionKey(option).replaceAll('us ','u s ')]);
+ }
+ if(/^are you (?:legally )?(?:authorized|eligible) to work (?:for (?:any|an?) (?:us|u s|united states) employer|in (?:the )?(?:us|u s|united states))$/.test(q)&&(fact(auth)||citizen))
+  return confirmed(fact(auth)||'Yes',fact(auth)?auth:'Citizenships');
  const sponsor='Will you now or in the future require sponsorship for employment visa status?';
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
  if(countryDependent||commonQuestion(q)?.question===sponsor){
@@ -143,6 +158,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(/^(zip|postal|zip postal)( code)?$/.test(q)&&zip)return result(zip,'ZIP from your saved address');
  const pursued=fact('Degree being pursued'),school=questionKey(field.educationSchool),college=school&&school===questionKey(profile.values?.school),highSchool=school&&school===questionKey(fact('High school name'));
  if(q==='degree'||q==='degree type'||commonQuestion(field.label)?.question==='Degree being pursued'){
+  if(field.highestEducation&&fact('Highest completed degree'))return confirmed(fact('Highest completed degree'),'Highest completed degree',questionKey(fact('Highest completed degree'))==='high school diploma'?['high school or equivalent','high school diploma ged','high school diploma','secondary education diploma']:undefined);
   if(highSchool)return result(fact('Highest completed degree'),'Completed high-school education',['high school diploma ged','high school diploma','full high school education']);
   if(pursued&&(college||commonQuestion(field.label)?.question==='Degree being pursued'))return result(pursued,'Degree in progress, not a completed degree',['bachelors','bachelor','bachelor s','bachelor degree','bachelor s degree','bachelor of science','b s','bs']);
   return {blocked:true};

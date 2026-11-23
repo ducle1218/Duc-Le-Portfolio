@@ -55,3 +55,22 @@ assert.equal((await attachResume({url:location.href,resume:pdf})).attached,true)
 input.files=[];const oversized=await makeResumeAttachment(new TextEncoder().encode('%PDF-1.4\n'+'x'.repeat(1000000)),pdf.jobUrl,'Large.pdf');
 assert.equal((await attachResume({url:location.href,resume:oversized})).attached,false);assert.equal(input.files.length,0);
 console.log('PASS: address splitting, dependent sources, scoped education/GPA, freshman standing, employment aliases, reviewed eligibility, East Coast checkboxes, and DuPont-style hidden CV upload/size limits.');
+const prefs={confirmed:true,values:{state:'New Jersey',country:'United States',phone:'(609) 555-0199'},answers:[
+ ...profile.answers.filter(a=>a.question!=='Are you legally authorized to work in the United States?'),
+ {question:'Citizenships',answer:'United States; Vietnam'},{question:'Are you 18 years or older?',answer:'Yes'},
+ {question:'SMS contact about my job application',answer:'Yes'},
+ {question:'Can provide a valid US passport, US birth certificate or certificate of naturalization on request',answer:'Yes'}
+]};
+const probe=(label,more={})=>suggestField({label,type:'combobox',filled:false,...more},prefs);
+for(const question of ['Were you ever employed by Oshkosh Corporation or one of its affiliates?','Are you a current employee of Another Company or one of its affiliates (this does NOT include contractor, consultant, or vendor roles)?'])assert.equal(probe(question)?.value,'No',question);
+assert.equal(probe('Are you at least 18 years of age?')?.value,'Yes');
+assert.equal(probe('Are you authorized to work for any US employer?')?.value,'Yes');
+assert.equal(probe('We would like to use SMS communication to contact you with regards to your application. Do you approve?')?.value,'Yes');
+assert.equal(probe('Country',{phoneCountry:true})?.value,'United States +1');
+assert.equal(probe('Degree',{highestEducation:true,educationSchool:'Rutgers'})?.value,'High school diploma');
+assert.match(probe('This position requires access to export-controlled information. For export-control purposes, please select among the following options:')?.value,/US Passport/);
+assert.equal(probe('What shift are you available to work?'),null);
+assert.equal(probe('State')?.value,'New Jersey');
+const updated=structuredClone(prefs);updated.answers.find(a=>a.question==='Employment experience').answer='Internship';
+assert.equal(suggestField({label:'Were you ever employed by Example or one of its affiliates?',type:'combobox'},updated),null);
+console.log('PASS: employer-specific questions follow updated employment history, phone country, SMS, US authorization, confirmed document availability and highest completed degree.');

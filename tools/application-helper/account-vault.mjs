@@ -36,7 +36,7 @@ export async function scanCredential(storage,options,keyStore=deviceKey){
  let key=await keyStore();
  if(!key&&entry){
   if(entry.deviceOnly)throw Error('This browser no longer has the key to its employer vault.');
-  if(!options.phrase)throw Error('Enter your existing vault passphrase in Employer account, then scan once to unlock it on this browser.');
+  if(!options.phrase)throw Object.assign(Error('Enter your existing vault passphrase once to unlock passwords saved by the older helper.'),{code:'LEGACY_VAULT'});
   key=await derive(options.phrase,entry.salt);
   const password=await accountCredential(storage,{...options,key});
   await keyStore(key);

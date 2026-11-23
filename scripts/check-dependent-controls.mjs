@@ -28,3 +28,27 @@ const changedScan=formBridge(),parent=changedScan.fields.find(f=>f.label==='How 
 const changed=await formBridge({action:'fill',url:changedScan.url,fields:[{...parent,value:'Amazon Career Site',display:'Amazon Career Site'},{...child,value:'Other',display:'Other'}]});
 assert.deepEqual(changed,{filled:1,skipped:1},'A replaced dependent control is skipped until rescanned');
 console.log('PASS: custom dropdown and radio remembering/filling, cascading follow-up discovery, existing-answer preservation, background facts, no legal/experience overreach and no submission.');
+const treeDOM=dom.parseHTML('<html><body><div data-automation-id="formField-source"><label>How Did You Hear About Us?</label><input id="ref" data-automation-id="searchBox" value="Company Website" aria-controls="ref-menu"><div id="ref-menu" data-automation-id="activeListContainer" hidden><div data-automation-id="promptOption">Company Website</div></div></div></body></html>');
+globalThis.document=treeDOM.document;globalThis.Event=treeDOM.window.Event;globalThis.KeyboardEvent=treeDOM.window.Event;
+const search=treeDOM.document.getElementById('ref'),menu=treeDOM.document.getElementById('ref-menu');
+const measurable=n=>{n.getClientRects=()=>n.closest('[hidden]')?[]:[{}];};for(const n of treeDOM.document.querySelectorAll('*'))measurable(n);
+search.onclick=()=>{menu.hidden=false;search.setAttribute('aria-expanded','true');};
+menu.firstElementChild.onclick=()=>{menu.innerHTML='<div data-automation-id="promptLeafNode">Company Careers Website</div>';const leaf=menu.firstElementChild;measurable(leaf);leaf.onclick=()=>{const token=treeDOM.document.createElement('span');token.setAttribute('data-automation-id','selectedItem');token.textContent=leaf.textContent;search.parentNode.append(token);search.value='';menu.hidden=true;search.setAttribute('aria-expanded','false');};};
+const treeScan=formBridge({action:'scan'}),source=treeScan.fields.find(f=>f.id==='ref');
+assert.equal(source.filled,false);const suggestion=suggestField(source,{...profile,answers:[...profile.answers,{question:'Preferred application source',answer:'Company website or university'}]});
+assert(suggestion.sourceTree);assert.equal((await formBridge({action:'fill',url:treeScan.url,fields:[{...source,...suggestion}]})).filled,1);
+assert.equal(search.parentNode.querySelector('[data-automation-id=selectedItem]').textContent,'Company Careers Website');
+console.log('PASS: uncommitted Workday search text opens its source category and selects the career website leaf.');
+const widgetDOM=dom.parseHTML('<html><body><section><p>In the Degree field provide highest level of education.</p><div data-automation-id="formField-degree"><label>Degree</label><button data-automation-id="degree">Select One</button></div></section><div data-automation-id="formField-countryRegion"><label>State</label><button data-automation-id="countryRegion">Select One</button></div><div class="react-tel-input"><button class="selected-flag"></button><input type="tel"></div></body></html>');
+globalThis.document=widgetDOM.document;
+for(const e of widgetDOM.document.querySelectorAll('*'))measurable(e);
+const choices=[['Bachelors','High School or Equivalent'],['Alabama','New Jersey'],['Afghanistan +93','United States +1']];
+for(const [i,button] of [...widgetDOM.document.querySelectorAll('button')].entries()){
+ button.onclick=()=>{const list=widgetDOM.document.createElement('div');list.setAttribute('role','listbox');measurable(list);button.after(list);
+ for(const choice of choices[i]){const item=widgetDOM.document.createElement('div');item.setAttribute('role','option');item.textContent=choice;measurable(item);list.append(item);item.onclick=()=>{button.textContent=choice;button.title=choice;list.remove();};}};
+}
+const widgetScan=formBridge({action:'scan'});
+const widgetFields=widgetScan.fields.filter(f=>f.type==='combobox').map(f=>({...f,...suggestField(f,{...profile,values:{...profile.values,state:'New Jersey',country:'United States',phone:'(609) 555-0199'}})}));
+assert.equal((await formBridge({action:'fill',url:widgetScan.url,fields:widgetFields})).filled,3);
+assert.deepEqual([...widgetDOM.document.querySelectorAll('button')].map(b=>b.textContent),['High School or Equivalent','New Jersey','United States +1']);
+console.log('PASS: clicked and verified the highest-degree, Workday state and telephone-country options.');

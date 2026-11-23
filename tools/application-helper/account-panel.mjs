@@ -22,16 +22,30 @@ export function setupAccounts(getEmail,getEmployer){
    if(!el('account-employer').value)el('account-employer').value=getEmployer()||url.hostname;
   }catch{status.textContent='Open the employer website first.';}
  };
- async function useAccount(tab,signup,automatic){
+ async function useAccount(tab,signup,automatic,afterEmail=false){
   const url=new URL(tab.url);
   if(url.protocol!=='https:')return null;
   const email=(el('account-email').value||getEmail()||'').trim();
   const employer=(el('account-employer').value||getEmployer()||url.hostname).trim();
-  const base={url:url.href,signup,email,automatic};
+  const base={url:url.href,signup,email,automatic,afterEmail};
   const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
   if(scan?.result?.error)throw Error(scan.result.error);
   if(!scan?.result)return null;
   if(!scan.documentId||!email||!employer)throw Error('Check the email and employer in Employer account before scanning.');
+  if(scan.result.emailStep){
+   const [advanced]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[base]});
+   if(advanced?.result?.error)throw Error(advanced.result.error);
+   if(!advanced?.result?.emailStep)return 'Check the Amazon Jobs email step.';
+   for(let attempt=0;attempt<15;attempt++){
+    await new Promise(resolve=>setTimeout(resolve,400));
+    const [current]=await chrome.tabs.query({active:true,currentWindow:true});
+    if(current?.id!==tab.id||!current.url||new URL(current.url).origin!==url.origin)break;
+    if(current.status==='loading')continue;
+    const next=await useAccount(current,undefined,true,true);
+    if(next)return next;
+   }
+   return 'Email entered. Complete any verification or social sign-in shown by Amazon Jobs.';
+  }
   const registration=automatic?scan.result.signup:signup;
   let password;
   try{
@@ -39,7 +53,11 @@ export function setupAccounts(getEmail,getEmployer){
     origin:url.origin,scope:accountScope(url,employer),employer,email,phrase:el('account-passphrase').value,
     signup:registration,min:scan.result.min,max:scan.result.max
    }));
+  }catch(error){
+   if(error.code==='LEGACY_VAULT'){panel.open=true;el('legacy-unlock').hidden=false;el('account-passphrase').focus();}
+   throw error;
   }finally{el('account-passphrase').value='';}
+  el('legacy-unlock').hidden=true;
   const [result]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,signup:registration,password}]});
   if(result?.result?.error)throw Error(result.result.error);
   return result?.result||'The account form changed. Check the website for the next step.';

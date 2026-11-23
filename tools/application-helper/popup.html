@@ -10,7 +10,7 @@
 <p id="account-site" class="file-note"></p>
 <label>Employer name <input id="account-employer" type="text" maxlength="160"></label>
 <label>Account email <input id="account-email" type="email" autocomplete="off"></label>
-<label>Existing vault passphrase (older helpers only) <input id="account-passphrase" type="password" autocomplete="off"></label>
+<label id="legacy-unlock" hidden>Unlock previously saved passwords <input id="account-passphrase" type="password" autocomplete="off"></label>
 <p class="file-note">Scan creates an employer account or signs in with your saved login. The first registration generates a shared password for this browser.</p>
 <button id="account-create" type="button">Create account</button>
 <button id="account-login" class="quiet" type="button">Fill saved login</button>

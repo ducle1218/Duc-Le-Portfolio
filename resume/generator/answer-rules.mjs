@@ -70,6 +70,17 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(!email||field.primaryEmail&&field.primaryEmail.trim().toLowerCase()!==email.trim().toLowerCase())return {blocked:true};
   return confirmed(email,'Profile email');
  }
+ if(/^(?:title|salutation|honorific|name prefix)$/.test(q)&&unique('Personal title')&&(
+  (field.options||[]).some(o=>/^(?:mr|mrs|ms|dr|miss|doctor)$/.test(questionKey(o.label)))||q!=='title'))return confirmed(unique('Personal title'),'Personal title');
+ if(/^preferred (?:last name|surname|family name)$/.test(q)&&unique('Preferred last name'))return confirmed(unique('Preferred last name'),'Preferred last name');
+ if(q==='current professional title'&&fact('Employment experience')==='None'&&profile.values?.major&&fact('Full-time student enrollment')==='Yes')return confirmed(profile.values.major+' Student','Full-time student enrollment');
+ if(/^(?:home |residence )?county$/.test(q)&&unique('Home county'))return confirmed(unique('Home county'),'Home county',[questionKey(unique('Home county')),questionKey(unique('Home county')).replace(/ county$/,'')]);
+ const options=(field.options||[]).map(o=>questionKey(o.label));
+ if(field.type==='checkbox-group'&&/^(?:select (?:the |all )?races? you identify with|race|race ethnicity)$/.test(q)&&/^asian(?:$| not hispanic)/.test(questionKey(fact('Race / ethnic background'))))return {...confirmed('Asian','Race / ethnic background'),raceSelection:true};
+ const negativeDisability='no i do not have a disability and have not had one in the past';
+ if(unique('Current or past disability')==='No'&&options.includes(negativeDisability)&&options.some(o=>o.startsWith('yes i have a disability')))return confirmed('No, I do not have a disability and have not had one in the past','Current or past disability',[negativeDisability]);
+ if(/^(?:do you (?:currently )?have a disability|do you have or have you ever had a disability)$/.test(q)&&unique('Current or past disability')==='No')return confirmed('No','Current or past disability');
+ if(/^are you willing to (?:undergo|submit to) (?:a |an? employment )?background check(?: in accordance with local (?:law|laws)(?: regulations)?)?$/.test(q)&&fact('Post-offer federal background check, physical and drug screen')==='Yes')return confirmed('Yes','Post-offer federal background check, physical and drug screen');
  if(commonQuestion(q)?.question==='Phone device type'&&fact('Phone device type')==='Mobile')return confirmed('Mobile','Phone device type',['mobile','mobile phone','cell','cell phone','cellular']);
  if(commonQuestion(q)?.question==='Preferred contact method'&&fact('Preferred contact method')==='Email')
   return confirmed('Email','Preferred contact method',['email','e mail','email address','by email']);
@@ -107,8 +118,8 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const race=fact('Race / ethnic background');
   if(questionKey(race)==='asian not hispanic or latino')return confirmed(race,'Race / ethnic background',['asian not hispanic latino','asian not hispanic or latino','asian']);
  }
- if((/^(?:protected )?veteran status$/.test(q)||/^please select your protected veteran status\b/.test(q))&&unique('Protected veteran status')==='I am not a protected veteran')
-  return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran']);
+ if((/^(?:protected )?veteran (?:self identification )?status$/.test(q)||/^please select your protected veteran status\b/.test(q))&&unique('Protected veteran status')==='I am not a protected veteran')
+  return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran','i am not a veteran','not a veteran','i am not a protected veteran or veteran']);
  const agreement='I have read and understand and I agree to the above';
  if(q===questionKey(agreement)&&unique(agreement)==='Yes')return result('Yes','Your saved answer for this acknowledgment');
  const citizen=String(unique('Citizenships')||'').split(';').some(v=>['united states','united states of america','us','usa'].includes(questionKey(v)));
@@ -122,6 +133,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const auth='Are you legally authorized to work in the United States?';
  if(citizen&&/\bare you a (?:u s|us|united states) citizen lawful permanent resident refugee or asylee$/.test(q))return confirmed('Yes','Citizenships');
  const proof='Can provide a valid US passport, US birth certificate or certificate of naturalization on request';
+ if(/^(?:if hired )?can you (?:submit|provide) (?:verification|proof|documentation) of your (?:legal )?right to work in (?:the )?(?:us|u s|united states)$/.test(q)&&citizen&&unique(proof)==='Yes')return confirmed('Yes',proof);
  if(/\bexport control(?:led)?\b/.test(q)&&/\b(?:select|choose) (?:among |one of )?(?:the following|an option|which statement)/.test(q)){
   if(!citizen||unique(proof)!=='Yes')return {blocked:true};
   const option='I am a US Person and can provide a valid, unexpired US Passport or US birth certificate or certificate of naturalization upon request.';
@@ -136,8 +148,9 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   return {blocked:true};
  }
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
- if(countryDependent||commonQuestion(q)?.question===sponsor){
-  const source=q.includes('sponsorship')?sponsor:auth,region=jobJurisdiction(field.jobLocation||'');
+ const visaAssistance=/^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
+ if(visaAssistance||countryDependent||commonQuestion(q)?.question===sponsor){
+  const source=visaAssistance||q.includes('sponsorship')?sponsor:auth,region=jobJurisdiction(field.jobLocation||field.workQuestionCountry||'');
   if(region==='us'&&fact(source))return result(fact(source),'Your U.S. work profile and this job’s location');
   const foreign='Do you require employment visa sponsorship for jobs outside the United States?';
   if(region==='foreign'&&source===sponsor&&unique(foreign))return result(unique(foreign),'Your international sponsorship preference');
@@ -223,7 +236,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(['fall','autumn','winter'].includes(season))return result('No','Not available full-time in fall or winter');
   return {blocked:true}; // Do not reuse an unconditional old Yes/No for an unknown season.
  }
- if(/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(questionKey(field.label))&&unique('Preferred application source')==='Company website or university')return result('Company Website','Your preferred application source',['company website','our website','company careers website','company career site','employer website','amazon career site','amazon jobs','university college','university recruiting','university','university career center','college university']);
+ if((commonQuestion(q)?.question==='How did you hear about this position?'||/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(q))&&unique('Preferred application source')==='Company website or university')return result('Company Website','Your preferred application source',['company website','our website','company careers website','company career site','employer website','amazon career site','amazon jobs','university college','university recruiting','university','university career center','college university']);
  const date=dateConcept(field.label);
  if(date==='start'||date==='end'){
   if(field.applicationSeason&&field.applicationSeason!=='summer-2027')return {blocked:true};

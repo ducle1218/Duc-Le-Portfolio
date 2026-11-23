@@ -5,18 +5,29 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
  const visible=el=>!el.disabled&&!el.readOnly&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
  if(embedded){
-  if(!/\.silkroad\.com$/i.test(location.hostname)||!/^\/epostings\/index\.cfm$/i.test(location.pathname)||new URL(url).searchParams.get('fuseaction')!=='app.resumesubmission')return null;
-  const first=document.getElementById('ohpassword'),confirm=document.getElementById('ohconfirmpassword');
-  const form=first?.form;if(!form||confirm?.form!==form||first.type!=='password'||confirm.type!=='password'||new URL(form.action||url,url).origin!==location.origin)return null;
-  const emails=[...form.querySelectorAll('input')].filter(el=>visible(el)&&['email','text'].includes(el.type)&&/email/i.test(el.type+' '+el.name+' '+el.id));
+  const caption=el=>[el.name,el.id,el.getAttribute('aria-label'),...[...(el.labels||[])].map(l=>l.textContent)].join(' ').toLowerCase();
+  const forms=[...document.forms].filter(form=>form.querySelectorAll('input[type=password]').length===2&&[...form.querySelectorAll('input,select,textarea')].some(el=>visible(el)&&/\b(?:address|city|postal|state|degree|school|resume|contact method)\b/i.test(caption(el))));
+  if(forms.length!==1)return null;
+  const form=forms[0],pair=[...form.querySelectorAll('input[type=password]')];
+  const confirmations=pair.filter(el=>/confirm|repeat|verify|re.?enter/i.test(caption(el)));
+  if(confirmations.length!==1||pair.some(el=>el.autocomplete==='current-password'||/\b(?:current|old|previous) password\b/.test(caption(el))))return null;
+  const confirm=confirmations[0],first=pair.find(el=>el!==confirm);
+  if(!form.contains(first)||confirm.form!==form||first.form!==form||new URL(form.action||url,url).origin!==location.origin||[...form.querySelectorAll('[formaction]')].some(b=>new URL(b.formAction,url).origin!==location.origin))return null;
+  const emails=[...form.querySelectorAll('input')].filter(el=>el.form===form&&visible(el)&&(el.type==='email'||el.type==='text'&&/e.?mail/i.test(caption(el))));
   if(emails.length!==1||!email)return null;
   const identity=emails[0];
+  if(inspectOnly&&(first.value||confirm.value||identity.value&&identity.value.trim().toLowerCase()!==email.toLowerCase()))return {mixed:true,available:false};
   if(identity.value&&identity.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The application uses a different email from your employer account.');
   if(first.value||confirm.value)return null;
-  if(inspectOnly)return {signup:true,min:8,max:30,alphanumeric:true};
-  if(!/^[a-zA-Z0-9]{8,30}$/.test(password||'')||!/[A-Z]/.test(password))throw Error('SilkRoad requires an 8–30 character letters-and-numbers password with an uppercase letter. Your saved password cannot be used here.');
+  const rules=form.innerText||form.textContent||'';
+  const alphanumeric=/only (?:contain|use) letters and numbers/i.test(rules)||first.id==='ohpassword'&&confirm.id==='ohconfirmpassword';
+  const statedMin=Number(rules.match(/(?:at least|minimum of) (\d+) characters/i)?.[1]||0);
+  const min=Math.max(statedMin,alphanumeric?8:1,...pair.map(el=>el.minLength||0));
+  const max=Math.min(alphanumeric?30:128,...pair.map(el=>el.maxLength>0?el.maxLength:128));
+  if(inspectOnly)return {mixed:true,available:true,signup:true,min,max,alphanumeric};
+  if(!password||password.length<min||password.length>max||alphanumeric&&(!/^[A-Za-z0-9]+$/.test(password)||!/[A-Z]/.test(password))||pair.some(el=>{const copy=el.cloneNode(false);copy.value=password;return copy.validity.patternMismatch;}))throw Error('The saved password does not match the password requirements on this form.');
   fill(identity,email);identity.focus();identity.blur();first.focus();
-  if(!visible(first)||!visible(confirm))throw Error('SilkRoad has not enabled both password fields yet.');
+  if(!visible(first)||!visible(confirm))throw Error('The employer has not enabled both password fields yet.');
   for(const el of [first,confirm])fill(el,password);
   return first.value===password&&confirm.value===password?'Employer email and password filled.':null;
  }

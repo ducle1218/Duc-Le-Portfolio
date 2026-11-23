@@ -97,3 +97,21 @@ console.log('PASS: employer-specific questions follow updated employment history
  assert.equal(ask("Hi! I'm Olivia, your job assistant. To get started, can you please provide me with your first and last name?",'chat-reply'),'Test Applicant');
  assert.equal(ask('Can you provide your name? What is your salary expectation?','chat-reply'),undefined);
 }
+{
+ const applicant={...prefs,values:{...prefs.values,lastName:'Tester',email:'tester@example.com'},answers:[...prefs.answers,
+  {question:'Personal title',answer:'Mr.'},{question:'Current or past disability',answer:'No'},
+  {question:'Preferred last name',answer:'Tester'},{question:'Post-offer federal background check, physical and drug screen',answer:'Yes'}]};
+ const answer=(label,more={})=>suggestField({label,type:'text',...more},applicant)?.display;
+ assert.equal(answer('Email address (Username) *'),'tester@example.com');
+ assert.equal(answer('Preferred last name'),'Tester');
+ assert.equal(answer('Title'),undefined);
+ assert.equal(answer('Title',{type:'radio-group',options:[{label:'Mr.',value:'1'},{label:'Mrs.',value:'2'}]}),'Mr.');
+ const consent='No, I do not have a disability and have not had one in the past';
+ assert.equal(answer('Please check one of the boxes below',{type:'radio-group',options:[{label:consent,value:'2'},{label:'Yes, I have a disability, or have had one in the past',value:'1'}]}),consent);
+ assert.equal(answer('Are you willing to undergo a background check, in accordance with local law/regulations?'),'Yes');
+ assert.equal(answer('If hired can you submit verification of your legal right to work in the US?'),'Yes');
+ const visa='Will you require visa assistance now or in the future from our company?';
+ assert.equal(answer(visa),undefined);
+ assert.equal(answer(visa,{workQuestionCountry:'United States'}),'No');
+ assert.equal(answer(visa,{workQuestionCountry:'United States',jobLocation:'Germany'}),undefined);
+}

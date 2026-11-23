@@ -33,28 +33,31 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   return answer?{...answer,reason:'Draft reply for your review',sourceQuestion:answer.sourceQuestion||contact.get(request)||prompt}:null;
  }
  const wording=String(field.label||'').replace(/^\s*(?:question\s+)?\d{1,3}\s*[*.)\-:]+\s*[.*:]?\s*/i,'');
- field={...field,label:wording};
- const label=normalize(wording).replace(/\b(required|optional)\b/g,'').trim();
- if(field.employmentEntry&&profile.answers?.some(a=>commonQuestion(a.question)?.question==='Employment experience'&&normalize(a.answer)==='none'))return null;
+ const parts=wording.trim().split(/\s+/),half=parts.length/2;
+ if(Number.isInteger(half)&&normalize(parts.slice(0,half).join(' '))===normalize(parts.slice(half).join(' ')))field={...field,label:parts.slice(0,half).join(' ')};
+ else field={...field,label:wording};
+ const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
+ if(field.employmentEntry&&label!=='current professional title'&&profile.answers?.some(a=>commonQuestion(a.question)?.question==='Employment experience'&&normalize(a.answer)==='none'))return null;
  const common=commonQuestion(label),background=backgroundAnswer(label,profile,memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context));
  const rule=answerRule(field,profile,memory,origin,context);if(rule?.blocked)return null;
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
- if(!label||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
+ if((!label&&!rule)||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
+ if(field.emailSave&&field.emailValue&&field.emailValue.toLowerCase()===profile.values?.email?.toLowerCase()&&!field.disabled)return {value:profile.values.email,display:profile.values.email,reason:'Save the matching email in this field'};
  if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||field.filled||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|school or university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile| account)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
  const fieldAliases={
-  'state location':'state','location city':'city','city of residence':'city','town or city':'city',
+  'email address username':'email','username email address':'email','state location':'state','location city':'city','city of residence':'city','town or city':'city',
   'discipline':'major','academic discipline':'major','primary field of study':'major',
   'school affiliation':'school','university affiliation':'school','college or university name':'school',
-  'other website':'portfolio','personal portfolio url':'portfolio'
+  'educational institution':'school','school name':'school','school or university name':'school','university or college':'school','major subject':'major','other website':'portfolio','personal portfolio url':'portfolio'
  };
  const directLabel=label.replace(/^(?:please (?:enter|provide|indicate) (?:us )?(?:your )?|what is your |what s your )/,'');
  // A country selector paired with a phone input may represent a calling code.
- if((label==='country'||/^(?:country phone code|phone country(?: code)?|country calling code|dial code)$/.test(label))&&(field.phoneCountry||/phone|dial|calling/i.test(field.id+' '+field.name+' '+label))){
+ if((label==='country'||/^(?:(?:phone(?: number)? )?country code|country phone code|phone country|country calling code|dial code)$/.test(label))&&(field.phoneCountry||/phone|dial|calling/i.test(field.id+' '+field.name+' '+label))){
   const num=String(profile.values.phone||'').replace(/\D/g,'');
   const us=/^(united states(?: of america)?|usa|us)$/.test(normalize(profile.values.country||background?.value));
   if(field.filled||field.disabled||!us||!/^1?\d{10}$/.test(num))return null;
-  const aliases=['united states 1','united states of america 1','united states','us 1'];
+  const aliases=['united states 1','united states of america 1','united states','us 1','1 united states','1 united states of america','united states us 1'];
   if(field.type==='combobox')return {value:'United States +1',display:'United States +1',aliases};
   const matches=(field.options||[]).filter(o=>!o.disabled&&aliases.includes(normalize(o.label)));
   return matches.length===1?{value:matches[0].value,display:matches[0].label}:null;
@@ -72,10 +75,14 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   }
   return ['text','textarea'].includes(field.type)?derived:null;
  }
- if(field.maxLength>0&&value.length>field.maxLength)return null;
+ if(field.maxLength>0&&value?.length>field.maxLength)return null;
  if(field.type==='checkbox-group'){
   if(rule?.markIncomplete)return {value:'Not Completed',display:'Not Completed',selectedLabels:[field.options[0].label],reason:rule.reason,sourceQuestion:rule.sourceQuestion};
   // Only explicit region preferences are supported: never consent/attestation boxes.
+  if(rule?.raceSelection){
+   const asian=field.options.filter(o=>!o.disabled&&normalize(o.label)==='asian');
+   if(asian.length===1)return {value:[asian[0].value],display:asian[0].label,selectedLabels:[asian[0].label],sourceQuestion:rule.sourceQuestion};
+  }
   if(common?.question!=='Preferred work regions')return null;
   const desired=value.split(';').map(normalize),matches=(field.options||[]).filter(o=>!o.disabled&&desired.includes(normalize(o.label)));
   if(matches.length!==desired.length||new Set(matches.map(o=>normalize(o.label))).size!==desired.length)return null;
@@ -171,7 +178,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     return p;
    }
    return null;
-  }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,.question-label,.form-label,.control-label'))return p;}return null;};
+  }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,label:not([for]),[aria-labelledby],.question-label,.form-label,.control-label'))return p;}return null;};
  const radios=e=>{if(checkbox(e)&&norm(ownLabel(e))==='not completed')return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
@@ -197,7 +204,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    for(let previous=node.previousElementSibling;previous;previous=previous.previousElementSibling){
     if(previous.matches(controls)||previous.querySelector(controls))return '';
     const prompt=text(previous).trim();if(!prompt)continue;
-    if(prompt.length<=800&&/\?\s*\*?$/.test(prompt))return prompt;
+    if(prompt.length<=800&&(/\?\s*\*?$/.test(prompt)||/^(?:select the races|please check one of the boxes|title$)/i.test(prompt)))return prompt;
     if(prompt.length>50||previous.matches('h1,h2,h3'))return '';
    }
   }
@@ -281,7 +288,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    const originals=[...scope.querySelectorAll('input')].filter(c=>c!==e&&visible(c)&&/^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
    return {primaryEmail:originals.length===1?originals[0].value||'':originals.length>1?'ambiguous':''};
   }
-  if(wording.replace(/ required$/,'')==='country'||e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag')){
+  if(/^(?:(?:phone(?: number)? )?country code|country)$/.test(wording.replace(/ required$/,''))||e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag')){
    let box=e.parentElement;for(let depth=0;box&&box!==document.body&&depth<13;depth++,box=box.parentElement){
     if(box.matches('.iti,.react-tel-input,.intl-tel-input,.phone-input__country,.phone-input')||box.querySelector('input[type="tel"],input[autocomplete="tel"],input[id="phone"]')&&[...box.querySelectorAll('input')].filter(i=>visible(i)&&i.type!=='hidden'&&i.getAttribute('aria-hidden')!=='true').length<=2)return {phoneCountry:true};
    }
@@ -303,6 +310,10 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if(degrees.length===1&&boxes.length===1){degreePair=true;rowDegree=empty(degrees[0])?'':valueText(degrees[0]);break;}
    }
   }
+  if(/\bvisa assistance\b/.test(wording)){
+   const all=elements(),recent=all.slice(Math.max(0,all.indexOf(e)-3),all.indexOf(e)).map(c=>norm(label(c)));
+   if(recent.some(s=>/right to work in (?:the )?(?:us|u s|united states)$/.test(s))&&!recent.some(s=>/work in /.test(s)&&!/work in (?:the )?(?:us|u s|united states)$/.test(s)))return {workQuestionCountry:'United States'};
+  }
   const q=norm(label(e));if(!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
   const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
   if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
@@ -321,7 +332,18 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   }
   return {parentAnswer,parentQuestion,educationSchool,highestEducation,degreePair,rowDegree};
  };
- const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
+ const emailSave=e=>{
+  if(!e.matches('input[type=email],input[type=text]')||!/^e ?mail(?: address)?$/.test(norm(label(e))))return null;
+  for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+   if(p.querySelectorAll('input:not([type=hidden]),select,textarea').length!==1)break;
+   const actions=[...p.querySelectorAll('button,[role=button]')].filter(b=>visible(b)&&!b.disabled&&!(b.form&&b.type==='submit'));
+   const caption=b=>norm(b.getAttribute('aria-label')||b.title||text(b));
+   const saves=actions.filter(b=>/^(?:(?:save|confirm)(?: (?:email(?: address)?|changes|your changes))?|done editing(?: your)? email(?: address)?)$/.test(caption(b)));
+   if(saves.length===1&&actions.some(b=>/^(?:cancel|undo|revert)(?: |$)/.test(caption(b))))return saves[0];
+  }
+  return null;
+ };
+ const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),...(e.value&&emailSave(e)?{emailSave:true,emailValue:e.value}:{}),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const sectionFor=name=>{
   const headings=[...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter(h=>visible(h)&&norm(text(h))===name);
@@ -398,11 +420,14 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   return complete;
  }
  if(action==='prepare-education'){
-  const buttons=[...document.querySelectorAll('button')].filter(b=>visible(b)&&!b.disabled&&!b.matches('[type="submit"]')&&(!b.form||b.type==='button')&&/^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
+  const buttons=[...document.querySelectorAll('button')].filter(b=>visible(b)&&!b.disabled&&!b.matches('[type="submit"]')&&(!b.form||b.type==='button')&&/^(?:\+\s*)?add(?: education(?: history)?)?$/i.test(text(b)));
   const education=buttons.filter(b=>{
    for(let section=b.parentElement;section&&section!==document.body;section=section.parentElement){
     const headings=[...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
     if(!headings.length)continue;
+    if(norm(text(b))==='add education'&&headings.some(h=>/^(?:work and education history|education(?: history)?)$/.test(norm(text(h)))))
+     return !section.querySelector('input:not([type=hidden]),select,textarea,[role=combobox],[data-education-entry],[aria-label*="Edit education" i], [class*="timeline-item"]:not([class*="year"])')&&
+      ![...section.querySelectorAll('h3,h4,li,[role=listitem]')].some(row=>/\b(?:university|bachelor|diploma|school of)\b/i.test(text(row)));
     return headings.length===1&&/^(?:education|education history)$/.test(norm(text(headings[0])))&&!section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]')&&buttons.filter(other=>section.contains(other)).length===1;
    }
    return false;
@@ -424,7 +449,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    countries.add(typeof country==='string'?country:'');
   }
   const jobLocation=countries.size===1?[...countries][0]:'';
-  const all=elements();return {url:location.href,jobLocation,fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).slice(0,150).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,jobLocation,fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -451,6 +476,10 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    }
    const all=elements();let e=all[f.index];
    if(f.id&&e?.id!==f.id){const matches=all.filter(c=>c.id===f.id);e=matches.length===1?matches[0]:null;}
+   if(f.emailSave&&e?.isConnected&&location.href===url&&label(e)===f.label&&e.value===f.emailValue&&e.value.toLowerCase()===String(f.value).toLowerCase()){
+    const save=emailSave(e);if(save){save.click();await pause(150);if(!e.isConnected||!emailSave(e))filled++;else skipped++;}else skipped++;
+    continue;
+   }
    if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
    const currentContext=context(e);if(('primaryEmail' in f&&currentContext.primaryEmail&&String(currentContext.primaryEmail).trim().toLowerCase()!==String(f.value).trim().toLowerCase())||(f.degreePair&&(!currentContext.degreePair||f.rowDegree&&f.rowDegree!==currentContext.rowDegree))||(f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
@@ -463,11 +492,15 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if(matching.length!==1){skipped++;continue;}matching[0].click();await new Promise(r=>setTimeout(r,60));
     if(selectedRadio(e)===matching[0])filled++;else skipped++;
    }else if(custom(e)){
-    const boxSelector='[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-    const optionSelector='[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
+    const boxSelector='[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+    const optionSelector='[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="gridcell"][aria-selected],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
     const before=new Set([...document.querySelectorAll(boxSelector)].filter(visible));
     const opener=e.matches('.ui-select-container')?(e.querySelector('.ui-select-toggle,.ui-select-match')||e):e;e.focus();if(e.getAttribute('aria-expanded')!=='true')activate(opener);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
     let boxes=[];
+    const searchInput=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
+    const searchableAddress=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
+    const writeSearch=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,value);searchInput.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
+    let initialQuery='';
     for(let attempt=0;attempt<15;attempt++){
      if(location.href!==url||!e.isConnected)break;
      const ids=((e.getAttribute('aria-controls')||'')+' '+(e.getAttribute('aria-owns')||'')).trim().split(/\s+/).filter(Boolean);
@@ -477,18 +510,19 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
      if(!boxes.length)boxes=[...document.querySelectorAll(boxSelector)].filter(n=>visible(n)&&!before.has(n));
      boxes=boxes.filter((b,i,all)=>!all.some(other=>other!==b&&other.contains(b)));
      if(boxes.length===1&&boxes[0].querySelector(optionSelector))break;
+     if(attempt===2&&searchInput&&searchableAddress&&!searchInput.value&&!f.phoneCountry){initialQuery=String(f.value);writeSearch(initialQuery);}
      await new Promise(r=>setTimeout(r,80));
     }
     const aliases=[...(f.aliases||[norm(f.value)])];const readOptions=()=>boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')).filter(o=>!o.matches('input,textarea')&&!o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o,i,all)=>!all.some(other=>other!==o&&o.contains(other)&&norm(text(o))===norm(text(other)))):[];
     const optionKey=o=>f.phoneCountry&&o.getAttribute('data-country-code')?.toLowerCase()==='us'&&/\+1\b/.test(text(o))?'united states 1':norm(text(o));
     let available=readOptions();
     // Address pickers may fetch rows only after a search. A search term is never itself a selection.
-    const isAddressPicker=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province)$/.test(norm(f.label));
-    const input=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
-    const query=input&&isAddressPicker&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'';
-    const setQuery=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
+    const isAddressPicker=searchableAddress;
+    const input=searchInput;
+    const query=initialQuery||(input&&isAddressPicker&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'');
+    const setQuery=writeSearch;
     if(query){
-     setQuery(query);
+     if(!initialQuery)setQuery(query);
      for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,80));if(!e.isConnected||location.href!==url)break;available=readOptions();if(available.some(o=>aliases.includes(optionKey(o))))break;}
     }
     // Virtualized pickers mount only the visible rows. Scroll the associated list.
@@ -535,7 +569,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
       }
       if(lists.length)continue;
      }
-     if(!(sourceBranch==='company'&&brand&&rootChoice===brand&&!leafChosen)&&aliases.includes(norm(valueText(e)))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
+     if(!(sourceBranch==='company'&&brand&&rootChoice===brand&&!leafChosen)&&(aliases.includes(norm(valueText(e)))||(f.phoneCountry&&/^\+1$/.test(valueText(e))&&boxes.every(b=>!b.isConnected||!visible(b))))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
     if(boxes.some(b=>b.isConnected&&visible(b))){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();}
     if(!accepted&&query&&input.isConnected&&input.value===query)setQuery('');
     if(accepted)filled++;else skipped++;
@@ -555,6 +589,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     }
     const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
     Object.getOwnPropertyDescriptor(proto,'value').set.call(e,fillValue);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));
+    if(e.value===fillValue&&/^e ?mail(?: address)?$/.test(norm(f.label))){await pause(80);emailSave(e)?.click();}
     if(!isReply(e))e.dispatchEvent(new Event('blur',{bubbles:true}));await new Promise(r=>setTimeout(r,120));if(e.isConnected&&e.value===fillValue&&(!e.validity||e.validity.valid))filled++;else skipped++;
    }
   }

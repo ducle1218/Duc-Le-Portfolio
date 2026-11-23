@@ -31,7 +31,7 @@ export function setupAccounts(getEmail,getEmployer){
   const base={url:url.href,signup,email,automatic,afterEmail,embedded:!!embeddedDocument};
   const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id,...(embeddedDocument?{documentIds:[embeddedDocument]}:{})},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
   if(scan?.result?.error)throw Error(scan.result.error);
-  if(!scan?.result)return null;
+  if(!scan?.result||scan.result.available===false)return null;
   if(!scan.documentId||!email||!employer)throw Error('Check the email and employer in Employer account before scanning.');
   if(scan.result.emailStep){
    const [advanced]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[base]});

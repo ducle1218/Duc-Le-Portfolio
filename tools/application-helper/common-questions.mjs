@@ -49,6 +49,7 @@ export const COMMON_QUESTIONS=[
 export const questionKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
 export const commonQuestion=q=>{
  const key=questionKey(q);
+ if(/^(?:please (?:indicate|specify|tell us) )?how (?:you heard|did you hear) about (?:this|the) (?:job|position|role)(?: at .+)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='How did you hear about this position?');
  if(key==='will you now or will you in the future require employment visa sponsorship')return COMMON_QUESTIONS.find(item=>item.question.startsWith('Will you now or in the future require sponsorship'));
  if(/^do you have the legal right to work in the u s(?: note .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Are you legally authorized to work in the United States?');
  if(/^will you now or in the future require sponsorship of a temporary work visa(?: e g .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Will you now or in the future require sponsorship for employment visa status?');

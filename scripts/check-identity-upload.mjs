@@ -24,3 +24,43 @@ globalThis.DataTransfer=class{constructor(){this.files=[];this.items={add:file=>
 const resume=await makeResumeAttachment(new TextEncoder().encode('%PDF-1.4\n'+'fixture '.repeat(40)),'https://employer.example/jobs/1','Tailored_Intern.pdf');
 assert.equal((await attachResume({url:location.href,resume})).attached,true);assert.equal(input.files[0].name,'Tailored_Intern.pdf');assert.equal(changes,1);assert.equal((await attachResume({url:location.href,resume})).attached,false);
 console.log('PASS: paragraph-led gender/race groups, option descriptions, explicit identity memory, citizenship/residence separation, ambiguous-country protection, and hidden resume upload attachment.');
+
+const question='Please indicate if you belong to one of the categories above:';
+document.body.innerHTML='<ul><li>U.S. Citizen</li><li>U.S. National</li></ul><div><label for="categories"></label><button id="categories" role="combobox">Select</button></div>';
+document.querySelector('label').textContent=question;
+for(const e of document.querySelectorAll('*'))e.getClientRects=()=>[{}];
+const application={confirmed:true,values:{},answers:Object.entries({
+ 'Citizenships':'United States; Canada','Previous security clearance':'No','Active security clearance':'No',
+ 'Government employment':'No','Military service':'No','Employment experience':'None',
+ 'Are you legally authorized to work in the United States?':'Yes',
+ 'Will you now or in the future require sponsorship for employment visa status?':'No',
+ 'Protected veteran status':'I am not a protected veteran','Race / ethnic background':'Asian (not Hispanic or Latino)',
+ 'I have read and understand and I agree to the above':'Yes'
+}).map(([question,answer])=>({question,answer}))};
+const categories=formBridge().fields[0];
+assert.equal(suggestField(categories,application)?.value,'Yes');
+document.querySelector('li').textContent='U.S. National';
+assert.equal(suggestField(formBridge().fields[0],application),null);
+const pick=(label,options,extra={})=>suggestField({label,type:'select-one',options:options.map(label=>({value:label,label})),...extra},application)?.value;
+const yn=['Yes','No'];
+for(const label of ['Security Clearance - Active','Security Clearance - inactive within 2 years'])
+ assert.equal(pick(label,['Secret','Top Secret','None of the Above']),'None of the Above');
+assert.equal(suggestField({label:'Date Granted',parentQuestion:'Security Clearance - Active',type:'date'},{
+ ...application,answers:[...application.answers,{question:'Date Granted',answer:'2025-01-01'}]}),null);
+for(const label of ['Including your current position, have you ever served as a U.S. government employee in the Legislative branch?',
+ 'Including your current position, have you ever been a U.S. Government employee in either the Executive Branch (e.g., Department of Defense, General Services Administration) or in the Judicial Branch?',
+ 'Including your current position, have you ever served in the U.S. military?'])assert.equal(pick(label,yn),'No');
+const employer='Have you ever worked for Lockheed Martin - either as a direct employee (including any mergers, acquisitions or subsidiary companies) or as a contractor/vendor that provided services to us?';
+assert.equal(pick(employer,yn),'No');
+const follow={label:'If you answered "Yes" and are a former LM employee: Enter the LM Person/Employee ID. If you answered "No", enter N/A.',type:'text',parentQuestion:employer,parentAnswer:'No'};
+assert.equal(suggestField(follow,application)?.value,'N/A');
+assert.equal(suggestField({...follow,parentAnswer:'Yes'},application),null);
+const auth='Are you legally authorized to work in the country of the job for which you are applying?';
+assert.equal(pick(auth,yn,{jobLocation:'Moorestown, NJ, US'}),'Yes');
+for(const jobLocation of ['London, UK','Remote',''])assert.equal(pick(auth,yn,{jobLocation}),undefined);
+assert.equal(pick('Will you require sponsorship for an employment Visa?',yn,{jobLocation:'United States'}),'No');
+assert.equal(pick('Please select your Protected Veteran Status. (A definition of each group is provided above.)',['I identify as one or more of the Classifications of Protected Veteran Listed above','I am not a protected Veteran / I prefer not to answer']),'I am not a protected Veteran / I prefer not to answer');
+assert.equal(pick('Please indicate the ethnic group with which you identify. (A definition of each ethnic group is provided above.)',['Asian (Not Hispanic/Latino)','Hispanic or Latino']),'Asian (Not Hispanic/Latino)');
+assert.equal(pick('I have read and understand and I agree to the above',yn),'Yes');
+assert.equal(pick('I agree to relocate',yn),undefined);
+console.log('PASS: contextual citizenship list, clearance dates, employer follow-ups, specific acknowledgments and country-scoped work authorization.');

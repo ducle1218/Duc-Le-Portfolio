@@ -1,4 +1,4 @@
-import {questionKey,commonQuestion} from './common-questions.mjs?v=20261123.1';
+import {questionKey,commonQuestion} from './common-questions.mjs?v=20261123.2';
 
 // Editable memories, seeded once by the helper. Dates are for summer 2027 only.
 // Rutgers New Brunswick: final exams end May 12; fall begins September 1.
@@ -41,6 +41,50 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   ['Active security clearance',/^(security clearance active|do you (currently )?(have|hold) an active security clearance)$/],
   ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
  ];
+ const confirmed=(value,sourceQuestion,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion,requiresReview:true});
+ const active='Active security clearance',previous='Previous security clearance';
+ const clearanceLevel=/^security clearance (active|inactive within (the past )?2 years)$/.exec(q);
+ if(clearanceLevel){
+  const source=clearanceLevel[1]==='active'?active:previous;
+  if(unique(source)==='No')return confirmed('None of the Above',source,['none of the above','no clearance','none','no']);
+ }
+ const parent=questionKey(field.parentQuestion),parentValue=questionKey(field.parentAnswer);
+ if(/^(security clearance )?date granted$/.test(q)&&(parent.includes('security clearance')||q.includes('clearance'))&&unique(previous)==='No')return {blocked:true};
+ if(/^military (branch|status)$/.test(q)&&unique('Military service')==='No')return {blocked:true};
+ const gov=q.replace(/^including your current position /,'');
+ if(/^have you ever (served as|been) a u s government employee in (the legislative branch|either the executive branch .* judicial branch)$/.test(gov)&&unique('Government employment')==='No')return confirmed('No','Government employment');
+ if(/^have you ever worked for lockheed martin\b/.test(q)&&q.endsWith('as a contractor vendor that provided services to us')&&fact('Employment experience')==='None')return confirmed('No','Employment experience');
+ if(/^have you (ever |previously )?worked (for|at) (us|our company|this company)$/.test(q)&&fact('Employment experience')==='None')return confirmed('No','Employment experience');
+ if(q.startsWith('if you answered yes and are a former lm employee')&&q.endsWith('if you answered no enter n a')){
+  if(parent.startsWith('have you ever worked for lockheed martin')&&parentValue==='no'&&fact('Employment experience')==='None')return confirmed('N/A','Employment experience');
+  return {blocked:true};
+ }
+ if(/^please indicate the ethnic group with which you identify\b/.test(q)||commonQuestion(q)?.question==='Race / ethnic background'){
+  const race=fact('Race / ethnic background');
+  if(questionKey(race)==='asian not hispanic or latino')return confirmed(race,'Race / ethnic background',['asian not hispanic latino','asian not hispanic or latino','asian']);
+ }
+ if(/^please select your protected veteran status\b/.test(q)&&unique('Protected veteran status')==='I am not a protected veteran')
+  return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran']);
+ const agreement='I have read and understand and I agree to the above';
+ if(q===questionKey(agreement)&&unique(agreement)==='Yes')return result('Yes','Your saved answer for this acknowledgment');
+ const citizen=String(unique('Citizenships')||'').split(';').some(v=>['united states','united states of america','us','usa'].includes(questionKey(v)));
+ if(/^please indicate if you belong to one of the categories above$/.test(q)){
+  if(citizen&&field.includesCitizenCategory)return confirmed('Yes','Citizenships',['yes','u s citizen','us citizen','united states citizen']);
+  return {blocked:true};
+ }
+ if(/^are you (a |an )?(u s|us|united states) citizen$/.test(q)&&citizen)return confirmed('Yes','Citizenships');
+ const auth='Are you legally authorized to work in the United States?';
+ const sponsor='Will you now or in the future require sponsorship for employment visa status?';
+ const countryDependent=q==='are you legally authorized to work in the country of the job for which you are applying'||q==='will you require sponsorship for an employment visa';
+ if(countryDependent){
+  const source=q.startsWith('will')?sponsor:auth;
+  // Only an explicit US job location supplies the jurisdiction.
+  const location=String(field.jobLocation||'').trim();
+  const domestic=/(?:^|,\s*|\s[-·]\s|^remote\s+)(?:U\.?S\.?(?:A\.?)?|United States(?: of America)?|New Jersey|New York|Pennsylvania|NJ|NY|PA)$/i.test(location);
+  if(domestic&&!/[;/]|\bor\b/i.test(location)&&fact(source))return confirmed(fact(source),source);
+  return {blocked:true};
+ }
+ if(/^if yes please indicate visa status$/.test(q)&&parent.includes('sponsorship')&&parentValue==='no')return {blocked:true};
  for(const [name,pattern] of privateRules){
   const wording=q.replace(/^including your current position /,'');
   if(pattern.test(wording)&&unique(name))return {...result(unique(name),'Your confirmed private answer'),requiresReview:true};

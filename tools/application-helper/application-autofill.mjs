@@ -1,7 +1,7 @@
-import {memoryMatch} from './answer-memory.mjs?v=20261123.1';
-import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261123.1';
-import {answerRule} from './answer-rules.mjs?v=20261123.1';
-import {portfolioAnswer} from './portfolio-answers.mjs?v=20261123.1';
+import {memoryMatch} from './answer-memory.mjs?v=20261123.2';
+import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261123.2';
+import {answerRule} from './answer-rules.mjs?v=20261123.2';
+import {portfolioAnswer} from './portfolio-answers.mjs?v=20261123.2';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
  if(!profile?.confirmed)return null;
@@ -84,10 +84,10 @@ export function formBridge({action='scan',url,fields=[]}={}){
    if(choice(e)){if(contained.some(c=>!choice(c)||!members.includes(c)))break;if(!members.length||!members.every(r=>parent.contains(r)))continue;}
    else if(contained.filter(c=>!radio(c)).length!==1)break;
    const candidates=[...parent.querySelectorAll('legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label')].filter(h=>!h.querySelector(controls)&&!members.some(r=>r.closest('label')?.contains(h)||[...(r.labels||[])].some(l=>l.contains(h))));
-   for(const heading of candidates){const value=labelText(heading);if(value&&!/^(yes|no|male|female)$/i.test(value)&&value.length<=250)return value;}
+   for(const heading of candidates){const value=labelText(heading);if(value&&!/^(yes|no|male|female)$/i.test(value)&&value.length<=800)return value;}
   }return '';
  };
- const label=e=>{if(choice(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,250);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||'').trim().slice(0,250);};
+ const label=e=>{if(choice(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,800);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||'').trim().slice(0,800);};
  const elements=()=>[...document.querySelectorAll(controls)].filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);
  const selectedValue=e=>{
   if(e.matches('.selectize-input,.ts-control,.ui-select-container')){
@@ -101,7 +101,25 @@ export function formBridge({action='scan',url,fields=[]}={}){
  const empty=e=>choice(e)?!selectedRadio(e):custom(e)?placeholder(selectedValue(e)):!e.value||(e.tagName==='SELECT'&&e.selectedIndex===0&&/select|choose|please/i.test(text(e.options[0])));
  const disabled=e=>e.disabled||e.readOnly&&!custom(e)||e.getAttribute('aria-disabled')==='true';
  const valueText=e=>e.tagName==='SELECT'?text(e.options[e.selectedIndex]):custom(e)?selectedValue(e):e.value||'';
+ // For a question referring to "categories above", inspect the nearest list.
+ // A preceding control or section heading ends the scope of the reference.
+ const citizenList=e=>{
+  for(let node=e,level=0;node&&node!==document.body&&level<8;node=node.parentElement,level++){
+   for(let sibling=node.previousElementSibling;sibling;sibling=sibling.previousElementSibling){
+    if(sibling.matches(controls+',h1,h2,h3,h4,fieldset')||sibling.querySelector(controls+',h1,h2,h3,h4'))return false;
+    const list=sibling.matches('ul,ol')?sibling:[...sibling.querySelectorAll('ul,ol')].at(-1);
+    if(list)return [...list.children].some(item=>/^(u s|us|united states) citizens?$/.test(norm(text(item))));
+   }
+  }
+  return false;
+ };
  const context=e=>{
+  const wording=norm(label(e));
+  if(wording==='please indicate if you belong to one of the categories above')return {includesCitizenCategory:citizenList(e)};
+  if(/date granted$|^if yes please indicate visa status$|^if you answered yes and are a former lm employee/.test(wording)){
+   const all=elements(),last=all.slice(0,all.indexOf(e)).filter(c=>visible(c)).at(-1);
+   return {parentQuestion:last?label(last):'',parentAnswer:last&&!empty(last)?valueText(last):''};
+  }
   const q=norm(label(e));if(!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
   const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
   if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
@@ -134,7 +152,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
   const all=elements(),targets=fields.map(f=>[f,all[f.index]]);let filled=0,skipped=0;
   for(const [f,e] of targets){
    if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!visible(e)||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
-   const currentContext=context(e);if((f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
+   const currentContext=context(e);if((f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
     const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&visible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
     if(!labels.length||matching.length!==labels.length||new Set(matching.map(r=>norm(optionLabel(r)))).size!==labels.length){skipped++;continue;}

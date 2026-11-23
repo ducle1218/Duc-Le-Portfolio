@@ -1,12 +1,12 @@
 # Duc Le — public experience record
 
-Snapshot: `8eb317e2ba5446d84faddbfb1b1b5366fa8f43ffd7ce5e70e0b6b558771dfd1a`
+Snapshot: `136df41cdb7d7fcad0da6d243db3da87ff5863875fe092a7ba5089de94bf469e`
 
 Source audit: 2026-11-05. Public-source consistency only; not independent verification or permission to submit applications. Unknown values are not negative answers.
 
 Mechanical engineering student at Rutgers University
 
-[Current resume PDF](https://ducle1218.github.io/Duc-Le-Portfolio/src/assets/resume/Duc_Le_Resume.pdf) — SHA-256 `a1827a739087d4f40bfe0428eb67362d81a90eddbafbecbe282676cb4dd3c2fa`. This PDF is not an editable template.
+[Current resume PDF](https://ducle1218.github.io/Duc-Le-Portfolio/src/assets/resume/Duc_Le_Resume.pdf) — SHA-256 `121893f45adddea34f0e8941ec9e32e24a4d98e5b0020356ade235536a8f41fa`. This PDF is not an editable template.
 
 ## Profile facts
 

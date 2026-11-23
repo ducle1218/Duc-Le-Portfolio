@@ -1,7 +1,7 @@
 // Public resume values are starting points. The owner confirms their private copy.
 export const PROFILE_FIELDS = [
  ['firstName','First name','Duc'],['lastName','Last name','Le'],
- ['email','Email','ducle1218@gmail.com'],['phone','Phone','(609) 289-6897'],
+ ['email','Email','ducle12182007@gmail.com'],['phone','Phone','(609) 289-6897'],
  ['city','City','Piscataway'],['state','State / province','New Jersey'],
  ['postalCode','Postal code',''],['country','Country',''],
  ['school','Current university','Rutgers University–New Brunswick'],
@@ -17,6 +17,7 @@ export function cleanProfile(input){
  if(!input||input.confirmed!==true)throw new Error('Review and confirm your profile first.');
  const values={};for(const [key] of PROFILE_FIELDS){const value=String(input.values?.[key]||'').trim();if(value.length>220||/[\u0000-\u001f]/.test(value))throw new Error('Profile field is too long or invalid.');values[key]=value;}
  if(!values.firstName||!values.lastName)throw new Error('Add your first and last name.');
+ if(values.email.toLowerCase()==='ducle1218@gmail.com')values.email='ducle12182007@gmail.com';
  if(values.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))throw new Error('Check your email.');
  for(const key of ['portfolio','linkedin','github'])if(values[key]){const u=new URL(values[key]);if(u.protocol!=='https:'||u.username||u.password)throw new Error('Profile links must use HTTPS.');}
  const answers=(Array.isArray(input.answers)?input.answers:[]).map(a=>({question:String(a.question||'').trim(),answer:String(a.answer||'').trim()})).filter(a=>a.question||a.answer);

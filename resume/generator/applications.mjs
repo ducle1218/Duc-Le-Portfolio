@@ -1,12 +1,12 @@
-import {paginateAnswers} from './answer-pagination.mjs?v=20261123.1';
-import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261123.1';
-import {cloudRequest,connected} from './cloud.mjs?v=20261123.1';
-import {buildResume} from './studio.mjs?v=20261123.1';
-import {filename,canonical} from './job-core.mjs?v=20261123.1';
-import {helperRequest} from './extension-client.mjs?v=20261123.1';
-import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261123.1';
-import {makeResumeAttachment} from './resume-attachment.mjs?v=20261123.1';
-import {importAnswers} from './answer-import.mjs?v=20261123.1';
+import {paginateAnswers} from './answer-pagination.mjs?v=20261123.2';
+import {PROFILE_FIELDS,APPLICATION_STATES,cleanProfile} from './application-core.mjs?v=20261123.2';
+import {cloudRequest,connected} from './cloud.mjs?v=20261123.2';
+import {buildResume} from './studio.mjs?v=20261123.2';
+import {filename,canonical} from './job-core.mjs?v=20261123.2';
+import {helperRequest} from './extension-client.mjs?v=20261123.2';
+import {COMMON_QUESTIONS,commonQuestion} from './common-questions.mjs?v=20261123.2';
+import {makeResumeAttachment} from './resume-attachment.mjs?v=20261123.2';
+import {importAnswers} from './answer-import.mjs?v=20261123.2';
 const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let profile=null,applications=[],dialog=null,pdfURL=null;
 const targetParams=typeof location!=='undefined'?new URL(location.href).searchParams:new URLSearchParams(),targetToken=/^[a-f0-9-]{36}$/.test(targetParams.get('applicationTarget')||'')?targetParams.get('applicationTarget'):null,targetHost=targetParams.get('applicationHost')||'the open employer application';
@@ -129,7 +129,7 @@ async function openApplication(job){
  let starting=false;
  original.onclick=async e=>{
   if(!helperReady||!profile)return;e.preventDefault();if(starting)return;starting=true;original.setAttribute('aria-disabled','true');
-  try{if(targetToken&&!helperUploadReady)throw new Error('Update Application Helper to 1.5 to connect this open application.');if(targetToken&&(!targetConfirm.checked||!attachPDF.checked))throw new Error('Confirm this is the same job and keep the tailored PDF option selected.');if(attachPDF.checked&&!helperResumeReady)throw new Error('Update Application Helper to 1.3 to bring a tailored PDF, or uncheck that option.');status.textContent=attachPDF.checked?'Preparing the resume for this specific job…':'Opening the employer with your confirmed profile…';const attachment=attachPDF.checked?(preparedResume||await prepareResume()):null;await helperRequest('start',{job:{url:job.url,title:job.title,company:job.company},profile,...(attachment?{resume:attachment,autoResume:true}:{}),...(targetToken?{targetToken,confirmTarget:targetConfirm.checked}:{})},15000);status.textContent=(targetToken?'Tailored PDF connected to your existing application. ':'Application opened. ')+'Review the suggested answers and tailored PDF in the helper, then choose Fill selected. You submit on the employer’s form.';
+  try{if(targetToken&&!helperUploadReady)throw new Error('Update Application Helper to 1.5 to connect this open application.');if(targetToken&&(!targetConfirm.checked||!attachPDF.checked))throw new Error('Confirm this is the same job and keep the tailored PDF option selected.');if(attachPDF.checked&&!helperResumeReady)throw new Error('Update Application Helper to 1.3 to bring a tailored PDF, or uncheck that option.');status.textContent=attachPDF.checked?'Preparing the resume for this specific job…':'Opening the employer with your confirmed profile…';const attachment=attachPDF.checked?(preparedResume||await prepareResume()):null;await helperRequest('start',{job:{url:job.url,title:job.title,company:job.company,location:job.location},profile,...(attachment?{resume:attachment,autoResume:true}:{}),...(targetToken?{targetToken,confirmTarget:targetConfirm.checked}:{})},15000);status.textContent=(targetToken?'Tailored PDF connected to your existing application. ':'Application opened. ')+'Review the suggested answers and tailored PDF in the helper, then choose Fill selected. You submit on the employer’s form.';
    if(connected()){const nextStage=stage.value==='Preparing'?'In progress':stage.value;try{const result=await cloudRequest('/applications','PUT',{...app,status:nextStage,notes:notes.value});applications=[result.application,...applications.filter(a=>a.url!==result.application.url)];stage.value=nextStage;dirty=false;discard.hidden=true;renderHistory();}catch(error){status.textContent+=' Your draft could not be saved: '+error.message;}}
   }catch(error){status.textContent=error.message+' You can use the original link below.';fallback.hidden=false;}finally{starting=false;original.removeAttribute('aria-disabled');}
  };

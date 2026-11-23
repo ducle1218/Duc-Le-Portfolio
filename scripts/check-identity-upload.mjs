@@ -64,3 +64,25 @@ assert.equal(pick('Please indicate the ethnic group with which you identify. (A 
 assert.equal(pick('I have read and understand and I agree to the above',yn),'Yes');
 assert.equal(pick('I agree to relocate',yn),undefined);
 console.log('PASS: contextual citizenship list, clearance dates, employer follow-ups, specific acknowledgments and country-scoped work authorization.');
+
+document.body.innerHTML='<form><div><strong>Have you previously worked here?</strong><button type="button" aria-label="Select" role="combobox">× No</button></div><div><label for="employee">If yes, enter your employee ID. If you answered No, enter N/A.</label><input id="employee" type="text"></div><div><label for="source">How did you hear about this position?</label><button id="source" type="button" role="combobox">× Company Website</button></div><div><strong>Details *</strong><button id="detail" type="button" role="combobox" aria-controls="career-sites" aria-expanded="false">Select</button></div><div role="listbox" id="career-sites" hidden><button type="button" role="option">Lockheed Martin Career Site</button></div></form>';
+const detail=document.querySelector('#detail'),list=document.querySelector('#career-sites');
+for(const elem of document.querySelectorAll('*'))elem.getClientRects=()=>elem.closest('[hidden]')?[]:[{}];
+detail.onclick=()=>{list.hidden=false;detail.setAttribute('aria-expanded','true');};
+list.firstElementChild.onclick=()=>{detail.textContent=list.firstElementChild.textContent;list.hidden=true;detail.setAttribute('aria-expanded','false');};
+const reviewed=formBridge().fields.flatMap(f=>{const answer=suggestField(f,application);return answer?[{...f,...answer}]:[];});
+assert.deepEqual(reviewed.map(f=>f.id),['employee','detail']);
+assert.equal((await formBridge({action:'fill',url:location.href,fields:reviewed})).filled,2);
+assert.equal(document.querySelector('#employee').value,'N/A');
+assert.equal(detail.textContent,'Lockheed Martin Career Site');
+const militaryOptions=['Army','Navy','N/A'];
+for(const label of ['Military Branch','Military Status'])assert.equal(pick(label,militaryOptions),'N/A');
+assert.equal(pick('Military Branch',['Army','Navy']),undefined);
+const outside={question:'Do you require employment visa sponsorship for jobs outside the United States?',answer:'Yes'};
+application.answers.push(outside);
+const sponsorship='Will you require sponsorship for an employment Visa?';
+for(const location of ['Berlin, Germany','Toronto, Canada','Tokyo, Japan'])assert.equal(pick(sponsorship,yn,{jobLocation:location}),'Yes');
+assert.equal(pick(sponsorship,yn,{jobLocation:'Fort Worth, TX'}),'No');
+assert.equal(pick(sponsorship,yn,{jobLocation:'Remote'}),undefined);
+assert.equal(pick('If yes, please indicate Visa status',['A citizen of the U.S.','None of the Above'],{jobLocation:'USA',required:true,parentQuestion:sponsorship,parentAnswer:'No'}),'A citizen of the U.S.');
+console.log('PASS: read completed parent dropdowns, filled the N/A text field, opened and selected the company career site, and checked domestic and foreign sponsorship.');

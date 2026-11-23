@@ -27,7 +27,7 @@
     container.append(details);
   }
 
-  // site/tools/application-helper/common-questions.mjs?v=20261123.2
+  // site/tools/application-helper/common-questions.mjs?v=20261123.3
   var COMMON_QUESTIONS = [
     { question: "Valid driver\u2019s license", aliases: ["valid driver s license", "do you possess a valid driver s license", "do you have a valid drivers license", "do you have a valid driver s license"], options: ["Yes", "No"], review: true },
     { question: "Reliable transportation to project sites and offices", aliases: ["reliable transportation to project sites and offices", "do you have reliable transportation to project sites and office locations"], options: ["Yes", "No"], review: true },
@@ -110,8 +110,16 @@
     }
     return seasons[0];
   }
+  var stateCodes = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" "));
+  var stateNames = new Set("alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|district of columbia|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming".split("|"));
+  var regionNames = new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+  var countryNames = /* @__PURE__ */ new Set();
+  for (const a of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") for (const b of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    const name = regionNames.of(a + b);
+    if (name) countryNames.add(questionKey(name));
+  }
 
-  // site/tools/application-helper/answer-rules.mjs?v=20261123.2
+  // site/tools/application-helper/answer-rules.mjs?v=20261123.3
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -134,6 +142,26 @@
       return years.length === 1 ? "summer-" + years[0] : "";
     }
     return seasons[0];
+  }
+  var stateCodes2 = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" "));
+  var stateNames2 = new Set("alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|district of columbia|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming".split("|"));
+  var regionNames2 = new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+  var countryNames2 = /* @__PURE__ */ new Set();
+  for (const a of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") for (const b of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    const name = regionNames2.of(a + b);
+    if (name) countryNames2.add(questionKey(name));
+  }
+  function jobJurisdiction(location2 = "") {
+    const value = location2.trim().replace(/\s*\((?:remote|hybrid|on[- ]site)\)$/i, "").replace(/^remote[\s:–-]+/i, "");
+    if (!value || /[;/]|\sor\s/i.test(value)) return "";
+    if (value === "Outside the United States") return "foreign";
+    const parts = value.split(/\s*,\s*|\s+[-–·]\s+/), last = parts.at(-1).replace(/\s+\d{5}(?:-\d{4})?$/, "");
+    const name = questionKey(last);
+    if (["us", "u s", "usa", "u s a", "united states", "united states of america"].includes(name)) return "us";
+    if (last === "Georgia" || last === "GA" && parts.length === 1) return "";
+    if (stateNames2.has(name) || parts.length > 1 && stateCodes2.has(last)) return "us";
+    if (countryNames2.has(name) || ["uk", "united kingdom", "south korea"].includes(name)) return "foreign";
+    return "";
   }
   function answerRule(field, profile, memory = [], origin = "", context = "", now = /* @__PURE__ */ new Date()) {
     const entries = [...profile.answers || [], ...memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context)];
@@ -164,14 +192,19 @@
     }
     const parent = questionKey(field.parentQuestion), parentValue = questionKey(field.parentAnswer);
     if (/^(security clearance )?date granted$/.test(q) && (parent.includes("security clearance") || q.includes("clearance")) && unique(previous) === "No") return { blocked: true };
-    if (/^military (branch|status)$/.test(q) && unique("Military service") === "No") return { blocked: true };
+    const na = ["n a", "na", "not applicable", "not applicable n a", "none", "did not serve", "no military service"];
+    if (/^(?:us |u s )?military (branch|status)$/.test(q) && unique("Military service") === "No" && parentValue !== "yes") return result("N/A", "No military service", na);
     const gov = q.replace(/^including your current position /, "");
-    if (/^have you ever (served as|been) a u s government employee in (the legislative branch|either the executive branch .* judicial branch)$/.test(gov) && unique("Government employment") === "No") return confirmed("No", "Government employment");
+    if (/^have you (?:ever |previously )?(?:served as|been|worked as) (?:a |an )?(?:u s |united states )(?:federal )?government employee\b/.test(gov) && !/\b(?:family|relative|spouse|or contractor|or worked)\b/.test(gov) && (unique("Government employment") === "No" || !entries.some((entry) => questionKey(entry.question) === "government employment") && fact("Employment experience") === "None")) return result("No", "Your employment history");
+    if (/^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/.test(gov) && unique("Military service") === "No") return result("No", "Your military service history");
     if (/^have you ever worked for lockheed martin\b/.test(q) && q.endsWith("as a contractor vendor that provided services to us") && fact("Employment experience") === "None") return confirmed("No", "Employment experience");
     if (/^have you (ever |previously )?worked (for|at) (us|our company|this company)$/.test(q) && fact("Employment experience") === "None") return confirmed("No", "Employment experience");
-    if (q.startsWith("if you answered yes and are a former lm employee") && q.endsWith("if you answered no enter n a")) {
-      if (parent.startsWith("have you ever worked for lockheed martin") && parentValue === "no" && fact("Employment experience") === "None") return confirmed("N/A", "Employment experience");
+    if (/\bif (?:you (?:selected|answered) )?no (?:please )?(?:enter|type|write|select|put) (?:n a|not applicable)$/.test(q)) {
+      if (parent && parentValue === "no") return result("N/A", "The preceding answer is No and this field requests N/A", na);
       return { blocked: true };
+    }
+    if (/^(?:source )?details?$/.test(q) && /^how (did|do) you (hear|learn|find out) about/.test(parent) && /website|career site/.test(parentValue)) {
+      return { ...result("Company career site", "The preceding source is Company Website", ["company website", "company career site", "our website"]), careerSiteDetail: true };
     }
     if (/^please indicate the ethnic group with which you identify\b/.test(q) || commonQuestion(q)?.question === "Race / ethnic background") {
       const race = fact("Race / ethnic background");
@@ -182,6 +215,8 @@
     const agreement = "I have read and understand and I agree to the above";
     if (q === questionKey(agreement) && unique(agreement) === "Yes") return result("Yes", "Your saved answer for this acknowledgment");
     const citizen = String(unique("Citizenships") || "").split(";").some((v) => ["united states", "united states of america", "us", "usa"].includes(questionKey(v)));
+    if (q === "please review the question again to confirm your response is correct" && field.parentIncludesCitizenCategory && parentValue === "yes" && citizen)
+      return confirmed("Confirming my response to the US Persons question is correct.", "Previous US Persons answer");
     if (/^please indicate if you belong to one of the categories above$/.test(q)) {
       if (citizen && field.includesCitizenCategory) return confirmed("Yes", "Citizenships", ["yes", "u s citizen", "us citizen", "united states citizen"]);
       return { blocked: true };
@@ -189,15 +224,19 @@
     if (/^are you (a |an )?(u s|us|united states) citizen$/.test(q) && citizen) return confirmed("Yes", "Citizenships");
     const auth = "Are you legally authorized to work in the United States?";
     const sponsor = "Will you now or in the future require sponsorship for employment visa status?";
-    const countryDependent = q === "are you legally authorized to work in the country of the job for which you are applying" || q === "will you require sponsorship for an employment visa";
-    if (countryDependent) {
-      const source = q.startsWith("will") ? sponsor : auth;
-      const location2 = String(field.jobLocation || "").trim();
-      const domestic = /(?:^|,\s*|\s[-·]\s|^remote\s+)(?:U\.?S\.?(?:A\.?)?|United States(?: of America)?|New Jersey|New York|Pennsylvania|NJ|NY|PA)$/i.test(location2);
-      if (domestic && !/[;/]|\bor\b/i.test(location2) && fact(source)) return confirmed(fact(source), source);
+    const countryDependent = /^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q) || /^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
+    if (countryDependent || commonQuestion(q)?.question === sponsor) {
+      const source = q.includes("sponsorship") ? sponsor : auth, region = jobJurisdiction(field.jobLocation || "");
+      if (region === "us" && fact(source)) return result(fact(source), "Your U.S. work profile and this job\u2019s location");
+      const foreign = "Do you require employment visa sponsorship for jobs outside the United States?";
+      if (region === "foreign" && source === sponsor && unique(foreign)) return result(unique(foreign), "Your international sponsorship preference");
       return { blocked: true };
     }
-    if (/^if yes please indicate visa status$/.test(q) && parent.includes("sponsorship") && parentValue === "no") return { blocked: true };
+    if (/^if yes please indicate visa status$/.test(q)) {
+      if (citizen && jobJurisdiction(field.jobLocation || "") === "us" && field.required && parent.includes("sponsorship") && parentValue === "no")
+        return confirmed("A citizen of the U.S.", "Citizenships", ["a citizen of the u s", "u s citizen", "us citizen"]);
+      return { blocked: true };
+    }
     for (const [name, pattern] of privateRules) {
       const wording = q.replace(/^including your current position /, "");
       if (pattern.test(wording) && unique(name)) return { ...result(unique(name), "Your confirmed private answer"), requiresReview: true };
@@ -209,8 +248,8 @@
     let street = address, zip = "";
     if (address && city && state) {
       const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const stateNames = questionKey(state) === "new jersey" ? "(?:NJ|New Jersey)" : escape(state);
-      const suffix = new RegExp("[,\\s]+" + escape(city) + "[,\\s]+" + stateNames + "[,\\s]+(\\d{5}(?:-\\d{4})?)$", "i");
+      const stateNames3 = questionKey(state) === "new jersey" ? "(?:NJ|New Jersey)" : escape(state);
+      const suffix = new RegExp("[,\\s]+" + escape(city) + "[,\\s]+" + stateNames3 + "[,\\s]+(\\d{5}(?:-\\d{4})?)$", "i");
       const match = address.match(suffix);
       if (match) {
         street = address.slice(0, match.index).replace(/[,\s]+$/, "");
@@ -276,7 +315,7 @@
     return null;
   }
 
-  // site/tools/application-helper/portfolio-answers.mjs?v=20261123.2
+  // site/tools/application-helper/portfolio-answers.mjs?v=20261123.3
   var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
   var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
@@ -365,7 +404,7 @@
     return answer(text, claims.flatMap((c) => c.sources));
   }
 
-  // site/tools/application-helper/application-autofill.mjs?v=20261123.2
+  // site/tools/application-helper/application-autofill.mjs?v=20261123.3
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -411,7 +450,8 @@
       for (const control of copy.querySelectorAll(controls + ',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper')) control.remove();
       return text(copy);
     };
-    const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
+    const useful = (s) => /^(select|please select|choose|open menu|clear|select an option)$/i.test((s || "").trim()) ? "" : s;
+    const ownLabel = (e) => (useful(e.getAttribute("aria-label")) || useful(labelled(e)) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
       const members = choice(e) ? radios(e) : [];
@@ -421,7 +461,8 @@
           if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
-        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -470,7 +511,7 @@
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
-    const valueText = (e) => e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e) : e.value || "";
+    const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
       for (let node = e, level = 0; node && node !== document.body && level < 8; node = node.parentElement, level++) {
         for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
@@ -484,9 +525,11 @@
     const context = (e) => {
       const wording = norm(label(e));
       if (wording === "please indicate if you belong to one of the categories above") return { includesCitizenCategory: citizenList(e) };
-      if (/date granted$|^if yes please indicate visa status$|^if you answered yes and are a former lm employee/.test(wording)) {
-        const all2 = elements(), last = all2.slice(0, all2.indexOf(e)).filter((c) => visible(c)).at(-1);
-        return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "" };
+      if (/date granted$|^if\b|\bif (?:you (?:selected|answered) )?no\b|^(?:source )?details?$|^military (branch|status)$|^please review the question again/.test(wording) && !/^if .+ please specify$/.test(wording)) {
+        const all2 = elements(), prior = all2.slice(0, all2.indexOf(e)).filter((c) => visible(c) && label(c) && !["hidden", "button", "submit", "file"].includes(type(c)));
+        let last = prior.at(-1);
+        if (wording === "military status" && last && norm(label(last)) === "military branch") last = prior.at(-2);
+        return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
       const q = norm(label(e));
       if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
@@ -517,10 +560,26 @@
       }
       return { parentAnswer, parentQuestion, educationSchool };
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "scan") {
+      const countries = /* @__PURE__ */ new Set(), postings = [];
+      for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+        if (script.textContent.length > 25e4) continue;
+        try {
+          const json = JSON.parse(script.textContent);
+          for (const row of [json].flat().flatMap((x) => x?.["@graph"] || [x])) if ([row?.["@type"]].flat().includes("JobPosting")) postings.push(row);
+        } catch {
+        }
+      }
+      if (postings.length === 1) for (const place of [postings[0].jobLocation].flat()) {
+        let country = place?.address?.addressCountry;
+        country = country?.name || country;
+        if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
+        countries.add(typeof country === "string" ? country : "");
+      }
+      const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -547,7 +606,7 @@
           continue;
         }
         const currentContext = context(e);
-        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
           skipped++;
           continue;
         }
@@ -593,7 +652,12 @@
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
-          const aliases3 = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases3.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const aliases3 = [...f.aliases || [norm(f.value)]], available = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (f.careerSiteDetail) {
+            const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
+            if (careerSites.length === 1) aliases3.push(careerSites[0]);
+          }
+          const options = available.filter((o) => aliases3.includes(norm(text(o))));
           if (options.length > 1 && aliases3.length > 1) {
             options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
@@ -648,7 +712,7 @@
     })();
   }
 
-  // site/tools/application-helper/answer-memory.mjs?v=20261123.2
+  // site/tools/application-helper/answer-memory.mjs?v=20261123.3
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
@@ -739,7 +803,11 @@
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
       const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
-      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...review };
+      if (rule?.careerSiteDetail && field.type === "select-one") {
+        const candidates = field.options.filter((o) => !o.disabled && o.value && /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(normalize(o.label)));
+        if (candidates.length === 1) return { value: candidates[0].value, display: candidates[0].label, ...review };
+      }
+      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...rule?.careerSiteDetail ? { careerSiteDetail: true } : {}, ...review };
       const matches = (field.options || []).filter((o) => !o.disabled && (aliases3.includes(normalize(o.label)) || field.type !== "radio-group" && aliases3.includes(normalize(o.value))));
       if (rule?.aliases && matches.length > 1) {
         matches.sort((a, b) => aliases3.indexOf(normalize(a.label)) - aliases3.indexOf(normalize(b.label)));
@@ -795,7 +863,8 @@
       for (const control of copy.querySelectorAll(controls + ',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper')) control.remove();
       return text(copy);
     };
-    const ownLabel = (e) => (e.getAttribute("aria-label") || labelled(e) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
+    const useful = (s) => /^(select|please select|choose|open menu|clear|select an option)$/i.test((s || "").trim()) ? "" : s;
+    const ownLabel = (e) => (useful(e.getAttribute("aria-label")) || useful(labelled(e)) || [...e.labels || [], ...[...document.querySelectorAll("label[for]")].filter((l) => e.id && l.getAttribute("for") === e.id)].map(labelText).filter((v, i, a) => a.indexOf(v) === i).join(" ") || labelText(e.closest("label")) || "").trim();
     const nearbyLabel = (e) => {
       let parent = e.parentElement;
       const members = choice(e) ? radios(e) : [];
@@ -805,7 +874,8 @@
           if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
-        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label")].filter((h) => !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
+        if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -854,7 +924,7 @@
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
-    const valueText = (e) => e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e) : e.value || "";
+    const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
       for (let node = e, level = 0; node && node !== document.body && level < 8; node = node.parentElement, level++) {
         for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
@@ -868,9 +938,11 @@
     const context = (e) => {
       const wording = norm(label(e));
       if (wording === "please indicate if you belong to one of the categories above") return { includesCitizenCategory: citizenList(e) };
-      if (/date granted$|^if yes please indicate visa status$|^if you answered yes and are a former lm employee/.test(wording)) {
-        const all2 = elements(), last = all2.slice(0, all2.indexOf(e)).filter((c) => visible(c)).at(-1);
-        return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "" };
+      if (/date granted$|^if\b|\bif (?:you (?:selected|answered) )?no\b|^(?:source )?details?$|^military (branch|status)$|^please review the question again/.test(wording) && !/^if .+ please specify$/.test(wording)) {
+        const all2 = elements(), prior = all2.slice(0, all2.indexOf(e)).filter((c) => visible(c) && label(c) && !["hidden", "button", "submit", "file"].includes(type(c)));
+        let last = prior.at(-1);
+        if (wording === "military status" && last && norm(label(last)) === "military branch") last = prior.at(-2);
+        return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
       const q = norm(label(e));
       if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
@@ -901,10 +973,26 @@
       }
       return { parentAnswer, parentQuestion, educationSchool };
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "scan") {
+      const countries = /* @__PURE__ */ new Set(), postings = [];
+      for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+        if (script.textContent.length > 25e4) continue;
+        try {
+          const json = JSON.parse(script.textContent);
+          for (const row of [json].flat().flatMap((x) => x?.["@graph"] || [x])) if ([row?.["@type"]].flat().includes("JobPosting")) postings.push(row);
+        } catch {
+        }
+      }
+      if (postings.length === 1) for (const place of [postings[0].jobLocation].flat()) {
+        let country = place?.address?.addressCountry;
+        country = country?.name || country;
+        if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
+        countries.add(typeof country === "string" ? country : "");
+      }
+      const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -931,7 +1019,7 @@
           continue;
         }
         const currentContext = context(e);
-        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
           skipped++;
           continue;
         }
@@ -977,7 +1065,12 @@
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
-          const aliases3 = f.aliases || [norm(f.value)], options = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled") && aliases3.includes(norm(text(o)))).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const aliases3 = [...f.aliases || [norm(f.value)]], available = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (f.careerSiteDetail) {
+            const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
+            if (careerSites.length === 1) aliases3.push(careerSites[0]);
+          }
+          const options = available.filter((o) => aliases3.includes(norm(text(o))));
           if (options.length > 1 && aliases3.length > 1) {
             options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
@@ -1364,7 +1457,7 @@
         if (automatic && signature === lastSignature) return;
         lastSignature = signature;
         review = { url: found.url, createdAt: Date.now(), fields: found.fields.flatMap((f) => {
-          const answer = suggestField({ ...f, jobLocation: entry.job.location, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
+          const answer = suggestField({ ...f, jobLocation: entry.job.location || found.jobLocation, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
           return answer ? [{ ...f, ...answer }] : [];
         }) };
         list.replaceChildren();
@@ -1420,12 +1513,13 @@
           fill.hidden = true;
           review = null;
           status.textContent = result.changed ? "The page changed. Scan again." : `${result.filled} answers filled; ${result.skipped} skipped. ${upload?.message || ""} Scan again for newly revealed follow-up questions. Nothing was submitted.`;
-          lastSignature = JSON.stringify([location.href, scanForm().fields]);
+          lastSignature = "";
         } catch {
           status.textContent = "Some controls need manual entry. Check the form and scan again.";
         } finally {
           filling = false;
           fill.disabled = scan.disabled = remember.disabled = false;
+          if (entry) scanNow(true);
         }
       };
       scanNow();

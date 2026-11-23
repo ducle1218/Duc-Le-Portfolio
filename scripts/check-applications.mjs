@@ -52,7 +52,7 @@ byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reu
 assert.equal(byId('profile-confirm'),null,'The extra confirmation checkbox is removed');
 byId('app-firstName').value='';byId('download-profile').onclick();assert.equal(downloads.length,0,'Invalid profiles still cannot export');
 byId('app-firstName').value='Reviewed';byId('download-profile').onclick();assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.confirmed,true);assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
-const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261123.2');await setupCloud(()=>{});
+const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261123.3');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Reviewed');assert.equal(ui.document.getElementById('export-profile').disabled,false);
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';

@@ -1,9 +1,12 @@
 import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core.mjs';
+import {cleanProfile} from './application-core.mjs';
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
 import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
 import {loadPortfolio} from './portfolio-source.mjs';
-chrome.runtime.onInstalled.addListener(({reason}) => {
-  if (reason === 'update') return chrome.storage.local.remove('answerVault');
+chrome.runtime.onInstalled.addListener(async ({reason}) => {
+  if(reason==='update')await chrome.storage.local.remove('answerVault');
+  const tabs=await chrome.tabs.query({url:'https://ducle1218.github.io/Duc-Le-Portfolio/*'});
+  await Promise.allSettled(tabs.filter(t=>studioURL(t.url)).map(t=>chrome.scripting.executeScript({target:{tabId:t.id},files:['bridge.js']})));
 });
 const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
 let memoryWrite=Promise.resolve();
@@ -34,6 +37,11 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
+   if(message.type==='studio-sync-profile'){
+    const profile=cleanProfile(message.payload);
+    await chrome.storage.local.set({profile});
+    return {ok:true,count:profile.answers.length};
+   }
    if(message.type==='studio-start'){
     const entry=prepareHandoff(message.payload),token=message.payload?.targetToken;
     if(!token)return launch(entry);

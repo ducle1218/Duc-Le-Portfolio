@@ -12,6 +12,30 @@ let profile=null,applications=[],dialog=null,pdfURL=null;
 const targetParams=typeof location!=='undefined'?new URL(location.href).searchParams:new URLSearchParams(),targetToken=/^[a-f0-9-]{36}$/.test(targetParams.get('applicationTarget')||'')?targetParams.get('applicationTarget'):null,targetHost=targetParams.get('applicationHost')||'the open employer application';
 let helperReady=false,helperResumeReady=false,helperControlReady=false,helperUploadReady=false;
 let profileEdited=false,baseline=null,helperSnapshotRevision=null;
+let fileHandle=null,fileContents=null,workingLocally=false,savingFile=false,fileSelection=0,verifiedHere=false;
+async function linkedFile(value){
+ if(!globalThis.indexedDB)return null;
+ const db=await new Promise((resolve,reject)=>{
+  const req=indexedDB.open('duc-studio-profile-file',1);
+  req.onupgradeneeded=()=>req.result.createObjectStore('files');
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+ });
+ try{return await new Promise((resolve,reject)=>{
+  const tx=db.transaction('files',value===undefined?'readonly':'readwrite'),store=tx.objectStore('files');
+  const req=value===undefined?store.get('active'):value?store.put(value,'active'):store.delete('active');
+  tx.oncomplete=()=>resolve(req.result);tx.onabort=()=>reject(tx.error);
+ });}finally{db.close();}
+}
+
+const profileName='Duc_Application_Profile.json';
+const fileOptions={id:'duc-profile',startIn:'downloads',types:[{description:'Application profile',accept:{'application/json':['.json']}}]};
+function showEditor(ready){
+ $('profile-form').hidden=!ready;
+ $('use-device-draft').hidden=ready;
+ $('download-profile').disabled=$('export-profile').disabled=!ready;
+ if(!ready)$('profile-origin').textContent='Open Duc_Application_Profile.json from Downloads to load your private answers.';
+}
+
 function editorSnapshot(){
  const values=Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value]));
  const answers=[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value}));
@@ -25,8 +49,16 @@ function revealAnswer(row,selector='.answer-value'){
 }
 function answerStatus(text){$('answer-action-status').textContent=text;}
 const exportStatus=text=>{$('profile-download-status').textContent=text;};
-function downloadProfile(confirmed){
- const url=URL.createObjectURL(new Blob([JSON.stringify({format:'duc-application-profile-v1',exportedAt:new Date().toISOString(),profile:confirmed},null,2)],{type:'application/json'}));
+async function downloadProfile(confirmed){
+ const content=JSON.stringify({format:'duc-application-profile-v1',exportedAt:new Date().toISOString(),profile:confirmed},null,2);
+ if(fileHandle||typeof globalThis.showSaveFilePicker==='function'){
+  const handle=fileHandle||await globalThis.showSaveFilePicker({...fileOptions,suggestedName:profileName});
+  if(fileHandle&&(await (await handle.getFile()).text())!==fileContents)throw Error('This file was edited outside Studio. Reopen it before saving.');
+  const writer=await handle.createWritable();
+  try{await writer.write(content);await writer.close();}catch(error){await writer.abort().catch(()=>{});throw error;}
+  fileHandle=handle;fileContents=content;baseline={values:confirmed.values,answers:confirmed.answers};await linkedFile(handle).catch(()=>{});exportStatus('Saved '+confirmed.answers.length+' answers to '+handle.name+'.');return;
+ }
+ const url=URL.createObjectURL(new Blob([content],{type:'application/json'}));
  const link=node('a');link.href=url;link.download='Duc_Application_Profile.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
  exportStatus('Downloaded Duc_Application_Profile.json · ready to import in the helper.');
 }
@@ -49,7 +81,7 @@ async function detectHelper(){let helperVersion='';try{const result=await helper
  else if(helperReady&&helperVersionSupportsSync(helperVersion)&&helperVersion!=='1.9.5'){
   try{
    const {profile:saved}=await helperRequest('read-profile');
-   if(saved&&!connected()&&saved.confirmedAt!==helperSnapshotRevision){
+   if(saved&&!fileHandle&&!connected()&&(!verifiedHere||saved.confirmedAt!==helperSnapshotRevision)){
     helperSnapshotRevision=saved.confirmedAt;applySavedProfile(saved);
     status.textContent='Private profile restored from your helper · '+saved.answers.length+' saved answers';
    }
@@ -89,31 +121,37 @@ $('add-common-question').onclick=()=>{
  if(existing){revealAnswer(existing);answerStatus('This question is already saved. Its answer is ready to edit.');return;}
  const row=addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();revealAnswer(row);answerStatus('Added '+question+'. Enter your answer below.');
 };
-function exportDraft(){try{
- if(legacyNeedsSync&&!baseline)throw Error('This device has an older profile. Reload your updated helper or open your private profile JSON to restore your saved answers.');
- const reviewed=readProfile();downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}
+async function exportDraft(){if(savingFile)return;savingFile=true;try{
+ if(!workingLocally&&!verifiedHere)throw Error('This device has an older profile. Reload your updated helper or open your private profile JSON to restore your saved answers.');
+ const reviewed=readProfile();await downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){if(error.name!=='AbortError'){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}finally{savingFile=false;}}
 $('export-profile').onclick=$('download-profile').onclick=exportDraft;
-$('open-profile').onclick=()=>$('profile-file').click();
-$('profile-file').onchange=async()=>{
- const input=$('profile-file');
- try{
-  const file=input.files[0];if(!file)return;
-  if(file.size>2000000)throw Error('Choose an exported Application Studio profile JSON.');
-  const data=JSON.parse(await file.text());
-  if(data.format!=='duc-application-profile-v1')throw Error('Choose an exported Application Studio profile JSON.');
-  profile=cleanProfile(data.profile);fillProfile();baseline=editorSnapshot();saveDraft();
-  $('application-profile').open=true;
-  exportStatus('Opened '+profile.answers.length+' answers. Download profile includes these details.');
-  $('draft-status').textContent='Profile opened on this device. Save online to sync changes.';
- }catch(error){exportStatus(error.message);}finally{input.value='';}
+async function openFile(file,handle=null,restoring=false){
+ if(!file)return;
+ if(file.size>2000000)throw Error('Choose an exported Application Studio profile JSON.');
+ const content=await file.text(),data=JSON.parse(content);
+ if(data.format!=='duc-application-profile-v1')throw Error('Choose an exported Application Studio profile JSON.');
+ const saved=cleanProfile(data.profile);fileHandle=handle;fileContents=handle?content:null;
+ if(restoring){applySavedProfile(saved);return;}
+ fileSelection++;verifiedHere=true;profile=saved;fillProfile();baseline=editorSnapshot();workingLocally=true;saveDraft();showEditor(true);await linkedFile(handle).catch(()=>{});
+ $('application-profile').open=true;exportStatus('Opened '+profile.answers.length+' answers from '+(file.name||profileName)+'.');
+ $('draft-status').textContent='File loaded. Save your profile file after editing.';
+}
+$('open-profile').onclick=async()=>{
+ if(typeof globalThis.showOpenFilePicker!=='function'){$('profile-file').click();return;}
+ try{const [handle]=await globalThis.showOpenFilePicker(fileOptions);await openFile(await handle.getFile(),handle);}
+ catch(error){if(error.name==='SecurityError'||error.name==='NotAllowedError')$('profile-file').click();else if(error.name!=='AbortError')exportStatus(error.message);}
 };
+$('profile-file').onchange=async()=>{
+ const input=$('profile-file');try{await openFile(input.files[0]);}catch(error){exportStatus(error.message);}finally{input.value='';}
+};
+$('use-device-draft').onclick=()=>{workingLocally=true;showEditor(true);saveDraft();$('profile-origin').textContent='Local draft · '+editorSnapshot().answers.length+' answers';};
 $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();});$('profile-form').addEventListener('change',()=>{profileEdited=true;saveDraft();});
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
 $('add-answer').addEventListener('click',()=>{profileEdited=true;});
-$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){exportDraft();return;}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;fillProfile();baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
+$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){return exportDraft();}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;verifiedHere=true;fillProfile();showEditor(true);baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
 const draftKey='duc-application-draft-v1',bankKey='duc-imported-answers-v1';let legacyNeedsSync=false,hasDraft=false,answerBank=[],needsStarterMigration=true,needsEducationMigration=true;
-function saveDraft(){try{const draft={localProfileVersion:legacyNeedsSync&&!baseline?0:1,starterAnswersVersion:1,educationAnswersVersion:1,baseline,helperSnapshotRevision,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
-try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;helperSnapshotRevision=draft.helperSnapshotRevision||null;legacyNeedsSync=!baseline&&draft.localProfileVersion!==1;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
+function saveDraft(){try{const draft={localProfileVersion:legacyNeedsSync&&!baseline?0:1,starterAnswersVersion:1,educationAnswersVersion:1,workingLocally,verifiedHere,baseline,helperSnapshotRevision,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
+try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;verifiedHere=draft.verifiedHere===true;workingLocally=draft.workingLocally===true;helperSnapshotRevision=draft.helperSnapshotRevision||null;legacyNeedsSync=!baseline&&draft.localProfileVersion!==1;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
 if(needsStarterMigration){const added=addStarterAnswers();saveDraft();if(added||!hasDraft)$('draft-status').textContent='Background answers are ready to edit.';}
 if(needsEducationMigration){const names=['Degree being pursued','Current academic standing','Preferred work regions','College GPA','College GPA scale','High school GPA','Full-time student enrollment'];addMissingAnswers(COMMON_QUESTIONS.filter(q=>names.includes(q.question)).map(q=>({question:q.question,answer:q.defaultAnswer})));saveDraft();}
 $('background-status').textContent='Sync loads your private online profile and keeps edits made since your last sync.';
@@ -122,6 +160,17 @@ if(hasDraft){
  $('profile-origin').textContent='On this device · '+initialEditor.answers.length+' answers';
  exportStatus(legacyNeedsSync?'Older device copy · reconnect your helper or open your saved profile before downloading.':initialEditor.answers.length+' answers ready.');
 }
+showEditor(verifiedHere||workingLocally);
+if(!verifiedHere&&!workingLocally)exportStatus('Private profile not loaded. Choose Open from Downloads or unlock owner access.');
+// Chrome can reopen a chosen file while its read permission remains granted.
+async function restoreLinkedFile(){
+ const selection=fileSelection;
+ try{const handle=await linkedFile();if(!handle||await handle.queryPermission({mode:'read'})!=='granted')return;
+  const file=await handle.getFile();
+  if(selection===fileSelection&&!fileHandle)await openFile(file,handle,true);
+ }catch{ /* The user can reselect a moved file or grant access in a fresh session. */ }
+}
+restoreLinkedFile();
 // On a legacy device, migrate shared answers from the server and retain unique local questions.
 function applySavedProfile(saved){
  const local=editorSnapshot(),old=baseline||initialEditor;
@@ -136,9 +185,9 @@ function applySavedProfile(saved){
   const legacyAddition=!baseline&&!merged.has(id)&&!commonQuestion(item.question)?.defaultAnswer&&id!=='sex';
   if(changed||legacyAddition)merged.set(id,item);
  }
- profile=saved;baseline={values:{...saved.values},answers:saved.answers};
+ verifiedHere=true;profile=saved;baseline={values:{...saved.values},answers:saved.answers};
  const answers=[...merged.values(),...local.answers.filter(item=>!item.question.trim())];
- fillProfile({values,answers});saveDraft();
+ fillProfile({values,answers});showEditor(true);saveDraft();
  $('draft-status').textContent=answers.length+' answers in this profile. Downloads include your edits.';
 }
 $('load-online-answers').onclick=async()=>{
@@ -153,10 +202,10 @@ $('answer-import-file').onchange=async()=>{try{const file=$('answer-import-file'
 $('export-answer-bank').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({format:'duc-answer-memory-v1',items:answerBank},null,2)],{type:'application/json'})),a=node('a');a.href=url;a.download='Application-Answers-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
 function renderHistory(){const container=$('application-history');container.replaceChildren();$('application-count').textContent=connected()?applications.length+' saved applications':'Owner access required';if(!applications.length)container.append(node('p','Choose “Prepare application” beside a job to start. Save drafts here to find them again on your phone.','hint'));
  for(const app of applications){const row=node('div',undefined,'application-history-row'),text=node('div');text.append(node('strong',app.title),node('p',app.company+' · '+app.status+' · '+new Date(app.updatedAt).toLocaleDateString(),'hint'));const open=node('button','Continue ↗','quiet');open.onclick=()=>openApplication(app);row.append(text,open);container.append(row);}}
-async function refresh(){if(!connected()){profile=null;applications=[];if(!hasDraft)fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);profile=p.profile;applications=a.applications;if(profile)applySavedProfile(profile);renderHistory();message('Private application workspace connected.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);}}
+async function refresh(){if(!connected()){profile=null;applications=[];if(!hasDraft)fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);applications=a.applications;if(p.profile&&!fileHandle)applySavedProfile(p.profile);renderHistory();message('Private application workspace connected.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);}}
 document.addEventListener('application-auth',refresh);
 $('refresh-applications').onclick=()=>{if(needOwner())refresh();};
-$('edit-profile').onclick=()=>{$('application-profile').open=!$('application-profile').open;if($('application-profile').open)$('app-firstName').focus();};
+$('edit-profile').onclick=()=>{$('application-profile').open=!$('application-profile').open;if($('application-profile').open)($('profile-form').hidden?$('open-profile'):$('app-firstName')).focus();};
 document.addEventListener('prepare-application',e=>openApplication(e.detail));renderHistory();
 async function originalDescription(job){
  if(job.description)return job.description;

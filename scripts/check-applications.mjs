@@ -47,18 +47,21 @@ assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Known c
 // A profile file can be reviewed and downloaded without cloud credentials.
 const byId=id=>ui.document.getElementById(id),downloads=[];
 for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
+assert(byId('profile-form').hidden,'An anonymous fresh session shows the file chooser before starter answers');
+assert(byId('download-profile').disabled);
+byId('use-device-draft').onclick();
 const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test-profile';};
 byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18);byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Background defaults do not duplicate cards');
 assert.equal(byId('profile-confirm'),null,'The extra confirmation checkbox is removed');
-byId('app-firstName').value='';byId('download-profile').onclick();assert.equal(downloads.length,0,'Invalid profiles still cannot export');
-byId('app-firstName').value='Reviewed';byId('download-profile').onclick();assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.confirmed,true);assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
+byId('app-firstName').value='';await byId('download-profile').onclick();assert.equal(downloads.length,0,'Invalid profiles still cannot export');
+byId('app-firstName').value='Reviewed';await byId('download-profile').onclick();assert.equal(downloads.length,1,byId('profile-download-status').textContent);const exported=JSON.parse(await downloads[0].text());assert.equal(exported.format,'duc-application-profile-v1');assert.equal(exported.profile.confirmed,true);assert.equal(exported.profile.values.firstName,'Reviewed');assert.match(byId('profile-download-status').textContent,/Duc_Application_Profile.json/);
 const {setupCloud}=await import('../resume/generator/cloud.mjs?v=20261123.3');await setupCloud(()=>{});
 ui.document.getElementById('cloud-key').value='test-only';await ui.document.getElementById('cloud-unlock').onclick();await new Promise(resolve=>setImmediate(resolve));
 assert.equal(ui.document.getElementById('app-firstName').value,'Reviewed');assert.equal(ui.document.getElementById('export-profile').disabled,false);
 ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.reusable-answer:last-child .answer-question').value='When can you start?';ui.document.querySelector('.reusable-answer:last-child .answer-value').value='June 1, 2027';
 await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers.find(a=>a.question==='When can you start?').answer,'June 1, 2027');assert.equal(savedProfile.answers.find(a=>a.question==='Sex').answer,'Male');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
-byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
-byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,3,'Download uses the latest draft in one click');assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
+await byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
+byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));await byId('download-profile').onclick();assert.equal(downloads.length,3,'Download uses the latest draft in one click');assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
 await byId('export-profile').onclick();
 assert.deepEqual(JSON.parse(await downloads.at(-1).text()).profile.answers,JSON.parse(await downloads[2].text()).profile.answers);
 assert.equal(JSON.parse(await downloads.at(-1).text()).profile.values.firstName,'Latest edit');
@@ -67,8 +70,16 @@ const savedExport={format:'duc-application-profile-v1',profile:{...savedProfile,
 byId('profile-file').files=[{size:9000,text:async()=>JSON.stringify(savedExport)}];await byId('profile-file').onchange();
 assert.equal(byId('reusable-answers').children.length,39);
 assert.match(byId('answer-pagination').textContent,/Page 1 of 4/);
-byId('app-firstName').value='Latest edit';byId('export-profile').onclick();
+byId('app-firstName').value='Latest edit';await byId('export-profile').onclick();
 assert.deepEqual(JSON.parse(await downloads.at(-1).text()).profile.answers,savedExport.profile.answers);
+
+let disk=JSON.stringify({...savedExport,profile:{...savedExport.profile,answers:[...savedExport.profile.answers,{question:'Extra file answer',answer:'Yes'}]}});
+const handle={name:'Duc_Application_Profile.json',getFile:async()=>({name:'Duc_Application_Profile.json',size:disk.length,text:async()=>disk}),createWritable:async()=>({write:async text=>{disk=text;},close:async()=>{}})};
+globalThis.showOpenFilePicker=async opts=>{assert.equal(opts.startIn,'downloads');return [handle];};
+await byId('open-profile').onclick();assert.equal(byId('reusable-answers').children.length,40);assert(!byId('profile-form').hidden);
+byId('app-firstName').value='Latest edit';await byId('download-profile').onclick();assert.equal(JSON.parse(disk).profile.values.firstName,'Latest edit');
+const changedOnDisk=disk+' ';disk=changedOnDisk;await byId('export-profile').onclick();assert.equal(disk,changedOnDisk);assert.match(byId('profile-download-status').textContent,/edited outside Studio/);
+delete globalThis.showOpenFilePicker;
 URL.createObjectURL=originalCreate;
 
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');
@@ -84,7 +95,7 @@ console.log('PASS: persisted drafts and imports restored; duplicate imports pres
 browserStore.set('duc-application-draft-v1',JSON.stringify({values:{firstName:'My edited name',lastName:'Applicant'},answers:[{question:'Sex',answer:'Male'}]}));
 const legacy=dom.parseHTML(html);globalThis.document=legacy.document;
 await import('../resume/generator/applications.mjs?legacy-prefill');
-assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,18);
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,18);assert(legacy.document.getElementById('profile-form').hidden);
 assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
 assert.equal(legacy.document.getElementById('profile-confirm'),null);
 savedProfile=cleanProfile({confirmed:true,values:{firstName:'Online',lastName:'Applicant'},answers:[{question:'Are you 18 years or older?',answer:'Yes'},{question:'Sex',answer:'Different saved value'}]});

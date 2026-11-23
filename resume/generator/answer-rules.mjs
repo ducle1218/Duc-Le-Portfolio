@@ -76,18 +76,49 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(q==='current professional title'&&fact('Employment experience')==='None'&&profile.values?.major&&fact('Full-time student enrollment')==='Yes')return confirmed(profile.values.major+' Student','Full-time student enrollment');
  if(/^(?:home |residence )?county$/.test(q)&&unique('Home county'))return confirmed(unique('Home county'),'Home county',[questionKey(unique('Home county')),questionKey(unique('Home county')).replace(/ county$/,'')]);
  const options=(field.options||[]).map(o=>questionKey(o.label));
- if(field.type==='checkbox-group'&&/^(?:select (?:the |all )?races? you identify with|race|race ethnicity)$/.test(q)&&/^asian(?:$| not hispanic)/.test(questionKey(fact('Race / ethnic background'))))return {...confirmed('Asian','Race / ethnic background'),raceSelection:true};
+ if(field.type==='checkbox-group'&&/^(?:select (?:the |all )?races? you identify with|race|ethnicity|race ethnicity)$/.test(q)&&/^asian(?:$| not hispanic)/.test(questionKey(fact('Race / ethnic background'))))return {...confirmed('Asian','Race / ethnic background'),raceSelection:true};
+ // Match the subject before applying facts. A relative's employment and a candidate's
+ // employment are separate, as are clearance history and willingness to be screened.
+ const prompt=q.replace(/^\d+ /,'');
+ const sources=[
+  ['Polygraph history',/^(?:which|what) types?(?: s)? of polygraph (?:have you had|have you taken)$/],
+  ['Government debarment or proposed debarment',/^have you been suspended or debarred\b.*\bfrom doing business with (?:any |a )?government(?:al)? entit/],
+  ['Civil False Claims Act liability',/^have you (?:ever )?been found liable for (?:a violation of )?the civil false claims act\b/],
+  ['Known relatives employed by government',/^do you have (?:any )?(?:family members|relatives) (?:working (?:in|for)|employed by) (?:the |a )?(?:us |u s |federal )?government$/],
+  ['Hispanic or Latino identification',/^(?:are you )?hispanic or latino$/],
+  ['Previous security clearance',/^have you (?:ever|previously) (?:had|held|possessed) (?:a |an )?(?:government |federal )?security clearance$/]
+ ];
+ for(const [source,pattern] of sources){
+  const value=unique(source);
+  if(value&&pattern.test(prompt))return confirmed(value,source,source==='Polygraph history'&&value==='None'?['none','no','n a','not applicable','no polygraph','none of the above']:undefined);
+ }
+ const contacts=/^do you have (?:any )?relatives or acquaintances (?:employed (?:at|by)|working (?:at|for)) (.+?)(?: or (?:its|their) (?:subsidiaries|affiliates)(?: affiliates)?)?$/.exec(prompt);
+ if(contacts){
+  const source=contacts[1]+' relatives or acquaintances',value=unique(source);
+  return value?confirmed(value,source):{blocked:true};
+ }
+ const nationalities=new Set((unique('Citizenships')||'').split(/[,;]/).map(questionKey).filter(Boolean));
+ if(nationalities.size>1&&/^(?:are you (?:also )?a citizen of (?:any |an? )?(?:other|another|second) countr(?:y|ies)|do you (?:hold|have) dual citizenship)$/.test(prompt))return confirmed('Yes','Citizenships');
+ if(unique('Government employment')==='No'&&/^(?:current )?government civilian (?:status|start date|separation from service date|transition leave date)(?: if applicable)?$/.test(prompt))
+  return prompt.endsWith('status')?confirmed('N/A','Government employment',['n a','not applicable','none','never employed']):{blocked:true};
+ // Time windows and narrower exclusions cannot introduce past work into an empty history.
+ const employmentClause=prompt.replace(/^are you currently employed or have you been employed /,'have you been employed ').replace(/^in the (?:past|last) (?:\w+ )?years?(?: from today s date)? /,'').replace(/ other than temporary .*$/,'');
+ if(/\b(?:worked|employed)\b.*\bor (?:volunteer(?:ed|ing)?|applied|served on|owned)\b/.test(employmentClause))return {blocked:true};
+ if(questionKey(fact('Employment experience'))==='none'&&/^have you been employed (?:in the past \w+ years? )?by (?:a |an |the )?(?:private sector|state or local government)\b/.test(employmentClause)&&!/(?:\bor (?!local government|competition for)|\b(?:family|relative|spouse|never|not)\b)/.test(employmentClause))
+  return confirmed('No','Employment experience');
+ if(unique('Consideration for other domestic positions')==='Yes'&&/^i understand that i may be considered for other open positions in my country in addition to the role s? ?to which i apply$/.test(prompt)&&field.type==='radio-group'&&field.options?.length===1)
+  return confirmed('Yes','Consideration for other domestic positions',[questionKey(field.options[0].label)]);
  const negativeDisability='no i do not have a disability and have not had one in the past';
  if(unique('Current or past disability')==='No'&&options.includes(negativeDisability)&&options.some(o=>o.startsWith('yes i have a disability')))return confirmed('No, I do not have a disability and have not had one in the past','Current or past disability',[negativeDisability]);
  if(/^(?:do you (?:currently )?have a disability|do you have or have you ever had a disability)$/.test(q)&&unique('Current or past disability')==='No')return confirmed('No','Current or past disability');
  if(/^are you willing to (?:undergo|submit to) (?:a |an? employment )?background check(?: in accordance with local (?:law|laws)(?: regulations)?)?$/.test(q)&&fact('Post-offer federal background check, physical and drug screen')==='Yes')return confirmed('Yes','Post-offer federal background check, physical and drug screen');
- if(commonQuestion(q)?.question==='Phone device type'&&fact('Phone device type')==='Mobile')return confirmed('Mobile','Phone device type',['mobile','mobile phone','cell','cell phone','cellular']);
+ if(commonQuestion(q)?.question==='Phone device type'&&fact('Phone device type')==='Mobile')return confirmed('Mobile','Phone device type',['personal mobile','mobile','mobile phone','cell','cell phone','cellular']);
  if(commonQuestion(q)?.question==='Preferred contact method'&&fact('Preferred contact method')==='Email')
   return confirmed('Email','Preferred contact method',['email','e mail','email address','by email']);
  const mainQuestion=questionKey(String(field.label).split('?')[0]);
  const employment=mainQuestion.replace(/^are you (?:a |an )?former employee of /,'have you worked for ').replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
  if(/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment)&&
-    !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
+    !/\b(?:family|relatives?|spouse|applied|volunteer(?:ed|ing)?|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
   return confirmed('No','Employment experience');
  const sms='SMS contact about my job application';
  if(/\b(?:sms|text messages?)\b/.test(q)&&/\b(?:application|recruiting|recruitment)\b/.test(q)&&/\b(?:approve|consent|agree|opt in|permission|receive|may we|can we)\b/.test(q)&&!/\b(?:opt out|decline|marketing|advertising|not|sales)\b/.test(q)&&unique(sms))
@@ -101,7 +132,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const parent=questionKey(field.parentQuestion),parentValue=questionKey(field.parentAnswer);
  if(/^(security clearance )?date granted$/.test(q)&&(parent.includes('security clearance')||q.includes('clearance'))&&unique(previous)==='No')return {blocked:true};
  const na=['n a','na','not applicable','not applicable n a','none','did not serve','no military service'];
- if(/^(?:us |u s )?military (branch|status)$/.test(q)&&unique('Military service')==='No'&&parentValue!=='yes')return result('N/A','No military service',na);
+ if(/^(?:current )?(?:us |u s )?military (branch|status)$/.test(q)&&unique('Military service')==='No'&&parentValue!=='yes')return result('N/A','No military service',na);
  const gov=q.replace(/^including your current position /,'');
  if(/^have you (?:ever |previously )?(?:served as|been|worked as) (?:a |an )?(?:u s |united states )(?:federal )?government employee\b/.test(gov)&&!/\b(?:family|relative|spouse|or contractor|or worked)\b/.test(gov)&&
     (unique('Government employment')==='No'||!entries.some(entry=>questionKey(entry.question)==='government employment')&&fact('Employment experience')==='None'))return result('No','Your employment history');

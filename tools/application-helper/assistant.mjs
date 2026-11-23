@@ -26,8 +26,8 @@ if(!globalThis.__ducApplicationHelper){
   close.onclick=()=>{stop();chrome.runtime.sendMessage({type:'stop-handoff'}).catch(()=>{});};
   async function autoResume(){
    if(!entry?.autoResume||!entry.resume||entry.resumeUploaded||autoResumeBusy)return;
-   const inputs=[...document.querySelectorAll('input[type="file"]')].filter(e=>!e.disabled&&!e.multiple&&!e.files?.length);
-   inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]')].filter(e=>/drop (?:your )?(?:resume|résumé|cv)/i.test(e.textContent)));
+   const inputs=[...document.querySelectorAll('input[type="file"]')].filter(e=>!e.disabled&&!e.files?.length);
+   inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]')].filter(e=>/drop (?:your |a )?(?:resume|résumé|cv|files?)\b/i.test(e.textContent)));
    if(!inputs.length||inputs.every(input=>autoTried.has(input)))return;for(const input of inputs)autoTried.add(input);autoResumeBusy=true;const activeEntry=entry;
    try{const result=await attachResume({url:location.href,resume:entry.resume});if(entry!==activeEntry)return;status.textContent=result.message+' Nothing was submitted.';if(result.attached){entry.resumeUploaded=true;list.querySelector('input[value="resume"]')?.closest('label').remove();fill.hidden=!list.querySelector('input');await chrome.runtime.sendMessage({type:'resume-attached',sha256:entry.resume.sha256});}}
    catch{if(entry===activeEntry)status.textContent='Automatic attachment could not finish. Use Fill selected to retry or attach the PDF manually.';}finally{autoResumeBusy=false;}

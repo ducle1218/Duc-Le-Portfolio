@@ -33,10 +33,14 @@ export function setupAccounts(getEmail,getEmployer){
   if(scan?.result?.error)throw Error(scan.result.error);
   if(!scan?.result||scan.result.available===false)return null;
   if(!scan.documentId||!email||!employer)throw Error('Check the email and employer in Employer account before scanning.');
+  if(scan.result.filledLogin){
+   const [sent]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,useFilledLogin:true}]});
+   return typeof sent?.result==='string'?sent.result:'Review the saved login on the sign-in form.';
+  }
   if(scan.result.emailStep){
    const [advanced]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[base]});
    if(advanced?.result?.error)throw Error(advanced.result.error);
-   if(!advanced?.result?.emailStep)return 'Check the Amazon Jobs email step.';
+   if(!advanced?.result?.emailStep)return 'Check the employer email step.';
    for(let attempt=0;attempt<15;attempt++){
     await new Promise(resolve=>setTimeout(resolve,400));
     const [current]=await chrome.tabs.query({active:true,currentWindow:true});
@@ -45,7 +49,7 @@ export function setupAccounts(getEmail,getEmployer){
     const next=await useAccount(current,undefined,true,true);
     if(next)return next;
    }
-   return 'Email entered. Complete any verification or social sign-in shown by Amazon Jobs.';
+   return 'Email entered. Complete any verification or social sign-in shown by the employer.';
   }
   const registration=automatic?scan.result.signup:signup;
   let password;

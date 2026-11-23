@@ -247,17 +247,45 @@
     if (q === "current professional title" && fact("Employment experience") === "None" && profile.values?.major && fact("Full-time student enrollment") === "Yes") return confirmed(profile.values.major + " Student", "Full-time student enrollment");
     if (/^(?:home |residence )?county$/.test(q) && unique("Home county")) return confirmed(unique("Home county"), "Home county", [questionKey(unique("Home county")), questionKey(unique("Home county")).replace(/ county$/, "")]);
     const options = (field.options || []).map((o) => questionKey(o.label));
-    if (field.type === "checkbox-group" && /^(?:select (?:the |all )?races? you identify with|race|race ethnicity)$/.test(q) && /^asian(?:$| not hispanic)/.test(questionKey(fact("Race / ethnic background")))) return { ...confirmed("Asian", "Race / ethnic background"), raceSelection: true };
+    if (field.type === "checkbox-group" && /^(?:select (?:the |all )?races? you identify with|race|ethnicity|race ethnicity)$/.test(q) && /^asian(?:$| not hispanic)/.test(questionKey(fact("Race / ethnic background")))) return { ...confirmed("Asian", "Race / ethnic background"), raceSelection: true };
+    const prompt = q.replace(/^\d+ /, "");
+    const sources = [
+      ["Polygraph history", /^(?:which|what) types?(?: s)? of polygraph (?:have you had|have you taken)$/],
+      ["Government debarment or proposed debarment", /^have you been suspended or debarred\b.*\bfrom doing business with (?:any |a )?government(?:al)? entit/],
+      ["Civil False Claims Act liability", /^have you (?:ever )?been found liable for (?:a violation of )?the civil false claims act\b/],
+      ["Known relatives employed by government", /^do you have (?:any )?(?:family members|relatives) (?:working (?:in|for)|employed by) (?:the |a )?(?:us |u s |federal )?government$/],
+      ["Hispanic or Latino identification", /^(?:are you )?hispanic or latino$/],
+      ["Previous security clearance", /^have you (?:ever|previously) (?:had|held|possessed) (?:a |an )?(?:government |federal )?security clearance$/]
+    ];
+    for (const [source, pattern] of sources) {
+      const value = unique(source);
+      if (value && pattern.test(prompt)) return confirmed(value, source, source === "Polygraph history" && value === "None" ? ["none", "no", "n a", "not applicable", "no polygraph", "none of the above"] : void 0);
+    }
+    const contacts = /^do you have (?:any )?relatives or acquaintances (?:employed (?:at|by)|working (?:at|for)) (.+?)(?: or (?:its|their) (?:subsidiaries|affiliates)(?: affiliates)?)?$/.exec(prompt);
+    if (contacts) {
+      const source = contacts[1] + " relatives or acquaintances", value = unique(source);
+      return value ? confirmed(value, source) : { blocked: true };
+    }
+    const nationalities = new Set((unique("Citizenships") || "").split(/[,;]/).map(questionKey).filter(Boolean));
+    if (nationalities.size > 1 && /^(?:are you (?:also )?a citizen of (?:any |an? )?(?:other|another|second) countr(?:y|ies)|do you (?:hold|have) dual citizenship)$/.test(prompt)) return confirmed("Yes", "Citizenships");
+    if (unique("Government employment") === "No" && /^(?:current )?government civilian (?:status|start date|separation from service date|transition leave date)(?: if applicable)?$/.test(prompt))
+      return prompt.endsWith("status") ? confirmed("N/A", "Government employment", ["n a", "not applicable", "none", "never employed"]) : { blocked: true };
+    const employmentClause = prompt.replace(/^are you currently employed or have you been employed /, "have you been employed ").replace(/^in the (?:past|last) (?:\w+ )?years?(?: from today s date)? /, "").replace(/ other than temporary .*$/, "");
+    if (/\b(?:worked|employed)\b.*\bor (?:volunteer(?:ed|ing)?|applied|served on|owned)\b/.test(employmentClause)) return { blocked: true };
+    if (questionKey(fact("Employment experience")) === "none" && /^have you been employed (?:in the past \w+ years? )?by (?:a |an |the )?(?:private sector|state or local government)\b/.test(employmentClause) && !/(?:\bor (?!local government|competition for)|\b(?:family|relative|spouse|never|not)\b)/.test(employmentClause))
+      return confirmed("No", "Employment experience");
+    if (unique("Consideration for other domestic positions") === "Yes" && /^i understand that i may be considered for other open positions in my country in addition to the role s? ?to which i apply$/.test(prompt) && field.type === "radio-group" && field.options?.length === 1)
+      return confirmed("Yes", "Consideration for other domestic positions", [questionKey(field.options[0].label)]);
     const negativeDisability = "no i do not have a disability and have not had one in the past";
     if (unique("Current or past disability") === "No" && options.includes(negativeDisability) && options.some((o) => o.startsWith("yes i have a disability"))) return confirmed("No, I do not have a disability and have not had one in the past", "Current or past disability", [negativeDisability]);
     if (/^(?:do you (?:currently )?have a disability|do you have or have you ever had a disability)$/.test(q) && unique("Current or past disability") === "No") return confirmed("No", "Current or past disability");
     if (/^are you willing to (?:undergo|submit to) (?:a |an? employment )?background check(?: in accordance with local (?:law|laws)(?: regulations)?)?$/.test(q) && fact("Post-offer federal background check, physical and drug screen") === "Yes") return confirmed("Yes", "Post-offer federal background check, physical and drug screen");
-    if (commonQuestion(q)?.question === "Phone device type" && fact("Phone device type") === "Mobile") return confirmed("Mobile", "Phone device type", ["mobile", "mobile phone", "cell", "cell phone", "cellular"]);
+    if (commonQuestion(q)?.question === "Phone device type" && fact("Phone device type") === "Mobile") return confirmed("Mobile", "Phone device type", ["personal mobile", "mobile", "mobile phone", "cell", "cell phone", "cellular"]);
     if (commonQuestion(q)?.question === "Preferred contact method" && fact("Preferred contact method") === "Email")
       return confirmed("Email", "Preferred contact method", ["email", "e mail", "email address", "by email"]);
     const mainQuestion = questionKey(String(field.label).split("?")[0]);
     const employment = mainQuestion.replace(/^are you (?:a |an )?former employee of /, "have you worked for ").replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
-    if (/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment) && !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment) && questionKey(fact("Employment experience")) === "none")
+    if (/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment) && !/\b(?:family|relatives?|spouse|applied|volunteer(?:ed|ing)?|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment) && questionKey(fact("Employment experience")) === "none")
       return confirmed("No", "Employment experience");
     const sms = "SMS contact about my job application";
     if (/\b(?:sms|text messages?)\b/.test(q) && /\b(?:application|recruiting|recruitment)\b/.test(q) && /\b(?:approve|consent|agree|opt in|permission|receive|may we|can we)\b/.test(q) && !/\b(?:opt out|decline|marketing|advertising|not|sales)\b/.test(q) && unique(sms))
@@ -271,7 +299,7 @@
     const parent = questionKey(field.parentQuestion), parentValue = questionKey(field.parentAnswer);
     if (/^(security clearance )?date granted$/.test(q) && (parent.includes("security clearance") || q.includes("clearance")) && unique(previous) === "No") return { blocked: true };
     const na = ["n a", "na", "not applicable", "not applicable n a", "none", "did not serve", "no military service"];
-    if (/^(?:us |u s )?military (branch|status)$/.test(q) && unique("Military service") === "No" && parentValue !== "yes") return result("N/A", "No military service", na);
+    if (/^(?:current )?(?:us |u s )?military (branch|status)$/.test(q) && unique("Military service") === "No" && parentValue !== "yes") return result("N/A", "No military service", na);
     const gov = q.replace(/^including your current position /, "");
     if (/^have you (?:ever |previously )?(?:served as|been|worked as) (?:a |an )?(?:u s |united states )(?:federal )?government employee\b/.test(gov) && !/\b(?:family|relative|spouse|or contractor|or worked)\b/.test(gov) && (unique("Government employment") === "No" || !entries.some((entry) => questionKey(entry.question) === "government employment") && fact("Employment experience") === "None")) return result("No", "Your employment history");
     if (/^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/.test(gov) && unique("Military service") === "No") return result("No", "Your military service history");
@@ -644,6 +672,7 @@
         if (e.name) return null;
         for (let p2 = e.parentElement; p2 && p2 !== document.body; p2 = p2.parentElement) {
           const rows = [...p2.querySelectorAll(radioSelector)];
+          if (rows.length === 1 && !p2.querySelector("select,textarea,input:not([type=radio]):not([type=hidden])") && [...p2.querySelectorAll("label,p,legend,span,div")].some((node) => !node.querySelector(controls) && /^i understand that i may be considered for other open positions in my country\b/.test(norm(text(node))))) return p2;
           if (rows.length < 2) continue;
           if (rows.some((r) => r.name || r.closest('[role="radiogroup"],fieldset')) || p2.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])')) return null;
           return p2;
@@ -700,7 +729,7 @@
           if (previous.matches(controls) || previous.querySelector(controls)) return "";
           const prompt = text(previous).trim();
           if (!prompt) continue;
-          if (prompt.length <= 800 && (/\?\s*\*?$/.test(prompt) || /^(?:select the races|please check one of the boxes|title$)/i.test(prompt))) return prompt;
+          if (prompt.length <= 800 && (/\?\s*\*?$/.test(prompt) || /^(?:select the races|please check one of the boxes|i understand that i may be considered for other open positions|ethnicity\s*\*?$|title$)/i.test(prompt))) return prompt;
           if (prompt.length > 50 || previous.matches("h1,h2,h3")) return "";
         }
       }
@@ -1095,7 +1124,7 @@
         } catch {
           return [];
         }
-      }), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
+      }), hasEmailSignIn: [...document.querySelectorAll("h1,h2,h3,[role=heading]")].some((h) => visible(h) && /^(?:sign in|log in)$/i.test(text(h))), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -1485,7 +1514,7 @@
     if (field.type === "checkbox-group") {
       if (rule?.markIncomplete) return { value: "Not Completed", display: "Not Completed", selectedLabels: [field.options[0].label], reason: rule.reason, sourceQuestion: rule.sourceQuestion };
       if (rule?.raceSelection) {
-        const asian = field.options.filter((o) => !o.disabled && normalize(o.label) === "asian");
+        const asian = field.options.filter((o) => !o.disabled && /^asian(?: united states(?: of america)?)?$/.test(normalize(o.label)));
         if (asian.length === 1) return { value: [asian[0].value], display: asian[0].label, selectedLabels: [asian[0].label], sourceQuestion: rule.sourceQuestion };
       }
       if (common?.question !== "Preferred work regions") return null;
@@ -1596,6 +1625,7 @@
         if (e.name) return null;
         for (let p2 = e.parentElement; p2 && p2 !== document.body; p2 = p2.parentElement) {
           const rows = [...p2.querySelectorAll(radioSelector)];
+          if (rows.length === 1 && !p2.querySelector("select,textarea,input:not([type=radio]):not([type=hidden])") && [...p2.querySelectorAll("label,p,legend,span,div")].some((node) => !node.querySelector(controls) && /^i understand that i may be considered for other open positions in my country\b/.test(norm(text(node))))) return p2;
           if (rows.length < 2) continue;
           if (rows.some((r) => r.name || r.closest('[role="radiogroup"],fieldset')) || p2.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])')) return null;
           return p2;
@@ -1652,7 +1682,7 @@
           if (previous.matches(controls) || previous.querySelector(controls)) return "";
           const prompt = text(previous).trim();
           if (!prompt) continue;
-          if (prompt.length <= 800 && (/\?\s*\*?$/.test(prompt) || /^(?:select the races|please check one of the boxes|title$)/i.test(prompt))) return prompt;
+          if (prompt.length <= 800 && (/\?\s*\*?$/.test(prompt) || /^(?:select the races|please check one of the boxes|i understand that i may be considered for other open positions|ethnicity\s*\*?$|title$)/i.test(prompt))) return prompt;
           if (prompt.length > 50 || previous.matches("h1,h2,h3")) return "";
         }
       }
@@ -2047,7 +2077,7 @@
         } catch {
           return [];
         }
-      }), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
+      }), hasEmailSignIn: [...document.querySelectorAll("h1,h2,h3,[role=heading]")].some((h) => visible(h) && /^(?:sign in|log in)$/i.test(text(h))), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -2367,11 +2397,11 @@
       return best;
     };
     const candidates = inputs.filter((e) => {
-      if (e.disabled || e.multiple) return false;
+      if (e.disabled) return false;
       const words = context(e);
       return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) || inputs.length === 1 && pageUpload) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
     });
-    const dropSelector = '[ondrop],[data-dropzone],[data-automation-id*="drop" i],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]';
+    const dropSelector = '[ondrop],[data-dropzone],[data-automation-id*="drop" i],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]';
     const resumeSection = (e) => {
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
         const headings = [...p.querySelectorAll("h1,h2,h3,h4,legend,[role=heading]")];
@@ -2379,7 +2409,7 @@
       }
       return null;
     };
-    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /drop files? here/i.test(text(e)) && !!resumeSection(e);
+    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!resumeSection(e);
     const eligibleZone = (e) => isResumeZone(e) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
     const zones = candidates.length ? [] : [...document.querySelectorAll(dropSelector)].filter(eligibleZone);
     const containers = zones.filter((z) => !zones.some((other) => other !== z && z.contains(other)));
@@ -2627,8 +2657,8 @@
       };
       async function autoResume() {
         if (!entry?.autoResume || !entry.resume || entry.resumeUploaded || autoResumeBusy) return;
-        const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.multiple && !e.files?.length);
-        inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]')].filter((e) => /drop (?:your )?(?:resume|résumé|cv)/i.test(e.textContent)));
+        const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.files?.length);
+        inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]')].filter((e) => /drop (?:your |a )?(?:resume|résumé|cv|files?)\b/i.test(e.textContent)));
         if (!inputs.length || inputs.every((input) => autoTried.has(input))) return;
         for (const input of inputs) autoTried.add(input);
         autoResumeBusy = true;

@@ -80,7 +80,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   if(rule?.markIncomplete)return {value:'Not Completed',display:'Not Completed',selectedLabels:[field.options[0].label],reason:rule.reason,sourceQuestion:rule.sourceQuestion};
   // Only explicit region preferences are supported: never consent/attestation boxes.
   if(rule?.raceSelection){
-   const asian=field.options.filter(o=>!o.disabled&&normalize(o.label)==='asian');
+   const asian=field.options.filter(o=>!o.disabled&&/^asian(?: united states(?: of america)?)?$/.test(normalize(o.label)));
    if(asian.length===1)return {value:[asian[0].value],display:asian[0].label,selectedLabels:[asian[0].label],sourceQuestion:rule.sourceQuestion};
   }
   if(common?.question!=='Preferred work regions')return null;
@@ -177,7 +177,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   if(radio(e)){
    if(e.name)return null;
    for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
-    const rows=[...p.querySelectorAll(radioSelector)];if(rows.length<2)continue;
+    const rows=[...p.querySelectorAll(radioSelector)];if(rows.length===1&&!p.querySelector('select,textarea,input:not([type=radio]):not([type=hidden])')&&[...p.querySelectorAll('label,p,legend,span,div')].some(node=>!node.querySelector(controls)&&/^i understand that i may be considered for other open positions in my country\b/.test(norm(text(node)))))return p;if(rows.length<2)continue;
     if(rows.some(r=>r.name||r.closest('[role="radiogroup"],fieldset'))||p.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])'))return null;
     return p;
    }
@@ -208,7 +208,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    for(let previous=node.previousElementSibling;previous;previous=previous.previousElementSibling){
     if(previous.matches(controls)||previous.querySelector(controls))return '';
     const prompt=text(previous).trim();if(!prompt)continue;
-    if(prompt.length<=800&&(/\?\s*\*?$/.test(prompt)||/^(?:select the races|please check one of the boxes|title$)/i.test(prompt)))return prompt;
+    if(prompt.length<=800&&(/\?\s*\*?$/.test(prompt)||/^(?:select the races|please check one of the boxes|i understand that i may be considered for other open positions|ethnicity\s*\*?$|title$)/i.test(prompt)))return prompt;
     if(prompt.length>50||previous.matches('h1,h2,h3'))return '';
    }
   }
@@ -482,7 +482,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   const jobLocation=countries.size===1?[...countries][0]:'';
   const all=elements();return {url:location.href,jobLocation,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
-  }),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
+  }),hasEmailSignIn:[...document.querySelectorAll('h1,h2,h3,[role=heading]')].some(h=>visible(h)&&/^(?:sign in|log in)$/i.test(text(h))),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
  if(action==='remember'){
   const blocked=/password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;

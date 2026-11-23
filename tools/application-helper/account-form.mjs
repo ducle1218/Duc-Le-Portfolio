@@ -1,5 +1,5 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,embedded=false}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,useFilledLogin=false,embedded=false}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
@@ -34,16 +34,18 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  const passwords=[...document.querySelectorAll('input[type=password]')].filter(visible);
  const shown=el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
  const amazon=location.hostname==='passport.amazon.jobs';
- if(amazon&&!passwords.length&&!afterEmail&&[...document.querySelectorAll('h1,h2,[role=heading]')].some(h=>shown(h)&&/^log in or create (?:an? )?account$/i.test(h.textContent.trim()))){
-  const emails=[...document.querySelectorAll('input[type=email],input[autocomplete=username],input[name=email],input[id=email]')].filter(visible);
+ const headings=[...document.querySelectorAll('h1,h2,h3,[role=heading]')].filter(h=>shown(h)&&/^(?:sign in|log in|log in or create (?:an? )?account)$/i.test(h.textContent.trim()));
+ if(!passwords.length&&!afterEmail&&headings.length===1){
+  const authScope=headings[0].closest('[role=dialog],dialog,form,main')||document;
+  const emails=[...authScope.querySelectorAll('input[type=email],input[autocomplete=username],input[name=email],input[id=email]')].filter(visible);
   if(emails.length!==1||!email)return null;
-  const input=emails[0],scope=input.form||input.closest('main,[role=main]')||document.body;
+  const input=emails[0],scope=input.form||input.closest('dialog,[role=dialog],main,[role=main]')||document.body;
   const buttons=[...scope.querySelectorAll('button,input[type=submit]')].filter(b=>shown(b)&&/^continue$/i.test((b.textContent||b.value||'').trim()));
   if(buttons.length!==1||scope.action&&new URL(scope.action,url).origin!==location.origin||buttons[0].hasAttribute('formaction')&&new URL(buttons[0].formAction,url).origin!==location.origin)return null;
   if(input.value&&input.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The form contains a different email.');
   if(inspectOnly)return {emailStep:true};
   fill(input,email);
-  if(input.value!==email||!visible(buttons[0])||buttons[0].getAttribute('aria-disabled')==='true'||input.form&&!input.form.checkValidity())throw Error('Check the email on the Amazon Jobs page and choose Continue.');
+  if(input.value!==email||!visible(buttons[0])||buttons[0].getAttribute('aria-disabled')==='true'||input.form&&!input.form.checkValidity())throw Error('Check the email on the sign-in page and choose Continue.');
   buttons[0].click();return {emailStep:true};
  }
  const scopes=new Set(passwords.map(el=>el.form||el.closest('[role="dialog"],main,[role="main"]')||document.body));
@@ -87,6 +89,13 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  const {fields,emailField,buttons,registration}=candidates[0];
  if(emailField&&(emailField.readOnly||emailField.disabled)&&!emailField.value.trim())throw Error('The employer must populate the account email before scanning.');
  if(emailField?.value.trim()&&emailField.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The form contains a different email. Check the account before continuing.');
+ if(automatic&&!registration&&emailField?.value.trim().toLowerCase()===email.toLowerCase()&&fields[0].value&&buttons.length===1){
+  if(inspectOnly)return {filledLogin:true};
+  if(useFilledLogin&&visible(buttons[0])&&buttons[0].getAttribute('aria-disabled')!=='true'&&(!buttons[0].form||buttons[0].form.checkValidity())){
+   buttons[0].click();return 'Sign-in requested using the login already filled in this browser.';
+  }
+ }
+ if(useFilledLogin)return null;
  if(openRegistration){
   if(registration)return null;
   const links=[...document.querySelectorAll('a[href],button,input[type=button],[role=button]')].filter(b=>{

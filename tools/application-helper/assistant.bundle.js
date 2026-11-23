@@ -626,7 +626,7 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -1053,7 +1053,7 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;

@@ -51,6 +51,10 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const unique=q=>{const values=entries.filter(a=>questionKey(a.question)===questionKey(q)).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
  const result=(value,reason,aliases)=>({value,display:value,reason,sourceQuestion:'Saved preferences',requiresReview:false,...(aliases?{aliases}:{} )});
  const q=questionKey(field.label),fact=name=>{const values=entries.filter(a=>commonQuestion(a.question)?.question===name).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
+ const prescreen='Willing to complete a U.S. Government Security Prescreen Questionnaire';
+ const prescreenQuestion=q.split(' your no answer')[0];
+ if(/(?:^| )are you willing to (?:complete|fill out) (?:a |the )?security pre ?screen(?:ing)? questionnaire$/.test(prescreenQuestion)&&unique(prescreen))
+  return result(unique(prescreen),'Your saved security prescreen preference');
  const privateRules=[
   ['Preferred first name',/^(preferred first name|what is your preferred first name)$/],
   ['Military service',/^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/],
@@ -94,7 +98,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(q===questionKey(agreement)&&unique(agreement)==='Yes')return result('Yes','Your saved answer for this acknowledgment');
  const citizen=String(unique('Citizenships')||'').split(';').some(v=>['united states','united states of america','us','usa'].includes(questionKey(v)));
  if(q==='please review the question again to confirm your response is correct'&&field.parentIncludesCitizenCategory&&parentValue==='yes'&&citizen)
-  return confirmed('Confirming my response to the US Persons question is correct.','Previous US Persons answer');
+  return {...confirmed('Confirming my response to the US Persons question is correct.','Previous US Persons answer'),confirmUSPersons:true};
  if(/^please indicate if you belong to one of the categories above$/.test(q)){
   if(citizen&&field.includesCitizenCategory)return confirmed('Yes','Citizenships',['yes','u s citizen','us citizen','united states citizen']);
   return {blocked:true};

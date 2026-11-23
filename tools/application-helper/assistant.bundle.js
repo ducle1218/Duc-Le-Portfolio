@@ -1,4 +1,41 @@
 (() => {
+  // site/tools/application-helper/fill-sequence.mjs
+  var questionId = (field) => JSON.stringify([field.type, field.label]);
+  async function fillWithFollowups({ url, reviewed, selected, scan, fill, suggest, active = () => true }) {
+    const excluded = new Set(reviewed.filter((field) => !selected.includes(field)).map(questionId));
+    const attempted = /* @__PURE__ */ new Set();
+    const identity = (field) => JSON.stringify([field.type, field.label, field.id, field.name]);
+    const total = { filled: 0, skipped: 0, changed: false };
+    let pending = selected;
+    for (let pass = 0; pass < 10 && pending.length && active(); pass++) {
+      pending.forEach((field) => attempted.add(identity(field)));
+      const batch = await fill({ url, fields: pending });
+      total.filled += batch.filled;
+      total.skipped += batch.skipped;
+      if (batch.changed) {
+        total.changed = true;
+        break;
+      }
+      if (!batch.filled) break;
+      pending = [];
+      for (const delay of [80, 200, 400, 700]) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        if (!active()) return total;
+        const form = await scan();
+        if (form.url !== url) {
+          total.changed = true;
+          return total;
+        }
+        pending = form.fields.filter((field) => !field.filled && !excluded.has(questionId(field)) && !attempted.has(identity(field))).flatMap((field) => {
+          const answer = suggest(field, form);
+          return answer ? [{ ...field, ...answer }] : [];
+        });
+        if (pending.length) break;
+      }
+    }
+    return total;
+  }
+
   // site/tools/application-helper/portfolio-answers.mjs
   var PORTFOLIO_URL = "https://ducle1218.github.io/Duc-Le-Portfolio/";
   var aliases = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
@@ -174,6 +211,10 @@
       const values = entries.filter((a) => commonQuestion(a.question)?.question === name).map((a) => a.answer.trim());
       return new Set(values).size === 1 ? values[0] : null;
     };
+    const prescreen = "Willing to complete a U.S. Government Security Prescreen Questionnaire";
+    const prescreenQuestion = q.split(" your no answer")[0];
+    if (/(?:^| )are you willing to (?:complete|fill out) (?:a |the )?security pre ?screen(?:ing)? questionnaire$/.test(prescreenQuestion) && unique(prescreen))
+      return result(unique(prescreen), "Your saved security prescreen preference");
     const privateRules = [
       ["Preferred first name", /^(preferred first name|what is your preferred first name)$/],
       ["Military service", /^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/],
@@ -216,7 +257,7 @@
     if (q === questionKey(agreement) && unique(agreement) === "Yes") return result("Yes", "Your saved answer for this acknowledgment");
     const citizen = String(unique("Citizenships") || "").split(";").some((v) => ["united states", "united states of america", "us", "usa"].includes(questionKey(v)));
     if (q === "please review the question again to confirm your response is correct" && field.parentIncludesCitizenCategory && parentValue === "yes" && citizen)
-      return confirmed("Confirming my response to the US Persons question is correct.", "Previous US Persons answer");
+      return { ...confirmed("Confirming my response to the US Persons question is correct.", "Previous US Persons answer"), confirmUSPersons: true };
     if (/^please indicate if you belong to one of the categories above$/.test(q)) {
       if (citizen && field.includesCitizenCategory) return confirmed("Yes", "Citizenships", ["yes", "u s citizen", "us citizen", "united states citizen"]);
       return { blocked: true };
@@ -456,7 +497,7 @@
       let parent = e.parentElement;
       const members = choice(e) ? radios(e) : [];
       for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
-        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
+        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector) && type(c) !== "hidden" && (c === e || visible(c)));
         if (choice(e)) {
           if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
@@ -513,11 +554,17 @@
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
-      for (let node = e, level = 0; node && node !== document.body && level < 8; node = node.parentElement, level++) {
+      const stopSelector = controls + ",h1,h2,h3,h4";
+      for (let node = e, level = 0; node && node !== document.body && level < 14; node = node.parentElement, level++) {
         for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
-          if (sibling.matches(controls + ",h1,h2,h3,h4,fieldset") || sibling.querySelector(controls + ",h1,h2,h3,h4")) return false;
-          const list = sibling.matches("ul,ol") ? sibling : [...sibling.querySelectorAll("ul,ol")].at(-1);
-          if (list) return [...list.children].some((item) => /^(u s|us|united states) citizens?$/.test(norm(text(item))));
+          const selector = stopSelector + ',ul,ol,[role="list"]';
+          const candidates = [sibling, ...sibling.querySelectorAll(selector)].reverse();
+          for (const candidate of candidates) {
+            if (candidate.matches('ul,ol,[role="list"]')) {
+              return [...candidate.querySelectorAll('li,[role="listitem"]')].some((item) => /^(?:u s|us|united states) citizens?$/.test(norm(text(item))));
+            }
+            if (candidate.matches(stopSelector) && visible(candidate) && candidate.type !== "hidden" && !candidate.closest('ul,ol,[role="list"]')) return false;
+          }
         }
       }
       return false;
@@ -653,6 +700,10 @@
             await new Promise((r) => setTimeout(r, 80));
           }
           const aliases3 = [...f.aliases || [norm(f.value)]], available = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (f.confirmUSPersons) {
+            const choices = available.filter((o) => !placeholder(text(o)));
+            if (choices.length === 1) aliases3.push(norm(text(choices[0])));
+          }
           if (f.careerSiteDetail) {
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
@@ -672,7 +723,7 @@
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
-            if (aliases3.includes(norm(selectedValue(e)))) {
+            if (aliases3.includes(norm(valueText(e)))) {
               accepted = true;
               break;
             }
@@ -803,11 +854,15 @@
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
       const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
+      if (rule?.confirmUSPersons && field.type === "select-one") {
+        const choices = field.options.filter((o) => !o.disabled && o.value && !/^(?:please )?(?:select|choose)\b/.test(normalize(o.label)));
+        if (choices.length === 1) return { value: choices[0].value, display: choices[0].label, ...review };
+      }
       if (rule?.careerSiteDetail && field.type === "select-one") {
         const candidates = field.options.filter((o) => !o.disabled && o.value && /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(normalize(o.label)));
         if (candidates.length === 1) return { value: candidates[0].value, display: candidates[0].label, ...review };
       }
-      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...rule?.careerSiteDetail ? { careerSiteDetail: true } : {}, ...review };
+      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...rule?.confirmUSPersons ? { confirmUSPersons: true } : {}, ...rule?.careerSiteDetail ? { careerSiteDetail: true } : {}, ...review };
       const matches = (field.options || []).filter((o) => !o.disabled && (aliases3.includes(normalize(o.label)) || field.type !== "radio-group" && aliases3.includes(normalize(o.value))));
       if (rule?.aliases && matches.length > 1) {
         matches.sort((a, b) => aliases3.indexOf(normalize(a.label)) - aliases3.indexOf(normalize(b.label)));
@@ -869,7 +924,7 @@
       let parent = e.parentElement;
       const members = choice(e) ? radios(e) : [];
       for (let n = 0; n < 8 && parent && parent !== document.body; n++, parent = parent.parentElement) {
-        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector));
+        const contained = [...parent.querySelectorAll(controls)].filter((c) => !c.parentElement?.closest(comboSelector) && type(c) !== "hidden" && (c === e || visible(c)));
         if (choice(e)) {
           if (contained.some((c) => !choice(c) || !members.includes(c))) break;
           if (!members.length || !members.every((r) => parent.contains(r))) continue;
@@ -926,11 +981,17 @@
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
-      for (let node = e, level = 0; node && node !== document.body && level < 8; node = node.parentElement, level++) {
+      const stopSelector = controls + ",h1,h2,h3,h4";
+      for (let node = e, level = 0; node && node !== document.body && level < 14; node = node.parentElement, level++) {
         for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
-          if (sibling.matches(controls + ",h1,h2,h3,h4,fieldset") || sibling.querySelector(controls + ",h1,h2,h3,h4")) return false;
-          const list = sibling.matches("ul,ol") ? sibling : [...sibling.querySelectorAll("ul,ol")].at(-1);
-          if (list) return [...list.children].some((item) => /^(u s|us|united states) citizens?$/.test(norm(text(item))));
+          const selector = stopSelector + ',ul,ol,[role="list"]';
+          const candidates = [sibling, ...sibling.querySelectorAll(selector)].reverse();
+          for (const candidate of candidates) {
+            if (candidate.matches('ul,ol,[role="list"]')) {
+              return [...candidate.querySelectorAll('li,[role="listitem"]')].some((item) => /^(?:u s|us|united states) citizens?$/.test(norm(text(item))));
+            }
+            if (candidate.matches(stopSelector) && visible(candidate) && candidate.type !== "hidden" && !candidate.closest('ul,ol,[role="list"]')) return false;
+          }
         }
       }
       return false;
@@ -1066,6 +1127,10 @@
             await new Promise((r) => setTimeout(r, 80));
           }
           const aliases3 = [...f.aliases || [norm(f.value)]], available = boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          if (f.confirmUSPersons) {
+            const choices = available.filter((o) => !placeholder(text(o)));
+            if (choices.length === 1) aliases3.push(norm(text(choices[0])));
+          }
           if (f.careerSiteDetail) {
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
@@ -1085,7 +1150,7 @@
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
-            if (aliases3.includes(norm(selectedValue(e)))) {
+            if (aliases3.includes(norm(valueText(e)))) {
               accepted = true;
               break;
             }
@@ -1379,7 +1444,7 @@
       const memoryNote = el("small", "Saved answers stay in this extension, even after clearing browser cache.");
       style.textContent += " .memory-row[hidden],.answer-pagination[hidden]{display:none!important}.answer-pagination{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.memory-difference{display:block;color:#9dd4c7;margin-bottom:6px}.memory-difference.changed{color:#e2bf73} .portfolio-evidence{font-size:12px;border:1px solid #384a48;border-radius:8px;padding:8px;margin:4px 0 12px}.portfolio-evidence a{color:#9dd4c7}.portfolio-evidence small{margin:5px 0 10px} .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
       const portfolioNote = el("small", entry.portfolio?.knowledge ? "Portfolio: " + entry.portfolio.knowledge.projects.length + " projects \xB7 " + (entry.portfolio.state === "cached" ? "cached evidence" : "source-backed suggestions") : "Portfolio evidence unavailable; saved answers still work.");
-      content.append(job, company, portfolioNote, status, list, footer, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
+      content.append(job, company, portfolioNote, footer, status, list, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
       panel.append(header, content);
       root.append(style, panel);
       document.documentElement.append(host);
@@ -1446,6 +1511,8 @@
           autoResumeBusy = false;
         }
       }
+      const excluded = /* @__PURE__ */ new Set();
+      const suggest = (f, form) => suggestField({ ...f, jobLocation: entry.job.location || form.jobLocation, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
       function scanNow(automatic = false) {
         if (!entry || Date.now() >= entry.expiresAt) {
           stop();
@@ -1457,7 +1524,7 @@
         if (automatic && signature === lastSignature) return;
         lastSignature = signature;
         review = { url: found.url, createdAt: Date.now(), fields: found.fields.flatMap((f) => {
-          const answer = suggestField({ ...f, jobLocation: entry.job.location || found.jobLocation, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
+          const answer = suggest(f, found);
           return answer ? [{ ...f, ...answer }] : [];
         }) };
         list.replaceChildren();
@@ -1466,7 +1533,11 @@
           label.className = "answer";
           const check = el("input");
           check.type = "checkbox";
-          check.checked = !f.requiresReview;
+          check.checked = !excluded.has(questionId(f));
+          check.onchange = () => {
+            if (check.checked) excluded.delete(questionId(f));
+            else excluded.add(questionId(f));
+          };
           check.value = String(i);
           const text = el("span", f.label);
           text.append(el("small", f.display));
@@ -1499,7 +1570,7 @@
           status.textContent = "Suggestions refreshed. Review them again before filling.";
           return;
         }
-        const checked = [...list.querySelectorAll("input:checked")], fields = checked.filter((c) => c.value !== "resume").map((c) => review.fields[Number(c.value)]), withResume = checked.some((c) => c.value === "resume");
+        const checked = [...list.querySelectorAll("input")].filter((c) => c.checked), fields = checked.filter((c) => c.value !== "resume").map((c) => review.fields[Number(c.value)]), withResume = checked.some((c) => c.value === "resume");
         if (!fields.length && !withResume) {
           status.textContent = "Select an answer or the tailored PDF.";
           return;
@@ -1507,12 +1578,14 @@
         filling = true;
         fill.disabled = scan.disabled = remember.disabled = true;
         try {
-          const result = await fillForm({ url: review.url, fields });
+          const running = entry;
+          const result = await fillWithFollowups({ url: review.url, reviewed: review.fields, selected: fields, scan: scanForm, fill: fillForm, suggest, active: () => entry === running && Date.now() < running.expiresAt });
+          if (entry !== running) return;
           const upload = withResume && entry?.resume ? await attachResume({ url: review.url, resume: entry.resume }) : null;
           list.replaceChildren();
           fill.hidden = true;
           review = null;
-          status.textContent = result.changed ? "The page changed. Scan again." : `${result.filled} answers filled; ${result.skipped} skipped. ${upload?.message || ""} Scan again for newly revealed follow-up questions. Nothing was submitted.`;
+          status.textContent = result.changed ? "The page changed. Scan again." : `${result.filled} answers filled; ${result.skipped} skipped. ${upload?.message || ""} Nothing was submitted.`;
           lastSignature = "";
         } catch {
           status.textContent = "Some controls need manual entry. Check the form and scan again.";

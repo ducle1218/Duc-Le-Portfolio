@@ -86,3 +86,25 @@ assert.equal(pick(sponsorship,yn,{jobLocation:'Fort Worth, TX'}),'No');
 assert.equal(pick(sponsorship,yn,{jobLocation:'Remote'}),undefined);
 assert.equal(pick('If yes, please indicate Visa status',['A citizen of the U.S.','None of the Above'],{jobLocation:'USA',required:true,parentQuestion:sponsorship,parentAnswer:'No'}),'A citizen of the U.S.');
 console.log('PASS: read completed parent dropdowns, filled the N/A text field, opened and selected the company career site, and checked domestic and foreign sponsorship.');
+
+const {fillWithFollowups}=await import('../tools/application-helper/fill-sequence.mjs');
+const confirmLabel='Please review the question again to confirm your response is correct.';
+const confirmation='Confirming my response to the US Persons question is correct.';
+const prescreenLabel='If you are applying for a position that requires U.S. Government Security Clearance, are you willing to complete a Security Prescreen Questionnaire? Your No answer has no bearing on whether or not you will be considered for other positions.';
+application.answers.push({question:'Willing to complete a U.S. Government Security Prescreen Questionnaire',answer:'Yes'});
+assert.equal(pick(prescreenLabel,yn),'Yes');
+document.body.innerHTML='<form><section><ul><li>U.S. Citizen</li><li>U.S. National</li></ul><input type="hidden"><button type="button">Read more</button></section><div><label for="membership">'+question+' *</label><button type="button" id="membership" role="combobox" aria-controls="members">Select</button></div><div id="members" role="listbox" hidden><span role="option">Yes</span><span role="option">No</span></div><p>It is common for applicants to answer the previous US Persons question incorrectly.</p><div><label for="confirmation">'+confirmLabel+' *</label><input type="hidden"><button type="button" id="confirmation" role="combobox" aria-controls="acks">Select</button></div><div role="listbox" id="acks" hidden><span role="option">'+confirmation+'</span></div></form>';
+for(const elem of document.querySelectorAll('*'))elem.getClientRects=()=>elem.closest('[hidden]')||elem.type==='hidden'?[]:[{}];
+for(const box of document.querySelectorAll('[role="combobox"]')){
+ const options=document.getElementById(box.getAttribute('aria-controls'));
+ box.onclick=()=>{options.hidden=false;box.setAttribute('aria-expanded','true');};
+ for(const option of options.children)option.onclick=()=>{box.textContent='× '+option.textContent;options.hidden=true;box.setAttribute('aria-expanded','false');};
+}
+const suggest=f=>suggestField(f,application);
+const reviewedMembership=formBridge().fields.flatMap(f=>{const ans=suggest(f);return ans?[{...f,...ans}]:[];});
+assert.deepEqual(reviewedMembership.map(f=>f.id),['membership']);
+const cascade=await fillWithFollowups({url:location.href,reviewed:reviewedMembership,selected:reviewedMembership,scan:()=>formBridge(),fill:data=>formBridge({action:'fill',...data}),suggest});
+assert.equal(cascade.filled,2);
+assert.equal(document.querySelector('#membership').textContent,'× Yes');
+assert.equal(document.querySelector('#confirmation').textContent,'× '+confirmation);
+console.log('PASS: a single fill selected US citizen category Yes and then the dependent confirmation option.');

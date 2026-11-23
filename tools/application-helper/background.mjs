@@ -5,9 +5,25 @@ import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
 import {loadPortfolio} from './portfolio-source.mjs';
 chrome.runtime.onInstalled.addListener(async ({reason}) => {
   if(reason==='update')await chrome.storage.local.remove('answerVault');
+  await loadDeviceProfile();
   const tabs=await chrome.tabs.query({url:'https://ducle1218.github.io/Duc-Le-Portfolio/*'});
   await Promise.allSettled(tabs.filter(t=>studioURL(t.url)).map(t=>chrome.scripting.executeScript({target:{tabId:t.id},files:['bridge.js']})));
 });
+// Optional owner-provisioned file in this device's unpacked folder. Never part of a release ZIP.
+async function loadDeviceProfile(){
+ let data;
+ try{
+  const response=await fetch(chrome.runtime.getURL('device-profile.json'));
+  if(!response.ok)return;
+  data=await response.json();
+ }catch{return;}
+ if(data.format!=='duc-application-profile-v1'||!Number.isFinite(Date.parse(data.exportedAt)))return;
+ const {deviceProfileRevision,studioProfile}=await chrome.storage.local.get(['deviceProfileRevision','studioProfile']);
+ if(deviceProfileRevision===data.exportedAt)return;
+ const profile={...cleanProfile(data.profile),confirmedAt:data.profile.confirmedAt};
+ if(studioProfile&&Date.parse(studioProfile.confirmedAt)>Date.parse(profile.confirmedAt))return;
+ await chrome.storage.local.set({profile,studioProfile:profile,deviceProfileRevision:data.exportedAt});
+}
 const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
 let memoryWrite=Promise.resolve();
 let preferenceSeed;
@@ -37,9 +53,14 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
+   if(message.type==='studio-read-profile'){
+    await loadDeviceProfile();
+    const {studioProfile}=await chrome.storage.local.get('studioProfile');
+    return {ok:true,profile:studioProfile||null};
+   }
    if(message.type==='studio-sync-profile'){
     const profile=cleanProfile(message.payload);
-    await chrome.storage.local.set({profile});
+    await chrome.storage.local.set({profile,studioProfile:{...profile,confirmedAt:message.payload.confirmedAt||profile.confirmedAt}});
     return {ok:true,count:profile.answers.length};
    }
    if(message.type==='studio-start'){

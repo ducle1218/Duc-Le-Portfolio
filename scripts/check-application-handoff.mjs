@@ -26,6 +26,8 @@ assert.equal((await send({type:'studio-sync-profile',payload:payload.profile},{.
 const saved={...payload.profile,answers:[{question:'Example question',answer:'Example answer'}]};
 assert.equal((await send({type:'studio-sync-profile',payload:saved})).count,1);
 assert.equal(local.get('profile').answers[0].answer,'Example answer');
+assert.equal((await send({type:'studio-read-profile'})).profile.answers[0].answer,'Example answer');
+assert.equal((await send({type:'studio-read-profile'},{...studio,frameId:1})).ok,false);
 assert.equal(tabs.size,0);
 for(const sender of [{...studio,url:'https://evil.example/'},{...studio,frameId:1},{...studio,id:'other'}])assert.equal((await send({type:'studio-start',payload},sender)).ok,false);
 assert.equal(tabs.size,0);assert.equal((await send({type:'studio-start',payload:{...payload,profile:{confirmed:false}}})).ok,false);

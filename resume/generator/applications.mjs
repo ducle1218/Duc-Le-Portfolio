@@ -11,7 +11,7 @@ const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.c
 let profile=null,applications=[],dialog=null,pdfURL=null;
 const targetParams=typeof location!=='undefined'?new URL(location.href).searchParams:new URLSearchParams(),targetToken=/^[a-f0-9-]{36}$/.test(targetParams.get('applicationTarget')||'')?targetParams.get('applicationTarget'):null,targetHost=targetParams.get('applicationHost')||'the open employer application';
 let helperReady=false,helperResumeReady=false,helperControlReady=false,helperUploadReady=false;
-let profileEdited=false,baseline=null;
+let profileEdited=false,baseline=null,helperSnapshotRevision=null;
 function editorSnapshot(){
  const values=Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value]));
  const answers=[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value}));
@@ -45,7 +45,17 @@ async function syncSavedProfile(){
   status.textContent='Helper connected · '+count+' answers synced from your saved online profile';
  }catch{status.textContent='Profile sync unavailable. Refocus Studio to retry.';}
 }
-async function detectHelper(){let helperVersion='';try{const result=await helperRequest('hello');helperVersion=result.version;helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';const [major,minor]=result.version.split('.').map(Number);helperResumeReady=major>1||major===1&&minor>=3;helperControlReady=major>1||major===1&&minor>=4;helperUploadReady=major>1||major===1&&minor>=5;}catch{helperReady=helperResumeReady=helperControlReady=helperUploadReady=false;}const status=$('helper-connection');if(status)status.textContent=helperUploadReady?'Helper '+helperVersion+' connected · profile and tailored resume ready':helperControlReady?'Helper 1.4 connected · dropdowns, radio groups and tailored PDF ready':helperReady?'Extension connected · update to 1.4 for radio groups and remembered dropdown answers':'Install or reload Application Helper, then refresh this page.';if(helperReady&&connected()&&helperVersionSupportsSync(helperVersion))await syncSavedProfile();return helperReady;}
+async function detectHelper(){let helperVersion='';try{const result=await helperRequest('hello');helperVersion=result.version;helperReady=Number(result.version?.split('.')[0])>=1&&result.version!=='1.0.0';const [major,minor]=result.version.split('.').map(Number);helperResumeReady=major>1||major===1&&minor>=3;helperControlReady=major>1||major===1&&minor>=4;helperUploadReady=major>1||major===1&&minor>=5;}catch{helperReady=helperResumeReady=helperControlReady=helperUploadReady=false;}const status=$('helper-connection');if(status)status.textContent=helperUploadReady?'Helper '+helperVersion+' connected · profile and tailored resume ready':helperControlReady?'Helper 1.4 connected · dropdowns, radio groups and tailored PDF ready':helperReady?'Extension connected · update to 1.4 for radio groups and remembered dropdown answers':'Install or reload Application Helper, then refresh this page.';if(helperReady&&connected()&&helperVersionSupportsSync(helperVersion))await syncSavedProfile();
+ else if(helperReady&&helperVersionSupportsSync(helperVersion)&&helperVersion!=='1.9.5'){
+  try{
+   const {profile:saved}=await helperRequest('read-profile');
+   if(saved&&!connected()&&saved.confirmedAt!==helperSnapshotRevision){
+    helperSnapshotRevision=saved.confirmedAt;applySavedProfile(saved);
+    status.textContent='Private profile restored from your helper · '+saved.answers.length+' saved answers';
+   }
+  }catch{ /* A browser without a provisioned helper can open a private profile file. */ }
+ }
+ return helperReady;}
 if(targetToken){$('application-status').textContent='Choose the matching job below, open Prepare application, then connect its tailored PDF to '+targetHost+'. Your existing application stays open.';}
 if(typeof window!=='undefined'){detectHelper();window.addEventListener('focus',detectHelper);window.addEventListener('duc-helper-ready',detectHelper);}
 const message=text=>{$('application-status').textContent=text;};
@@ -79,7 +89,9 @@ $('add-common-question').onclick=()=>{
  if(existing){revealAnswer(existing);answerStatus('This question is already saved. Its answer is ready to edit.');return;}
  const row=addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();revealAnswer(row);answerStatus('Added '+question+'. Enter your answer below.');
 };
-function exportDraft(){try{const reviewed=readProfile();downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}
+function exportDraft(){try{
+ if(legacyNeedsSync&&!baseline)throw Error('This device has an older profile. Reload your updated helper or open your private profile JSON to restore your saved answers.');
+ const reviewed=readProfile();downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}
 $('export-profile').onclick=$('download-profile').onclick=exportDraft;
 $('open-profile').onclick=()=>$('profile-file').click();
 $('profile-file').onchange=async()=>{
@@ -99,16 +111,16 @@ $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();}
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
 $('add-answer').addEventListener('click',()=>{profileEdited=true;});
 $('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){exportDraft();return;}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;fillProfile();baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
-const draftKey='duc-application-draft-v1',bankKey='duc-imported-answers-v1';let hasDraft=false,answerBank=[],needsStarterMigration=true,needsEducationMigration=true;
-function saveDraft(){try{const draft={starterAnswersVersion:1,educationAnswersVersion:1,baseline,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
-try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
+const draftKey='duc-application-draft-v1',bankKey='duc-imported-answers-v1';let legacyNeedsSync=false,hasDraft=false,answerBank=[],needsStarterMigration=true,needsEducationMigration=true;
+function saveDraft(){try{const draft={localProfileVersion:legacyNeedsSync&&!baseline?0:1,starterAnswersVersion:1,educationAnswersVersion:1,baseline,helperSnapshotRevision,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
+try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;helperSnapshotRevision=draft.helperSnapshotRevision||null;legacyNeedsSync=!baseline&&draft.localProfileVersion!==1;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
 if(needsStarterMigration){const added=addStarterAnswers();saveDraft();if(added||!hasDraft)$('draft-status').textContent='Background answers are ready to edit.';}
 if(needsEducationMigration){const names=['Degree being pursued','Current academic standing','Preferred work regions','College GPA','College GPA scale','High school GPA','Full-time student enrollment'];addMissingAnswers(COMMON_QUESTIONS.filter(q=>names.includes(q.question)).map(q=>({question:q.question,answer:q.defaultAnswer})));saveDraft();}
 $('background-status').textContent='Sync loads your private online profile and keeps edits made since your last sync.';
 const initialEditor=editorSnapshot();
 if(hasDraft){
  $('profile-origin').textContent='On this device · '+initialEditor.answers.length+' answers';
- exportStatus(initialEditor.answers.length+' answers ready. Open a saved profile file or unlock owner access to sync.');
+ exportStatus(legacyNeedsSync?'Older device copy · reconnect your helper or open your saved profile before downloading.':initialEditor.answers.length+' answers ready.');
 }
 // On a legacy device, migrate shared answers from the server and retain unique local questions.
 function applySavedProfile(saved){

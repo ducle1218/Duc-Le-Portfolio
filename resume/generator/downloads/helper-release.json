@@ -1,11 +1,12 @@
 {
-  "version": "1.9.5",
-  "sha256": "e79955dcf2941054d64d4a83e5649ee1c87f84111460b86efdd2ccb3bb0bb878",
+  "version": "1.9.6",
+  "sha256": "ded5583b7f5ff16569867f7be7548589c10422abf631a1d901cc09c9a7b9bfb1",
   "files": [
     "manifest.json",
     "popup.html",
     "popup.css",
     "popup.mjs",
+    "fill-sequence.mjs",
     "application-core.mjs",
     "application-autofill.mjs",
     "answer-memory.mjs",

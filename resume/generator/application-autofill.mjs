@@ -46,11 +46,15 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  const review=rule?{reason:rule.reason,sourceQuestion:rule.sourceQuestion,requiresReview:rule.requiresReview}:{reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){
   const aliases=rule?.aliases||(key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:(key==='country'||background?.value==='United States')&&['us','usa','united states'].includes(normalize(value))?['united states','united states of america','us','usa']:common?.question==='Highest completed degree'&&normalize(value)==='high school diploma'?['high school diploma','high school diploma or equivalent','high school diploma ged','high school or equivalent']:[normalize(value)]);
+  if(rule?.confirmUSPersons&&field.type==='select-one'){
+   const choices=field.options.filter(o=>!o.disabled&&o.value&&!/^(?:please )?(?:select|choose)\b/.test(normalize(o.label)));
+   if(choices.length===1)return {value:choices[0].value,display:choices[0].label,...review};
+  }
   if(rule?.careerSiteDetail&&field.type==='select-one'){
    const candidates=field.options.filter(o=>!o.disabled&&o.value&&/\b(?:careers? (?:web)?site|careers? page|company website)$/.test(normalize(o.label)));
    if(candidates.length===1)return {value:candidates[0].value,display:candidates[0].label,...review};
   }
-  if(field.type==='combobox')return {value,display:value,aliases,...(rule?.careerSiteDetail?{careerSiteDetail:true}:{}),...review};
+  if(field.type==='combobox')return {value,display:value,aliases,...(rule?.confirmUSPersons?{confirmUSPersons:true}:{}),...(rule?.careerSiteDetail?{careerSiteDetail:true}:{}),...review};
   const matches=(field.options||[]).filter(o=>!o.disabled&&(aliases.includes(normalize(o.label))||field.type!=='radio-group'&&aliases.includes(normalize(o.value))));if(rule?.aliases&&matches.length>1){matches.sort((a,b)=>aliases.indexOf(normalize(a.label))-aliases.indexOf(normalize(b.label)));if(normalize(matches[0].label)!==normalize(matches[1].label))matches.splice(1);}if(matches.length!==1)return null;return {value:matches[0].value,display:matches[0].label,...review};
  }
  return {value,display:value,...review};
@@ -85,7 +89,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
  const ownLabel=e=>(useful(e.getAttribute('aria-label'))||useful(labelled(e))||[...(e.labels||[]),...([...document.querySelectorAll('label[for]')].filter(l=>e.id&&l.getAttribute('for')===e.id))].map(labelText).filter((v,i,a)=>a.indexOf(v)===i).join(' ')||labelText(e.closest('label'))||'').trim();
  const nearbyLabel=e=>{let parent=e.parentElement;const members=choice(e)?radios(e):[];
   for(let n=0;n<8&&parent&&parent!==document.body;n++,parent=parent.parentElement){
-   const contained=[...parent.querySelectorAll(controls)].filter(c=>!c.parentElement?.closest(comboSelector));
+   const contained=[...parent.querySelectorAll(controls)].filter(c=>!c.parentElement?.closest(comboSelector)&&type(c)!=='hidden'&&(c===e||visible(c)));
    if(choice(e)){if(contained.some(c=>!choice(c)||!members.includes(c)))break;if(!members.length||!members.every(r=>parent.contains(r)))continue;}
    else if(contained.filter(c=>!radio(c)).length!==1)break;
    const candidates=[...parent.querySelectorAll('legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong')].filter(h=>!h.closest('[role="listbox"],[role="option"]')&&!h.querySelector(controls)&&!members.some(r=>r.closest('label')?.contains(h)||[...(r.labels||[])].some(l=>l.contains(h))));
@@ -110,11 +114,19 @@ export function formBridge({action='scan',url,fields=[]}={}){
  // For a question referring to "categories above", inspect the nearest list.
  // A preceding control or section heading ends the scope of the reference.
  const citizenList=e=>{
-  for(let node=e,level=0;node&&node!==document.body&&level<8;node=node.parentElement,level++){
+  const stopSelector=controls+',h1,h2,h3,h4';
+  // Inspect the closest list before the field in document order, including lists
+  // in a disclosure with a Read more button or a hidden form input after it.
+  for(let node=e,level=0;node&&node!==document.body&&level<14;node=node.parentElement,level++){
    for(let sibling=node.previousElementSibling;sibling;sibling=sibling.previousElementSibling){
-    if(sibling.matches(controls+',h1,h2,h3,h4,fieldset')||sibling.querySelector(controls+',h1,h2,h3,h4'))return false;
-    const list=sibling.matches('ul,ol')?sibling:[...sibling.querySelectorAll('ul,ol')].at(-1);
-    if(list)return [...list.children].some(item=>/^(u s|us|united states) citizens?$/.test(norm(text(item))));
+    const selector=stopSelector+',ul,ol,[role="list"]';
+    const candidates=[sibling,...sibling.querySelectorAll(selector)].reverse();
+    for(const candidate of candidates){
+     if(candidate.matches('ul,ol,[role="list"]')){
+      return [...candidate.querySelectorAll('li,[role="listitem"]')].some(item=>/^(?:u s|us|united states) citizens?$/.test(norm(text(item))));
+     }
+     if(candidate.matches(stopSelector)&&visible(candidate)&&candidate.type!=='hidden'&&!candidate.closest('ul,ol,[role="list"]'))return false;
+    }
    }
   }
   return false;
@@ -200,6 +212,10 @@ export function formBridge({action='scan',url,fields=[]}={}){
      await new Promise(r=>setTimeout(r,80));
     }
     const aliases=[...(f.aliases||[norm(f.value)])],available=boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')).filter((o,i,all)=>!all.some(other=>other!==o&&other.contains(o))):[];
+    if(f.confirmUSPersons){
+     const choices=available.filter(o=>!placeholder(text(o)));
+     if(choices.length===1)aliases.push(norm(text(choices[0])));
+    }
     if(f.careerSiteDetail){
      const careerSites=available.map(o=>norm(text(o))).filter(v=>/\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
      if(careerSites.length===1)aliases.push(careerSites[0]);
@@ -209,7 +225,7 @@ export function formBridge({action='scan',url,fields=[]}={}){
     // An open menu's option text must not be mistaken for an existing selection.
     if(location.href!==url||!e.isConnected||options.length!==1){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));skipped++;continue;}
     activate(options[0]);let accepted=false;
-    for(let attempt=0;attempt<10;attempt++){await new Promise(r=>setTimeout(r,80));if(location.href!==url||!e.isConnected)break;if(aliases.includes(norm(selectedValue(e)))){accepted=true;break;}}
+    for(let attempt=0;attempt<10;attempt++){await new Promise(r=>setTimeout(r,80));if(location.href!==url||!e.isConnected)break;if(aliases.includes(norm(valueText(e)))){accepted=true;break;}}
     if(accepted)filled++;else skipped++;
    }else{
     if(e.tagName==='SELECT'&&![...e.options].some(o=>o.value===f.value&&!o.disabled&&text(o)===f.display)){skipped++;continue;}

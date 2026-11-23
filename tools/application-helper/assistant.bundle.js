@@ -81,7 +81,12 @@
     { question: "Summer internship end date", aliases: ["summer internship end date"], defaultAnswer: "2027-08-31" },
     { question: "Full-time internship availability", aliases: ["full time internship availability"], defaultAnswer: "Summer only; not fall or winter" },
     { question: "Preferred application source", aliases: ["preferred application source"], defaultAnswer: "Company website or university" },
-    { question: "Preferred contact method", aliases: ["preferred contact method", "preferred method of contact", "preferred method of communication", "how would you prefer to be contacted", "how do you prefer to be contacted", "how should we contact you", "how would you like us to contact you"], options: ["Email", "Mobile Phone", "Home Phone"] },
+    { question: "Phone device type", aliases: ["phone device type", "phone type", "primary phone type", "telephone type"], options: ["Mobile", "Landline"] },
+    { question: "Languages spoken", aliases: ["languages spoken", "which languages do you speak", "what languages do you speak", "languages you speak"] },
+    { question: "Expected graduation date", aliases: ["expected graduation date", "expected graduation month", "anticipated graduation date"] },
+    { question: "University start year", aliases: ["university start year", "college start year"] },
+    { question: "Application source fallbacks", aliases: ["application source fallbacks"] },
+    { question: "Preferred contact method", aliases: ["primary contact method", "preferred contact method", "preferred method of contact", "preferred method of communication", "how would you prefer to be contacted", "how do you prefer to be contacted", "how should we contact you", "how would you like us to contact you"], options: ["Email", "Mobile Phone", "Home Phone"] },
     { question: "Do you have reliable transportation?", aliases: ["do you have reliable transportation", "do you have a reliable means of transportation", "do you have reliable transportation to work", "do you have reliable transportation to and from work"], options: ["Yes", "No"] },
     { question: "Post-offer federal background check, physical and drug screen", aliases: ["post offer federal background check physical and drug screen", "if extended a job offer are you willing to submit to a detailed federal background check pre employment physical and drug screen"], options: ["Yes", "No"] },
     { question: "Sex", options: ["Male", "Female", "I do not wish to self-identify"], aliases: ["sex", "what is your sex", "gender", "what is your gender"], review: true },
@@ -233,6 +238,7 @@
       if (!email || field.primaryEmail && field.primaryEmail.trim().toLowerCase() !== email.trim().toLowerCase()) return { blocked: true };
       return confirmed(email, "Profile email");
     }
+    if (commonQuestion(q)?.question === "Phone device type" && fact("Phone device type") === "Mobile") return confirmed("Mobile", "Phone device type", ["mobile", "mobile phone", "cell", "cell phone", "cellular"]);
     if (commonQuestion(q)?.question === "Preferred contact method" && fact("Preferred contact method") === "Email")
       return confirmed("Email", "Preferred contact method", ["email", "e mail", "email address", "by email"]);
     const employment = q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
@@ -339,6 +345,7 @@
       if (/^bachelor(?: s)?(?: degree| of .+)$/.test(highest)) return confirmed("Yes", "Highest completed degree");
       return { blocked: true };
     }
+    if (q === "from" && college && /^\d{4}$/.test(fact("University start year") || "")) return result(fact("University start year"), "Start year at this school");
     if (q === "to actual or expected" && college && /^\d{4}$/.test(profile.values.graduationYear)) return result(profile.values.graduationYear, "Expected graduation year at this school");
     const pendingDegree = field.degreePair && pursued && (!school || college) && !field.highestEducation;
     if (q === "not completed" && field.type === "checkbox-group") {
@@ -396,6 +403,7 @@
     if (date === "graduation") {
       const values = entries.filter((a) => dateConcept(a.question) === "graduation").map((a) => a.answer.trim());
       const months = values.filter((v) => /^\d{4}-\d{2}(?:-\d{2})?$/.test(v)).map((v) => v.slice(0, 7));
+      if (new Set(months).size === 1 && ["text", "textarea"].includes(field.type) && !field.placeholder) return result(months[0], "Confirmed expected graduation month");
       if (new Set(months).size === 1 && (field.type === "month" || /^YYYY-MM$/i.test(field.placeholder || ""))) return { ...result(months[0], "Expected graduation month"), requiresReview: true };
     }
     return null;
@@ -543,6 +551,10 @@
   // tools/application-helper/application-autofill.mjs?v=20261123.3
   function formBridge({ action = "scan", url, fields = [], origins = [] } = {}) {
     if (action === "scan-chat" && !origins.includes(location.origin)) return null;
+    if (action === "scan-frame") {
+      if (!origins.includes(location.href)) return null;
+      action = "scan";
+    }
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
@@ -592,11 +604,11 @@
       return "";
     };
     const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
-    const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
+    const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(e.getRootNode?.().getElementById?.(id) || document.getElementById(id))).join(" ");
     const radioSelector = 'input[type="radio"],[role="radio"]';
-    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l));
+    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l)) || radio(e) && e.parentElement?.querySelectorAll(radioSelector).length === 1 && visible(e.parentElement) && !!e.parentElement.querySelector('svg,[role="img"]');
     const group = (e) => {
-      const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
+      const explicit = e.closest('[role="radiogroup"],fieldset') || e.closest('[role="group"]');
       if (explicit) return explicit;
       if (radio(e)) {
         if (e.name) return null;
@@ -618,7 +630,7 @@
     const radios = (e) => {
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
-      return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
+      return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
     const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
@@ -651,7 +663,21 @@
       }
       return "";
     };
+    const groupPrompt = (g) => {
+      if (!g) return "";
+      for (let node = g; node && node !== document.body; node = node.parentElement) {
+        for (let previous = node.previousElementSibling; previous; previous = previous.previousElementSibling) {
+          if (previous.matches(controls) || previous.querySelector(controls)) return "";
+          const prompt = text(previous).trim();
+          if (!prompt) continue;
+          if (prompt.length <= 800 && /\?\s*\*?$/.test(prompt)) return prompt;
+          if (prompt.length > 50 || previous.matches("h1,h2,h3")) return "";
+        }
+      }
+      return "";
+    };
     const label = (e) => {
+      if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
@@ -663,7 +689,7 @@
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
       if (choice(e)) {
         const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
-        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 800);
+        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || groupPrompt(g) || nearbyLabel(e)).trim().slice(0, 800);
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 800);
     };
@@ -672,7 +698,7 @@
       const list = [...document.querySelectorAll(controls)];
       const shadowReplies = (root) => {
         for (const host of root.querySelectorAll("*")) if (host.shadowRoot) {
-          shadowEditors.push(...[...host.shadowRoot.querySelectorAll(controls)].filter(isReply));
+          shadowEditors.push(...host.shadowRoot.querySelectorAll(controls));
           shadowReplies(host.shadowRoot);
         }
       };
@@ -712,7 +738,7 @@
       return (e.value || text(e)).trim();
     };
     const selectedRadio = (e) => radios(e).find((r) => r.checked || r.getAttribute("aria-checked") === "true");
-    const optionLabel = (e) => {
+    const originalOptionLabel = (e) => {
       const associated = [...e.labels || []];
       const root = associated[0] || e.closest("label");
       if (root) {
@@ -724,8 +750,16 @@
       }
       return ownLabel(e) || text(e) || e.value || "";
     };
+    const optionLabel = (e) => {
+      const raw = originalOptionLabel(e);
+      for (const v of [raw, e.getAttribute("aria-label"), labelled(e), e.parentElement?.getAttribute("aria-label")]) {
+        const yn = String(v || "").trim().match(/^(yes|no)(?:\s*[,.-]?\s*(?:option\s+)?\d+\s+of\s+\d+)?[.\s]*$/i);
+        if (yn) return yn[1];
+      }
+      return raw;
+    };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => /^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id) && /^(?:0+|yyyy)$/i.test(e.value) ? true : isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please|^\s*\[.+\]\s*$/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
@@ -785,7 +819,7 @@
         }
       }
       const q = norm(label(e));
-      if (!/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -800,13 +834,13 @@
           parentQuestion = label(last);
         }
       }
-      if (/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
           if (schools.length > 1) break;
           if (schools.length === 1) {
-            educationSchool = valueText(schools[0]);
+            educationSchool = valueText(schools[0]) || schools[0].value || "";
             break;
           }
         }
@@ -824,6 +858,112 @@
       return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const sectionFor = (name) => {
+      const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);
+      if (headings.length !== 1) return null;
+      for (let p = headings[0].parentElement; p && p !== document.body; p = p.parentElement) {
+        if (p.querySelector(name === "skills" ? "input:not([type=hidden])" : 'button,input:not([type=hidden]),select,[role="combobox"]')) {
+          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !/^languages? \d+$/i.test(text(h)));
+          return other ? null : p;
+        }
+      }
+      return null;
+    };
+    const chipValues = (p) => [...p.querySelectorAll('[data-automation-id="selectedItem"],[data-automation-id="selectedItemLabel"],[data-item],.item[data-value],.select2-selection__choice,[class*="multiValueLabel"]')].flatMap((n) => {
+      if (n.querySelector('[data-automation-id="selectedItemLabel"]')) return [];
+      const copy = n.cloneNode(true);
+      for (const child of copy.querySelectorAll("button,svg,[aria-hidden=true]")) child.remove();
+      const value = (text(copy) || n.getAttribute("data-value") || "").replace(/^[×✕]\s*/, "").trim();
+      return value ? [value] : [];
+    });
+    const skillInput = (p) => [...p.querySelectorAll("input:not([type=hidden]):not([type=checkbox])")].find((e) => visible(e) && !disabled(e) && (/skills/i.test(label(e) + " " + e.id) || e.getAttribute("data-automation-id") === "searchBox"));
+    const languageInputs = (p) => elements().filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && /^(language|select language)$/.test(norm(label(e))));
+    const languageAdd = (p) => [...p.querySelectorAll("button")].find((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && /^(add|add another|add language)$/i.test(text(b)));
+    const listFields = () => {
+      const fields2 = [], skills = sectionFor("skills"), languages = sectionFor("languages");
+      if (skills && skillInput(skills)) fields2.push({ type: "skill-list", label: "Skills", existing: chipValues(skills) });
+      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).filter((e) => !empty(e)).map(valueText) });
+      return fields2;
+    };
+    async function fillLanguages(values) {
+      for (const value of values) {
+        const section = sectionFor("languages");
+        if (!section || location.href !== url) return false;
+        let inputs = languageInputs(section);
+        if (inputs.some((e) => !empty(e) && norm(valueText(e)) === norm(value))) continue;
+        if (!inputs.some(empty)) {
+          const add = languageAdd(section);
+          if (!add) return false;
+          add.click();
+          for (let i = 0; i < 20; i++) {
+            await pause(75);
+            const next = sectionFor("languages");
+            inputs = next ? languageInputs(next) : [];
+            if (inputs.some(empty)) break;
+          }
+        }
+        const blanks = inputs.filter(empty);
+        if (blanks.length !== 1) return false;
+        const target = blanks[0], field = snapshot(target, elements().indexOf(target));
+        let answer = { value, display: value, aliases: [norm(value)] };
+        if (target.tagName === "SELECT") {
+          const options = field.options.filter((o) => !o.disabled && norm(o.label) === norm(value));
+          if (options.length !== 1) return false;
+          answer = { value: options[0].value, display: options[0].label };
+        }
+        const result = await formBridge({ action: "fill", url, fields: [{ ...field, ...answer }] });
+        if (!result.filled) return false;
+      }
+      return true;
+    }
+    async function fillSkills(values, skillAliases = {}) {
+      let complete = true;
+      for (const value of values) {
+        const section = sectionFor("skills"), e = section && skillInput(section);
+        if (!e || location.href !== url) return false;
+        const skillKey3 = (s) => s.toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
+        const aliases3 = new Set(skillAliases[value] || [skillKey3(value)]);
+        const committed = () => {
+          const p = sectionFor("skills");
+          return !!p && chipValues(p).some((s) => aliases3.has(skillKey3(s)));
+        };
+        if (committed()) continue;
+        if (e.value.trim()) return false;
+        const write = (v) => {
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(e, v);
+          e.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+        const menus = '[role="listbox"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"]';
+        const before = new Set([...document.querySelectorAll(menus)].filter(visible));
+        e.focus();
+        write(value);
+        let clicked = false;
+        for (let i = 0; i < 20 && !committed(); i++) {
+          await pause(75);
+          if (!e.isConnected || location.href !== url) return false;
+          const id = e.getAttribute("aria-controls") || e.getAttribute("aria-owns");
+          const panels = [...document.querySelectorAll(menus)].filter((p) => visible(p) && (p.id === id || section.contains(p) || !before.has(p)));
+          const inner = panels.filter((p) => !panels.some((n) => n !== p && p.contains(n)));
+          const panel = panels.find((p) => p.id && p.id === id) || (inner.length === 1 ? inner[0] : null);
+          const rows = panel ? [...panel.querySelectorAll('[role="option"],[data-automation-id="promptOption"],[data-automation-id="menuItem"],[data-automation-id="promptLeafNode"],li')].filter((o) => visible(o) && !disabled(o)) : [];
+          const matches = rows.filter((o) => aliases3.has(skillKey3(text(o))));
+          const options = matches.filter((o) => !matches.some((n) => n !== o && o.contains(n)));
+          if (!clicked && options.length === 1) {
+            activate(options[0], true);
+            clicked = true;
+          } else if (!clicked && i === 4 && !rows.length) {
+            for (const event of ["keydown", "keyup"]) e.dispatchEvent(new KeyboardEvent(event, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+          }
+        }
+        if (!committed()) {
+          if (e.value === value) write("");
+          e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          complete = false;
+        }
+      }
+      return complete;
+    }
     if (action === "prepare-education") {
       const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
@@ -863,7 +1003,14 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+        try {
+          const u = new URL(frame.src, location.href);
+          return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
+        } catch {
+          return [];
+        }
+      }), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
@@ -891,6 +1038,11 @@
       if (location.href !== url) return { filled: 0, skipped: fields.length, changed: true };
       let filled = 0, skipped = 0;
       for (const f of fields) {
+        if (f.type === "skill-list" || f.type === "language-list") {
+          if (location.href === url && Array.isArray(f.value) && await (f.type === "skill-list" ? fillSkills : fillLanguages)(f.value, f.skillAliases)) filled++;
+          else skipped++;
+          continue;
+        }
         const all = elements();
         let e = all[f.index];
         if (f.id && e?.id !== f.id) {
@@ -995,6 +1147,12 @@
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
           }
+          const brand = /\.myworkdayjobs\.com$/.test(location.hostname) ? norm(location.hostname.split(".")[0]) : "";
+          if (f.sourceTree) {
+            const direct = available.filter((o) => /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
+            if (direct.length === 1) aliases3.unshift(optionKey(direct[0]));
+            if (brand && available.some((o) => optionKey(o) === brand)) aliases3.unshift(brand);
+          }
           const options = available.filter((o) => aliases3.includes(optionKey(o)));
           if (f.phoneCountry && options.length > 1 && options.every((o) => optionKey(o) === "united states 1")) options.splice(1);
           if (options.length > 1 && aliases3.length > 1) {
@@ -1011,22 +1169,38 @@
           options[0].scrollIntoView?.({ block: "nearest" });
           activate(options[0], true);
           let accepted = false, leafChosen = false;
-          const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
+          const rootChoice = optionKey(options[0]);
+          const branchKind = (name) => name === brand || /^(?:company|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
+          let sourceBranch = f.sourceTree && branchKind(rootChoice), tried = /* @__PURE__ */ new Set([rootChoice]);
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
             if (sourceBranch && !leafChosen) {
               const lists = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && (boxes.includes(n) || !before.has(n)));
-              const leaves = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o) && /^(?:(?:company|employer) )?careers? (?:web ?site|site|page)$/.test(norm(text(o))));
-              if (leaves.length === 1) {
-                aliases3.push(norm(text(leaves[0])));
-                activate(leaves[0], true);
+              const nodes = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o));
+              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
+              const matches = nodes.filter((o) => names.includes(optionKey(o)) || sourceBranch === "company" && /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
+              const leaf = matches.find((o) => !matches.some((x) => x !== o && o.contains(x)));
+              if (leaf) {
+                aliases3.push(optionKey(leaf));
+                activate(leaf, true);
                 leafChosen = true;
                 continue;
               }
+              if (f.sourceFallbacks && attempt >= 2 && nodes.length) {
+                const next = ["job board", "job boards", "recruiting event"].find((name) => !tried.has(name) && nodes.some((o) => optionKey(o) === name));
+                if (next) {
+                  tried.add(next);
+                  sourceBranch = branchKind(next);
+                  activate(nodes.find((o) => optionKey(o) === next), true);
+                  continue;
+                }
+                const back = lists.flatMap((b) => [...b.querySelectorAll('button,[role="button"],[data-automation-id*="Back"],[data-automation-id*="back"]')]).find((n) => visible(n) && /back/i.test([n.getAttribute("aria-label"), n.getAttribute("data-automation-id"), text(n)].join(" ")));
+                if (back) activate(back, true);
+              }
               if (lists.length) continue;
             }
-            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
+            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }
@@ -1118,8 +1292,25 @@
 
   // tools/application-helper/application-autofill.mjs
   var normalize = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  var skillKey2 = (s) => normalize(String(s).toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp"));
+  var skillEquivalents = {
+    cad: ["computer aided design", "computer aided design cad", "cad computer aided design"],
+    fea: ["finite element analysis", "finite element analysis fea"],
+    excel: ["microsoft excel"],
+    "3d printing": ["3 d printing", "three dimensional printing"],
+    solidworks: ["solidworks cad", "solidworks 3d cad"]
+  };
   function suggestField(field, profile, memory = [], origin = "", context = "", portfolio = null) {
     if (!profile?.confirmed) return null;
+    if (field.type === "skill-list" || field.type === "language-list") {
+      const skills = field.type === "skill-list";
+      const languages = profile.answers?.find((a) => normalize(a.question) === "languages spoken")?.answer || "";
+      const values = skills ? (portfolio?.skills || []).map((s) => s.name) : languages.split(/[,;]/).map((s) => s.trim());
+      const aliasesFor = (v) => [skillKey2(v), ...skills ? skillEquivalents[skillKey2(v)] || [] : []];
+      const present = new Set((field.existing || []).map(skillKey2));
+      const pending = [...new Set(values.filter(Boolean))].filter((v) => !aliasesFor(v).some((alias) => present.has(alias))).slice(0, skills ? Math.max(0, 10 - present.size) : 20);
+      return pending.length ? { ...skills ? { skillAliases: Object.fromEntries(pending.map((v) => [v, aliasesFor(v)])) } : {}, value: pending, display: pending.join(", "), reason: skills ? "Skills documented on your r\xE9sum\xE9" : "Languages in your confirmed profile", requiresReview: true } : null;
+    }
     if (field.type === "chat-reply") {
       if (field.filled || field.disabled) return null;
       const parts = field.label.split(/(?:[.!]\s+(?=[A-Z])|\n+)/);
@@ -1142,6 +1333,7 @@
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile| account)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
     const fieldAliases = {
+      "state location": "state",
       "location city": "city",
       "city of residence": "city",
       "town or city": "city",
@@ -1191,6 +1383,17 @@
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
       const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states", "united states of america"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
+      const sourceTree = common?.question === "How did you hear about this position?" && normalize(value) === "company website";
+      const sourceFallbacks = sourceTree && profile.answers?.some((a) => a.question === "Application source fallbacks" && a.answer === "LinkedIn or Indeed, then a career fair");
+      if (sourceFallbacks) {
+        const fallback = ["linkedin", "linked in", "indeed", "indeed com", "job board", "job boards", "job board job search site", "career fair", "job fair", "recruiting event", "career fair recruiting event"];
+        const university = aliases3.findIndex((a) => a.startsWith("university"));
+        aliases3.splice(university < 0 ? aliases3.length : university, 0, ...fallback);
+        for (const option of field.options || []) {
+          const name = normalize(option.label);
+          if (/\bcareers? (?:web ?site|page|site)$/.test(name)) aliases3.unshift(name);
+        }
+      }
       if (rule?.confirmUSPersons && field.type === "select-one") {
         const choices = field.options.filter((o) => !o.disabled && o.value && !/^(?:please )?(?:select|choose)\b/.test(normalize(o.label)));
         if (choices.length === 1) return { value: choices[0].value, display: choices[0].label, ...review };
@@ -1199,7 +1402,7 @@
         const candidates = field.options.filter((o) => !o.disabled && o.value && /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(normalize(o.label)));
         if (candidates.length === 1) return { value: candidates[0].value, display: candidates[0].label, ...review };
       }
-      if (field.type === "combobox") return { value, display: value, aliases: aliases3, ...rule?.confirmUSPersons ? { confirmUSPersons: true } : {}, ...rule?.careerSiteDetail ? { careerSiteDetail: true } : {}, ...common?.question === "How did you hear about this position?" && normalize(value) === "company website" ? { sourceTree: true } : {}, ...review };
+      if (field.type === "combobox") return { value, display: sourceFallbacks ? "Company career site, then LinkedIn or Indeed, then career fair" : value, aliases: aliases3, ...rule?.confirmUSPersons ? { confirmUSPersons: true } : {}, ...rule?.careerSiteDetail ? { careerSiteDetail: true } : {}, ...sourceTree ? { sourceTree: true, sourceFallbacks } : {}, ...review };
       const matches = (field.options || []).filter((o) => !o.disabled && (aliases3.includes(normalize(o.label)) || field.type !== "radio-group" && aliases3.includes(normalize(o.value))));
       if (rule?.aliases && matches.length > 1) {
         matches.sort((a, b) => aliases3.indexOf(normalize(a.label)) - aliases3.indexOf(normalize(b.label)));
@@ -1212,6 +1415,10 @@
   }
   function formBridge2({ action = "scan", url, fields = [], origins = [] } = {}) {
     if (action === "scan-chat" && !origins.includes(location.origin)) return null;
+    if (action === "scan-frame") {
+      if (!origins.includes(location.href)) return null;
+      action = "scan";
+    }
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
@@ -1261,11 +1468,11 @@
       return "";
     };
     const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
-    const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
+    const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(e.getRootNode?.().getElementById?.(id) || document.getElementById(id))).join(" ");
     const radioSelector = 'input[type="radio"],[role="radio"]';
-    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l));
+    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l)) || radio(e) && e.parentElement?.querySelectorAll(radioSelector).length === 1 && visible(e.parentElement) && !!e.parentElement.querySelector('svg,[role="img"]');
     const group = (e) => {
-      const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
+      const explicit = e.closest('[role="radiogroup"],fieldset') || e.closest('[role="group"]');
       if (explicit) return explicit;
       if (radio(e)) {
         if (e.name) return null;
@@ -1287,7 +1494,7 @@
     const radios = (e) => {
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
-      return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
+      return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
     const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
@@ -1320,7 +1527,21 @@
       }
       return "";
     };
+    const groupPrompt = (g) => {
+      if (!g) return "";
+      for (let node = g; node && node !== document.body; node = node.parentElement) {
+        for (let previous = node.previousElementSibling; previous; previous = previous.previousElementSibling) {
+          if (previous.matches(controls) || previous.querySelector(controls)) return "";
+          const prompt = text(previous).trim();
+          if (!prompt) continue;
+          if (prompt.length <= 800 && /\?\s*\*?$/.test(prompt)) return prompt;
+          if (prompt.length > 50 || previous.matches("h1,h2,h3")) return "";
+        }
+      }
+      return "";
+    };
     const label = (e) => {
+      if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
@@ -1332,7 +1553,7 @@
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
       if (choice(e)) {
         const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
-        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 800);
+        return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || groupPrompt(g) || nearbyLabel(e)).trim().slice(0, 800);
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 800);
     };
@@ -1341,7 +1562,7 @@
       const list = [...document.querySelectorAll(controls)];
       const shadowReplies = (root) => {
         for (const host of root.querySelectorAll("*")) if (host.shadowRoot) {
-          shadowEditors.push(...[...host.shadowRoot.querySelectorAll(controls)].filter(isReply));
+          shadowEditors.push(...host.shadowRoot.querySelectorAll(controls));
           shadowReplies(host.shadowRoot);
         }
       };
@@ -1381,7 +1602,7 @@
       return (e.value || text(e)).trim();
     };
     const selectedRadio = (e) => radios(e).find((r) => r.checked || r.getAttribute("aria-checked") === "true");
-    const optionLabel = (e) => {
+    const originalOptionLabel = (e) => {
       const associated = [...e.labels || []];
       const root = associated[0] || e.closest("label");
       if (root) {
@@ -1393,8 +1614,16 @@
       }
       return ownLabel(e) || text(e) || e.value || "";
     };
+    const optionLabel = (e) => {
+      const raw = originalOptionLabel(e);
+      for (const v of [raw, e.getAttribute("aria-label"), labelled(e), e.parentElement?.getAttribute("aria-label")]) {
+        const yn = String(v || "").trim().match(/^(yes|no)(?:\s*[,.-]?\s*(?:option\s+)?\d+\s+of\s+\d+)?[.\s]*$/i);
+        if (yn) return yn[1];
+      }
+      return raw;
+    };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => /^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id) && /^(?:0+|yyyy)$/i.test(e.value) ? true : isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please|^\s*\[.+\]\s*$/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
@@ -1454,7 +1683,7 @@
         }
       }
       const q = norm(label(e));
-      if (!/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -1469,13 +1698,13 @@
           parentQuestion = label(last);
         }
       }
-      if (/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
           if (schools.length > 1) break;
           if (schools.length === 1) {
-            educationSchool = valueText(schools[0]);
+            educationSchool = valueText(schools[0]) || schools[0].value || "";
             break;
           }
         }
@@ -1493,6 +1722,112 @@
       return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const sectionFor = (name) => {
+      const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);
+      if (headings.length !== 1) return null;
+      for (let p = headings[0].parentElement; p && p !== document.body; p = p.parentElement) {
+        if (p.querySelector(name === "skills" ? "input:not([type=hidden])" : 'button,input:not([type=hidden]),select,[role="combobox"]')) {
+          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !/^languages? \d+$/i.test(text(h)));
+          return other ? null : p;
+        }
+      }
+      return null;
+    };
+    const chipValues = (p) => [...p.querySelectorAll('[data-automation-id="selectedItem"],[data-automation-id="selectedItemLabel"],[data-item],.item[data-value],.select2-selection__choice,[class*="multiValueLabel"]')].flatMap((n) => {
+      if (n.querySelector('[data-automation-id="selectedItemLabel"]')) return [];
+      const copy = n.cloneNode(true);
+      for (const child of copy.querySelectorAll("button,svg,[aria-hidden=true]")) child.remove();
+      const value = (text(copy) || n.getAttribute("data-value") || "").replace(/^[×✕]\s*/, "").trim();
+      return value ? [value] : [];
+    });
+    const skillInput = (p) => [...p.querySelectorAll("input:not([type=hidden]):not([type=checkbox])")].find((e) => visible(e) && !disabled(e) && (/skills/i.test(label(e) + " " + e.id) || e.getAttribute("data-automation-id") === "searchBox"));
+    const languageInputs = (p) => elements().filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && /^(language|select language)$/.test(norm(label(e))));
+    const languageAdd = (p) => [...p.querySelectorAll("button")].find((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && /^(add|add another|add language)$/i.test(text(b)));
+    const listFields = () => {
+      const fields2 = [], skills = sectionFor("skills"), languages = sectionFor("languages");
+      if (skills && skillInput(skills)) fields2.push({ type: "skill-list", label: "Skills", existing: chipValues(skills) });
+      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).filter((e) => !empty(e)).map(valueText) });
+      return fields2;
+    };
+    async function fillLanguages(values) {
+      for (const value of values) {
+        const section = sectionFor("languages");
+        if (!section || location.href !== url) return false;
+        let inputs = languageInputs(section);
+        if (inputs.some((e) => !empty(e) && norm(valueText(e)) === norm(value))) continue;
+        if (!inputs.some(empty)) {
+          const add = languageAdd(section);
+          if (!add) return false;
+          add.click();
+          for (let i = 0; i < 20; i++) {
+            await pause(75);
+            const next = sectionFor("languages");
+            inputs = next ? languageInputs(next) : [];
+            if (inputs.some(empty)) break;
+          }
+        }
+        const blanks = inputs.filter(empty);
+        if (blanks.length !== 1) return false;
+        const target = blanks[0], field = snapshot(target, elements().indexOf(target));
+        let answer = { value, display: value, aliases: [norm(value)] };
+        if (target.tagName === "SELECT") {
+          const options = field.options.filter((o) => !o.disabled && norm(o.label) === norm(value));
+          if (options.length !== 1) return false;
+          answer = { value: options[0].value, display: options[0].label };
+        }
+        const result = await formBridge2({ action: "fill", url, fields: [{ ...field, ...answer }] });
+        if (!result.filled) return false;
+      }
+      return true;
+    }
+    async function fillSkills(values, skillAliases = {}) {
+      let complete = true;
+      for (const value of values) {
+        const section = sectionFor("skills"), e = section && skillInput(section);
+        if (!e || location.href !== url) return false;
+        const skillKey3 = (s) => s.toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
+        const aliases3 = new Set(skillAliases[value] || [skillKey3(value)]);
+        const committed = () => {
+          const p = sectionFor("skills");
+          return !!p && chipValues(p).some((s) => aliases3.has(skillKey3(s)));
+        };
+        if (committed()) continue;
+        if (e.value.trim()) return false;
+        const write = (v) => {
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(e, v);
+          e.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+        const menus = '[role="listbox"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"]';
+        const before = new Set([...document.querySelectorAll(menus)].filter(visible));
+        e.focus();
+        write(value);
+        let clicked = false;
+        for (let i = 0; i < 20 && !committed(); i++) {
+          await pause(75);
+          if (!e.isConnected || location.href !== url) return false;
+          const id = e.getAttribute("aria-controls") || e.getAttribute("aria-owns");
+          const panels = [...document.querySelectorAll(menus)].filter((p) => visible(p) && (p.id === id || section.contains(p) || !before.has(p)));
+          const inner = panels.filter((p) => !panels.some((n) => n !== p && p.contains(n)));
+          const panel = panels.find((p) => p.id && p.id === id) || (inner.length === 1 ? inner[0] : null);
+          const rows = panel ? [...panel.querySelectorAll('[role="option"],[data-automation-id="promptOption"],[data-automation-id="menuItem"],[data-automation-id="promptLeafNode"],li')].filter((o) => visible(o) && !disabled(o)) : [];
+          const matches = rows.filter((o) => aliases3.has(skillKey3(text(o))));
+          const options = matches.filter((o) => !matches.some((n) => n !== o && o.contains(n)));
+          if (!clicked && options.length === 1) {
+            activate(options[0], true);
+            clicked = true;
+          } else if (!clicked && i === 4 && !rows.length) {
+            for (const event of ["keydown", "keyup"]) e.dispatchEvent(new KeyboardEvent(event, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+          }
+        }
+        if (!committed()) {
+          if (e.value === value) write("");
+          e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          complete = false;
+        }
+      }
+      return complete;
+    }
     if (action === "prepare-education") {
       const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
@@ -1532,7 +1867,14 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+        try {
+          const u = new URL(frame.src, location.href);
+          return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
+        } catch {
+          return [];
+        }
+      }), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
@@ -1560,6 +1902,11 @@
       if (location.href !== url) return { filled: 0, skipped: fields.length, changed: true };
       let filled = 0, skipped = 0;
       for (const f of fields) {
+        if (f.type === "skill-list" || f.type === "language-list") {
+          if (location.href === url && Array.isArray(f.value) && await (f.type === "skill-list" ? fillSkills : fillLanguages)(f.value, f.skillAliases)) filled++;
+          else skipped++;
+          continue;
+        }
         const all = elements();
         let e = all[f.index];
         if (f.id && e?.id !== f.id) {
@@ -1664,6 +2011,12 @@
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
           }
+          const brand = /\.myworkdayjobs\.com$/.test(location.hostname) ? norm(location.hostname.split(".")[0]) : "";
+          if (f.sourceTree) {
+            const direct = available.filter((o) => /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
+            if (direct.length === 1) aliases3.unshift(optionKey(direct[0]));
+            if (brand && available.some((o) => optionKey(o) === brand)) aliases3.unshift(brand);
+          }
           const options = available.filter((o) => aliases3.includes(optionKey(o)));
           if (f.phoneCountry && options.length > 1 && options.every((o) => optionKey(o) === "united states 1")) options.splice(1);
           if (options.length > 1 && aliases3.length > 1) {
@@ -1680,22 +2033,38 @@
           options[0].scrollIntoView?.({ block: "nearest" });
           activate(options[0], true);
           let accepted = false, leafChosen = false;
-          const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
+          const rootChoice = optionKey(options[0]);
+          const branchKind = (name) => name === brand || /^(?:company|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
+          let sourceBranch = f.sourceTree && branchKind(rootChoice), tried = /* @__PURE__ */ new Set([rootChoice]);
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
             if (location.href !== url || !e.isConnected) break;
             if (sourceBranch && !leafChosen) {
               const lists = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && (boxes.includes(n) || !before.has(n)));
-              const leaves = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o) && /^(?:(?:company|employer) )?careers? (?:web ?site|site|page)$/.test(norm(text(o))));
-              if (leaves.length === 1) {
-                aliases3.push(norm(text(leaves[0])));
-                activate(leaves[0], true);
+              const nodes = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o));
+              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
+              const matches = nodes.filter((o) => names.includes(optionKey(o)) || sourceBranch === "company" && /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
+              const leaf = matches.find((o) => !matches.some((x) => x !== o && o.contains(x)));
+              if (leaf) {
+                aliases3.push(optionKey(leaf));
+                activate(leaf, true);
                 leafChosen = true;
                 continue;
               }
+              if (f.sourceFallbacks && attempt >= 2 && nodes.length) {
+                const next = ["job board", "job boards", "recruiting event"].find((name) => !tried.has(name) && nodes.some((o) => optionKey(o) === name));
+                if (next) {
+                  tried.add(next);
+                  sourceBranch = branchKind(next);
+                  activate(nodes.find((o) => optionKey(o) === next), true);
+                  continue;
+                }
+                const back = lists.flatMap((b) => [...b.querySelectorAll('button,[role="button"],[data-automation-id*="Back"],[data-automation-id*="back"]')]).find((n) => visible(n) && /back/i.test([n.getAttribute("aria-label"), n.getAttribute("data-automation-id"), text(n)].join(" ")));
+                if (back) activate(back, true);
+              }
               if (lists.length) continue;
             }
-            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
+            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }

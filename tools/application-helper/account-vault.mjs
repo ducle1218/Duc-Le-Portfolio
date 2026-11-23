@@ -8,8 +8,9 @@ async function derive(phrase,salt){
  const material=await crypto.subtle.importKey('raw',encoder.encode(phrase),'PBKDF2',false,['deriveKey']);
  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:new Uint8Array(salt),iterations:600000},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
-function generatedPassword(min=0,max=80){
+function generatedPassword(min=0,max=80,alphanumeric=false){
  const groups=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%'];
+ if(alphanumeric)groups.pop();
  const length=Math.min(max,Math.max(20,min));
  if(length<12||length<min||length>128)throw Error('This form needs a different password length. Review its requirements.');
  const pick=n=>{let x;do{x=random(1)[0];}while(x>=256-256%n);return x%n;};
@@ -48,9 +49,9 @@ export async function scanCredential(storage,options,keyStore=deviceKey){
   key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
   await keyStore(key);
  }
- return accountCredential(storage,{...options,key,sitePassword:entry?'':generatedPassword(options.min,options.max)});
+ return accountCredential(storage,{...options,key,sitePassword:entry?'':generatedPassword(options.min,options.max,options.alphanumeric)});
 }
-export async function accountCredential(storage,{origin,employer,email,phrase,repeat,signup,sitePassword,key:device,scope=''}){
+export async function accountCredential(storage,{origin,employer,email,phrase,repeat,signup,sitePassword,key:device,scope='',alphanumeric=false}){
  const entry=(await storage.get(vaultKey))[vaultKey];
  if(!entry&&!signup)throw unknown('Create an account with the helper first.');
  if(!entry&&!device&&(phrase.length<12||phrase!==repeat))throw Error('Choose a vault passphrase of at least 12 characters and enter it twice.');
@@ -70,6 +71,7 @@ export async function accountCredential(storage,{origin,employer,email,phrase,re
  const label=employer.trim().toLowerCase(),identity=email.trim().toLowerCase();
  if(!label||!identity)throw Error('Enter the employer name and your account email.');
  const saved=vault.accounts.some(a=>a.origin===origin&&a.email===identity&&(a.scope&&scope?a.scope===scope:a.label===label));
+ if(alphanumeric&&(!/^[a-zA-Z0-9]{8,30}$/.test(vault.password)||!/[A-Z]/.test(vault.password)))throw Error('Your saved shared password does not meet SilkRoad’s letters-and-numbers rule. Enter a site-specific password manually.');
  if(saved)return vault.password;
  if(!signup)throw unknown('No saved login matches this website, employer name and email.');
  vault.accounts.push({origin,label,email:identity,scope});

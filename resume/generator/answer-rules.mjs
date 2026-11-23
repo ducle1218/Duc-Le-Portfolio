@@ -70,6 +70,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(!email||field.primaryEmail&&field.primaryEmail.trim().toLowerCase()!==email.trim().toLowerCase())return {blocked:true};
   return confirmed(email,'Profile email');
  }
+ if(commonQuestion(q)?.question==='Phone device type'&&fact('Phone device type')==='Mobile')return confirmed('Mobile','Phone device type',['mobile','mobile phone','cell','cell phone','cellular']);
  if(commonQuestion(q)?.question==='Preferred contact method'&&fact('Preferred contact method')==='Email')
   return confirmed('Email','Preferred contact method',['email','e mail','email address','by email']);
  const employment=q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
@@ -176,6 +177,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(/^bachelor(?: s)?(?: degree| of .+)$/.test(highest))return confirmed('Yes','Highest completed degree');
   return {blocked:true};
  }
+ if(q==='from'&&college&&/^\d{4}$/.test(fact('University start year')||''))return result(fact('University start year'),'Start year at this school');
  if(q==='to actual or expected'&&college&&/^\d{4}$/.test(profile.values.graduationYear))return result(profile.values.graduationYear,'Expected graduation year at this school');
  const pendingDegree=field.degreePair&&pursued&&(!school||college)&&!field.highestEducation;
  if(q==='not completed'&&field.type==='checkbox-group'){
@@ -234,6 +236,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const values=entries.filter(a=>dateConcept(a.question)==='graduation').map(a=>a.answer.trim());
   // Never invent a graduation day from a known month or year.
   const months=values.filter(v=>/^\d{4}-\d{2}(?:-\d{2})?$/.test(v)).map(v=>v.slice(0,7));
+  if(new Set(months).size===1&&['text','textarea'].includes(field.type)&&!field.placeholder)return result(months[0],'Confirmed expected graduation month');
   if(new Set(months).size===1&&(field.type==='month'||/^YYYY-MM$/i.test(field.placeholder||'')))return {...result(months[0],'Expected graduation month'),requiresReview:true};
  }
  return null;

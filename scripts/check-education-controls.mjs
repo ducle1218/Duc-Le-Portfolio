@@ -5,6 +5,19 @@ import {makeResumeAttachment,attachResume} from '../resume/generator/resume-atta
 let dom;try{dom=await import('linkedom');}catch{dom=await import('../../tmp/job-tests/node_modules/linkedom/esm/index.js');}
 const profile={confirmed:true,values:{city:'Sample City',state:'New Jersey',postalCode:'00000',school:'Rutgers University–New Brunswick'},answers:[...COMMON_QUESTIONS.filter(q=>q.defaultAnswer).map(q=>({question:q.question,answer:q.defaultAnswer})),{question:'Address Line',answer:'123 Test Way, Sample City, NJ 08854'},{question:'Are you legally authorized to work in the United States?',answer:'Yes'},{question:'Will you now or in the future require sponsorship for employment visa status?',answer:'No'}]};
 const field=(label,extra={})=>({label,type:'text',filled:false,...extra});
+const atsProfile={...profile,answers:[...profile.answers,
+ {question:'Phone device type',answer:'Mobile'},{question:'Expected graduation date',answer:'2030-05'},
+ {question:'Application source fallbacks',answer:'LinkedIn or Indeed, then a career fair'},
+ {question:'Languages spoken',answer:'English, Chinese, Vietnamese'}]};
+const dropdown=(label,options)=>field(label,{type:'select-one',options:options.map((label,i)=>({label,value:String(i)}))});
+assert.equal(suggestField(dropdown('State/Location *',['[ State/Location ]','New Jersey']),atsProfile)?.display,'New Jersey');
+assert.equal(suggestField(dropdown('Phone Device Type',['Landline','Mobile']),atsProfile)?.display,'Mobile');
+assert.equal(suggestField(dropdown('How did you hear about us?',['Job Board','LinkedIn','Indeed','Recruiting Event']),atsProfile)?.display,'LinkedIn');
+assert.equal(suggestField(dropdown('How did you hear about us?',['Recruiting Event','Referral']),atsProfile)?.display,'Recruiting Event');
+assert.equal(suggestField(field('What is your expected graduation date?',{type:'month'}),atsProfile)?.value,'2030-05');
+assert.deepEqual(suggestField(field('Languages',{type:'language-list',existing:['English']}),atsProfile)?.value,['Chinese','Vietnamese']);
+const withSkills={skills:[{name:'CAD'},{name:'C++'}]};
+assert.deepEqual(suggestField(field('Skills',{type:'skill-list',existing:['Computer-Aided Design (CAD)','C']}),atsProfile,[],'','',withSkills)?.value,['C++']);
 assert.equal(suggestField(field('Address Line 1 *'),profile).value,'123 Test Way');
 assert.equal(suggestField(field('Postal Code'),profile).value,'08854');
 assert.equal(suggestField(field('Address Line 2'),profile),null);

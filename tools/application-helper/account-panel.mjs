@@ -23,13 +23,13 @@ export function setupAccounts(getEmail,getEmployer){
    if(!el('account-employer').value)el('account-employer').value=getEmployer()||url.hostname;
   }catch{status.textContent='Open the employer website first.';}
  };
- async function useAccount(tab,signup,automatic,afterEmail=false){
+ async function useAccount(tab,signup,automatic,afterEmail=false,embeddedDocument=''){
   const url=new URL(tab.url);
   if(url.protocol!=='https:')return null;
   const email=(el('account-email').value||getEmail()||'').trim();
   const employer=(el('account-employer').value||getEmployer()||url.hostname).trim();
-  const base={url:url.href,signup,email,automatic,afterEmail};
-  const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
+  const base={url:url.href,signup,email,automatic,afterEmail,embedded:!!embeddedDocument};
+  const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id,...(embeddedDocument?{documentIds:[embeddedDocument]}:{})},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
   if(scan?.result?.error)throw Error(scan.result.error);
   if(!scan?.result)return null;
   if(!scan.documentId||!email||!employer)throw Error('Check the email and employer in Employer account before scanning.');
@@ -52,7 +52,7 @@ export function setupAccounts(getEmail,getEmployer){
   try{
    password=await navigator.locks.request('employer-vault-write',()=>scanCredential(chrome.storage.local,{
     origin:url.origin,scope:accountScope(url,employer),employer,email,phrase:el('account-passphrase').value,
-    signup:registration,min:scan.result.min,max:scan.result.max
+    signup:registration,min:scan.result.min,max:scan.result.max,alphanumeric:scan.result.alphanumeric
    }));
   }catch(error){
    if(error.code==='NO_SAVED_ACCOUNT'&&automatic&&!registration&&signup===undefined&&!afterEmail){
@@ -88,5 +88,5 @@ export function setupAccounts(getEmail,getEmployer){
   finally{create.disabled=login.disabled=false;}
  }
  create.onclick=()=>manual(true);login.onclick=()=>manual(false);
- return tab=>useAccount(tab,undefined,true);
+ return (tab,embeddedDocument)=>embeddedDocument?useAccount(tab,true,false,false,embeddedDocument):useAccount(tab,undefined,true);
 }

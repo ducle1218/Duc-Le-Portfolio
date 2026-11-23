@@ -1,9 +1,25 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,embedded=false}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
  const visible=el=>!el.disabled&&!el.readOnly&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
+ if(embedded){
+  if(!/\.silkroad\.com$/i.test(location.hostname)||!/^\/epostings\/index\.cfm$/i.test(location.pathname)||new URL(url).searchParams.get('fuseaction')!=='app.resumesubmission')return null;
+  const first=document.getElementById('ohpassword'),confirm=document.getElementById('ohconfirmpassword');
+  const form=first?.form;if(!form||confirm?.form!==form||first.type!=='password'||confirm.type!=='password'||new URL(form.action||url,url).origin!==location.origin)return null;
+  const emails=[...form.querySelectorAll('input')].filter(el=>visible(el)&&['email','text'].includes(el.type)&&/email/i.test(el.type+' '+el.name+' '+el.id));
+  if(emails.length!==1||!email)return null;
+  const identity=emails[0];
+  if(identity.value&&identity.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The application uses a different email from your employer account.');
+  if(first.value||confirm.value)return null;
+  if(inspectOnly)return {signup:true,min:8,max:30,alphanumeric:true};
+  if(!/^[a-zA-Z0-9]{8,30}$/.test(password||'')||!/[A-Z]/.test(password))throw Error('SilkRoad requires an 8–30 character letters-and-numbers password with an uppercase letter. Your saved password cannot be used here.');
+  fill(identity,email);identity.focus();identity.blur();first.focus();
+  if(!visible(first)||!visible(confirm))throw Error('SilkRoad has not enabled both password fields yet.');
+  for(const el of [first,confirm])fill(el,password);
+  return first.value===password&&confirm.value===password?'Employer email and password filled.':null;
+ }
  const passwords=[...document.querySelectorAll('input[type=password]')].filter(visible);
  const shown=el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
  const amazon=location.hostname==='passport.amazon.jobs';

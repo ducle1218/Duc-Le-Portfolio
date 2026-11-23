@@ -2,6 +2,9 @@ import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
 import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
 import {loadPortfolio} from './portfolio-source.mjs';
+chrome.runtime.onInstalled.addListener(({reason}) => {
+  if (reason === 'update') return chrome.storage.local.remove('answerVault');
+});
 const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
 let memoryWrite=Promise.resolve();
 let preferenceSeed;

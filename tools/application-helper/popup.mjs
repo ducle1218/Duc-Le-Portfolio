@@ -31,26 +31,3 @@ $('scan').onclick=async()=>{reset();$('scan').disabled=true;try{if(!profile)thro
 $('fill').onclick=async()=>{$('fill').disabled=true;try{if(!review||Date.now()-review.createdAt>120000)throw new Error('Scan the current form again before filling.');const [active]=await chrome.tabs.query({active:true,currentWindow:true});if(active.id!==review.tabId)throw new Error('The active tab changed. Scan again.');const fields=[...$('suggestions').querySelectorAll('input:checked')].filter(c=>c.value!=='resume').map(c=>review.fields[Number(c.value)]);const withResume=!!$('suggestions').querySelector('input[value="resume"]:checked');if(!fields.length&&!withResume)throw new Error('Select an answer or the tailored PDF.');const [{result}]=await chrome.scripting.executeScript({target:{tabId:review.tabId},func:formBridge,args:[{action:'fill',url:review.url,fields}]});let upload=null;if(withResume&&review.resume){const response=await chrome.scripting.executeScript({target:{tabId:review.tabId},func:attachResume,args:[{url:review.url,resume:review.resume}]});upload=response[0].result;}reset();say(result.changed?'The page changed. Scan again.':result.filled+' answers filled; '+result.skipped+' fields could not be filled or changed. '+(upload?.message||'Review the form. Scan again for newly revealed follow-up questions.')+' Nothing was submitted.');}catch(error){say(error.message);}finally{$('fill').disabled=false;}};
 
 $('application-season').onchange=()=>{reset();say('Season updated. Scan again to review availability. Edit summer dates in Saved answers.');};
-
-// The encrypted supplement stays separate from ordinary profile exports and handoffs.
-const vaultInput=document.createElement('input');
-vaultInput.type='file';vaultInput.accept='.json';vaultInput.hidden=true;
-const vaultButton=document.createElement('button');
-vaultButton.textContent='Unlock private answers';
-const vaultKey=document.createElement('input');
-vaultKey.type='password';vaultKey.autocomplete='off';vaultKey.placeholder='Private answer key';vaultKey.setAttribute('aria-label','Private answer key');
-$('profile-settings').append(vaultKey,vaultButton,vaultInput);
-const unlockVault=async vault=>{
- if(!profile)throw Error('Load your Application Studio profile first.');
- const keyText=vaultKey.value;vaultKey.value='';
- if(!keyText)throw Error('Enter your key first.');
- const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
- const key=await crypto.subtle.importKey('raw',bytes(keyText.trim()),'AES-GCM',false,['decrypt']);
- const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(vault.iv)},key,bytes(vault.data));
- const answers=JSON.parse(new TextDecoder().decode(plain));
- const replaced=new Set(answers.map(a=>a.question.toLowerCase()));
- profile=cleanProfile({...profile,answers:[...profile.answers.filter(a=>!replaced.has(a.question.toLowerCase())),...answers]});
- await chrome.storage.local.set({answerVault:vault});reset();say('Private answers unlocked until this popup closes. Scan the application again.');
-};
-vaultButton.onclick=async()=>{try{const {answerVault}=await chrome.storage.local.get('answerVault');if(answerVault)await unlockVault(answerVault);else vaultInput.click();}catch{say('Could not unlock private answers. Check the key.');}};
-vaultInput.onchange=async()=>{try{const file=vaultInput.files[0];if(file&&file.size<100000)await unlockVault(JSON.parse(await file.text()));}catch{say('Could not unlock private answers. Check the file and key.');}finally{vaultInput.value='';}};

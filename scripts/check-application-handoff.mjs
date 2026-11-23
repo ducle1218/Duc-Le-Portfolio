@@ -10,7 +10,15 @@ for(const url of ['http://careers.example.com','https://user:pass@careers.exampl
 assert.throws(()=>prepareHandoff({...payload,profile:{confirmed:false}}));
 const local=new Map(),stored=new Map(),tabs=new Map(),grants=new Set(),injections=[],deliveries=[],badges=[];let messageListener,updateListener,removeListener,nextId=2;
 globalThis.chrome={runtime:{id:'helper',getURL:path=>'chrome-extension://helper/'+path,getManifest:()=>({version:'1.1.0'}),onMessage:{addListener:cb=>messageListener=cb}},storage:{local:{get:async key=>Object.fromEntries((Array.isArray(key)?key:[key]).map(k=>[k,local.get(k)])),set:async data=>Object.entries(data).forEach(([k,v])=>local.set(k,v))},session:{get:async key=>key===null?Object.fromEntries(stored):{[key]:stored.get(key)},set:async data=>Object.entries(data).forEach(([k,v])=>stored.set(k,v)),remove:async keys=>{for(const k of Array.isArray(keys)?keys:[keys])stored.delete(k);}}},permissions:{contains:async ({origins})=>origins.every(o=>grants.has(o))},tabs:{get:async id=>tabs.get(id),create:async data=>{const tab={id:nextId++,...data};tabs.set(tab.id,tab);return tab;},update:async(id,data)=>Object.assign(tabs.get(id),data),sendMessage:async(id,data)=>deliveries.push({id,data}),onUpdated:{addListener:cb=>updateListener=cb},onRemoved:{addListener:cb=>removeListener=cb}},scripting:{executeScript:async data=>injections.push(data)},action:{setBadgeText:async data=>badges.push(data)}};
+let installed;
+chrome.runtime.onInstalled={addListener:listener=>{installed=listener;}};
+chrome.storage.local.remove=async key=>local.delete(key);
 await import('../tools/application-helper/background.mjs');
+local.set('answerVault',{data:'old encrypted supplement'});
+local.set('profile',payload.profile);
+await installed({reason:'update'});
+assert(!local.has('answerVault'));
+assert.equal(local.get('profile'),payload.profile);
 const send=(message,sender=studio)=>new Promise(resolve=>messageListener(message,sender,resolve));
 assert.equal((await send({type:'studio-hello'})).version,'1.1.0');
 for(const sender of [{...studio,url:'https://evil.example/'},{...studio,frameId:1},{...studio,id:'other'}])assert.equal((await send({type:'studio-start',payload},sender)).ok,false);

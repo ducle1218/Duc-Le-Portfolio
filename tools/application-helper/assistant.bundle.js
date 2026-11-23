@@ -1,5 +1,5 @@
 (() => {
-  // site/tools/application-helper/fill-sequence.mjs
+  // tools/application-helper/fill-sequence.mjs
   var questionId = (field) => JSON.stringify([field.type, field.label]);
   async function fillWithFollowups({ url, reviewed, selected, scan, fill, suggest, active = () => true }) {
     const excluded = new Set(reviewed.filter((field) => !selected.includes(field)).map(questionId));
@@ -29,7 +29,7 @@
           total.changed = true;
           return total;
         }
-        pending = form.fields.filter((field) => field.type !== "chat-reply" && !field.filled && !excluded.has(questionId(field)) && (attempts.get(identity(field)) || 0) < (field.type === "combobox" ? 2 : 1)).flatMap((field) => {
+        pending = form.fields.filter((field) => field.type !== "chat-reply" && (!field.filled || field.languageRow === "english" && field.currentLevel === "basic") && !excluded.has(questionId(field)) && (attempts.get(identity(field)) || 0) < (field.type === "combobox" ? 2 : 1)).flatMap((field) => {
           const answer = suggest(field, form);
           return answer ? [{ ...field, ...answer }] : [];
         });
@@ -39,12 +39,12 @@
     return total;
   }
 
-  // site/tools/application-helper/portfolio-answers.mjs
+  // tools/application-helper/portfolio-answers.mjs
   var PORTFOLIO_URL = "https://ducle1218.github.io/Duc-Le-Portfolio/";
   var aliases = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
 
-  // site/tools/application-helper/portfolio-ui.mjs
+  // tools/application-helper/portfolio-ui.mjs
   function addPortfolioEvidence(container, suggestion) {
     if (!suggestion.portfolioDerived || !suggestion.sources?.length) return;
     const details = document.createElement("details"), summary = document.createElement("summary");
@@ -67,7 +67,7 @@
     container.append(details);
   }
 
-  // site/tools/application-helper/common-questions.mjs?v=20261123.3
+  // tools/application-helper/common-questions.mjs?v=20261123.3
   var COMMON_QUESTIONS = [
     { question: "Valid driver\u2019s license", aliases: ["valid driver s license", "do you possess a valid driver s license", "do you have a valid drivers license", "do you have a valid driver s license"], options: ["Yes", "No"], review: true },
     { question: "Reliable transportation to project sites and offices", aliases: ["reliable transportation to project sites and offices", "do you have reliable transportation to project sites and office locations"], options: ["Yes", "No"], review: true },
@@ -148,7 +148,7 @@
     return null;
   }
 
-  // site/tools/application-helper/answer-rules.mjs
+  // tools/application-helper/answer-rules.mjs
   function applicationSeason(title = "") {
     const s = questionKey(title);
     const seasons = ["summer", "fall", "autumn", "winter", "spring"].filter((x) => new RegExp("\\b" + x + "\\b").test(s));
@@ -168,7 +168,7 @@
     if (name) countryNames.add(questionKey(name));
   }
 
-  // site/tools/application-helper/answer-rules.mjs?v=20261123.3
+  // tools/application-helper/answer-rules.mjs?v=20261123.3
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -255,7 +255,8 @@
     if (commonQuestion(q)?.question === "Phone device type" && fact("Phone device type") === "Mobile") return confirmed("Mobile", "Phone device type", ["mobile", "mobile phone", "cell", "cell phone", "cellular"]);
     if (commonQuestion(q)?.question === "Preferred contact method" && fact("Preferred contact method") === "Email")
       return confirmed("Email", "Preferred contact method", ["email", "e mail", "email address", "by email"]);
-    const employment = q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
+    const mainQuestion = questionKey(String(field.label).split("?")[0]);
+    const employment = mainQuestion.replace(/^are you (?:a |an )?former employee of /, "have you worked for ").replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
     if (/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment) && !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment) && questionKey(fact("Employment experience")) === "none")
       return confirmed("No", "Employment experience");
     const sms = "SMS contact about my job application";
@@ -316,13 +317,26 @@
       if (citizen || fact(auth) === "Yes" && fact(sponsor) === "No") return confirmed("Yes", citizen ? "Citizenships" : auth);
       return { blocked: true };
     }
+    const region = jobJurisdiction(field.jobLocation || field.workQuestionCountry || "");
+    if (/^do you (?:have|hold) a valid driver(?: s)? licen[cs]e for (?:the )?country (?:in which|where) (?:this|the) job (?:resides|is located|is based)$/.test(q) && unique("Valid driver\u2019s license") === "Yes" && unique("Driver license issuing country") === "United States") {
+      if (region === "us") return confirmed("Yes", "Driver license issuing country");
+      if (region === "foreign" && unique("Driver license valid for jobs outside the US") === "No") return confirmed("No", "Driver license valid for jobs outside the US");
+      return { blocked: true };
+    }
+    if (/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q)) return region === "us" && citizen && unique(proof) === "Yes" ? confirmed("Yes", proof) : { blocked: true };
+    if (field.languageRow === "english" && /^(reading|speaking|writing|understanding|listening)$/.test(q) && unique("English proficiency") === "Fluent") return confirmed("Fluent", "English proficiency", ["fluent"]);
+    const collegeStart = unique("University start month"), collegeEnd = unique("Expected graduation date");
+    if (field.educationSchool && questionKey(field.educationSchool) === questionKey(profile.values.school) && ["from", "to actual or expected", "start date", "end date actual or expected"].includes(q)) {
+      const month = /^(?:from|start date)$/.test(q) ? collegeStart : collegeEnd;
+      if (/^\d{4}-\d{2}$/.test(month || "") && (field.type === "month" || /^yyyy$/i.test(field.placeholder || ""))) return confirmed(field.type === "month" ? month : month.slice(0, 4), "University attendance dates");
+    }
     const countryDependent = /^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q) || /^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
-    const visaAssistance = /^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
+    const visaAssistance = q === "will you now or in the future require sponsorship for an immigration related employment benefit" || /^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
     if (visaAssistance || countryDependent || commonQuestion(q)?.question === sponsor) {
-      const source = visaAssistance || q.includes("sponsorship") ? sponsor : auth, region = jobJurisdiction(field.jobLocation || field.workQuestionCountry || "");
-      if (region === "us" && fact(source)) return result(fact(source), "Your U.S. work profile and this job\u2019s location");
+      const source = visaAssistance || q.includes("sponsorship") ? sponsor : auth, region2 = jobJurisdiction(field.jobLocation || field.workQuestionCountry || "");
+      if (region2 === "us" && fact(source)) return result(fact(source), "Your U.S. work profile and this job\u2019s location");
       const foreign = "Do you require employment visa sponsorship for jobs outside the United States?";
-      if (region === "foreign" && source === sponsor && unique(foreign)) return result(unique(foreign), "Your international sponsorship preference");
+      if (region2 === "foreign" && source === sponsor && unique(foreign)) return result(unique(foreign), "Your international sponsorship preference");
       return { blocked: true };
     }
     if (/^if yes please indicate visa status$/.test(q)) {
@@ -407,7 +421,7 @@
       if (["fall", "autumn", "winter"].includes(season)) return result("No", "Not available full-time in fall or winter");
       return { blocked: true };
     }
-    if ((commonQuestion(q)?.question === "How did you hear about this position?" || /^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(q)) && unique("Preferred application source") === "Company website or university") return result("Company Website", "Your preferred application source", ["company website", "our website", "company careers website", "company career site", "employer website", "amazon career site", "amazon jobs", "university college", "university recruiting", "university", "university career center", "college university"]);
+    if ((commonQuestion(q)?.question === "How did you hear about this position?" || /^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(q)) && unique("Preferred application source") === "Company website or university") return result("Company Website", "Your preferred application source", ["company website", "corporate website", "our website", "company careers website", "company career site", "employer website", "amazon career site", "amazon jobs", "university college", "university recruiting", "university", "university career center", "college university"]);
     const date = dateConcept(field.label);
     if (date === "start" || date === "end") {
       if (field.applicationSeason && field.applicationSeason !== "summer-2027") return { blocked: true };
@@ -425,7 +439,7 @@
     return null;
   }
 
-  // site/tools/application-helper/portfolio-answers.mjs?v=20261123.3
+  // tools/application-helper/portfolio-answers.mjs?v=20261123.3
   var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
   var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
@@ -564,7 +578,7 @@
     return answer(text + use, [...claims.flatMap((c) => c.sources), ...tool?.sources || []]);
   }
 
-  // site/tools/application-helper/application-autofill.mjs?v=20261123.3
+  // tools/application-helper/application-autofill.mjs?v=20261123.3
   function formBridge({ action = "scan", url, fields = [], origins = [] } = {}) {
     if (action === "scan-chat" && !origins.includes(location.origin)) return null;
     if (action === "scan-frame") {
@@ -695,6 +709,7 @@
     const label = (e) => {
       if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
+      if (e.matches("input[type=url],input[type=text]") && /^(?:url|website url|website|link)$/.test(norm(ownLabel(e))) && sectionFor("websites")?.contains(e)) return "Portfolio URL";
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
       if (fieldLabel && (!choice(e) || !fieldLabel.contains(e))) {
@@ -796,6 +811,12 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
+        for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+          const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
+          if (langs.length) return { languageRow: langs.length === 1 ? norm(valueText(langs[0])) : "", currentLevel: norm(valueText(e)) };
+        }
+      }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
         const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
         if (!headings.length) continue;
@@ -839,7 +860,7 @@
         if (recent.some((s) => /right to work in (?:the )?(?:us|u s|united states)$/.test(s)) && !recent.some((s) => /work in /.test(s) && !/work in (?:the )?(?:us|u s|united states)$/.test(s))) return { workQuestionCountry: "United States" };
       }
       const q = norm(label(e));
-      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -854,7 +875,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -995,7 +1016,27 @@
       }
       return complete;
     }
+    if (action === "advance") {
+      if (location.href !== url || document.querySelector("input[type=password]")) return false;
+      const heading = [...document.querySelectorAll("h1,h2,[aria-current=step]")].filter(visible).map(text).join(" ");
+      if (/review and submit|review your application|submit application|certification|signature/i.test(heading)) return false;
+      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit]")].filter((b) => visible(b) && !disabled(b));
+      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(text(b) || b.value))) return false;
+      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue|next(?: step| section)?)$/i.test((text(b) || b.value || "").trim()));
+      if (next.length !== 1) return false;
+      const current = document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]');
+      if (current && /review|submit|certif|signature|final/i.test(text(current))) return false;
+      if (next[0].type === "submit" && !/save (?:and|&) continue/i.test(text(next[0]) || next[0].value) && !current) return false;
+      if (next[0].form && !next[0].form.checkValidity() || [...document.querySelectorAll("[aria-invalid=true]")].some(visible)) return false;
+      next[0].click();
+      return true;
+    }
     if (action === "prepare-education") {
+      const sites = sectionFor("websites");
+      if (sites && !sites.querySelector('input:not([type=hidden]),a[href^="http"]')) {
+        const adds = [...sites.querySelectorAll("button")].filter((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && norm(text(b)) === "add");
+        if (adds.length === 1) adds[0].click();
+      }
       const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education(?: history)?)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
         for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
@@ -1034,9 +1075,13 @@
         if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
         countries.add(typeof country === "string" ? country : "");
       }
+      if (!countries.size) for (const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')) {
+        const loc = node.getAttribute("data-job-location") || text(node);
+        if (loc && loc.length < 120) countries.add(loc);
+      }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -1092,7 +1137,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -1211,7 +1256,7 @@
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
-            if (query && input.isConnected && input.value === query) setQuery("");
+            if (query && input.isConnected && input.value === query && !/^address line 1\s*\*?$/i.test(f.label.trim())) setQuery("");
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
             skipped++;
@@ -1221,7 +1266,7 @@
           activate(options[0], true);
           let accepted = false, leafChosen = false;
           const rootChoice = optionKey(options[0]);
-          const branchKind = (name) => name === brand || /^(?:company|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
+          const branchKind = (name) => name === brand || /^(?:company|corporate|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
           let sourceBranch = f.sourceTree && branchKind(rootChoice), tried = /* @__PURE__ */ new Set([rootChoice]);
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
@@ -1229,7 +1274,7 @@
             if (sourceBranch && !leafChosen) {
               const lists = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && (boxes.includes(n) || !before.has(n)));
               const nodes = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o));
-              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
+              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["job search", "company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
               const matches = nodes.filter((o) => names.includes(optionKey(o)) || sourceBranch === "company" && /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
               const leaf = matches.find((o) => !matches.some((x) => x !== o && o.contains(x)));
               if (leaf) {
@@ -1260,7 +1305,7 @@
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
           }
-          if (!accepted && query && input.isConnected && input.value === query) setQuery("");
+          if (!accepted && query && input.isConnected && input.value === query && !/^address line 1$/i.test(f.label.trim())) setQuery("");
           if (accepted) filled++;
           else skipped++;
         } else {
@@ -1307,7 +1352,7 @@
     })();
   }
 
-  // site/tools/application-helper/answer-memory.mjs?v=20261123.3
+  // tools/application-helper/answer-memory.mjs?v=20261123.3
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
@@ -1345,7 +1390,7 @@
     return { value: matches[0].answer, question: matches[0].question, reason: kind, requiresReview: reviewedIdentityQuestion(question) };
   }
 
-  // site/tools/application-helper/application-autofill.mjs
+  // tools/application-helper/application-autofill.mjs
   var normalize = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   var skillKey2 = (s) => normalize(String(s).toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp"));
   var skillEquivalents = {
@@ -1388,7 +1433,7 @@
     if (/^(in )?(what|which) country( region)?$/.test(label)) return null;
     if (!label && !rule || !rule && !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
     if (field.emailSave && field.emailValue && field.emailValue.toLowerCase() === profile.values?.email?.toLowerCase() && !field.disabled) return { value: profile.values.email, display: profile.values.email, reason: "Save the matching email in this field" };
-    if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
+    if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled && !(field.languageRow === "english" && field.currentLevel === "basic" && rule?.value === "Fluent") || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile| account)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
     const fieldAliases = {
       "email address username": "email",
@@ -1452,6 +1497,10 @@
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
       const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states", "united states of america"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
+      if (common?.question === "Street address" && profile.values.city && profile.values.state && profile.values.postalCode) {
+        const state = normalize(profile.values.state), states = state === "new jersey" ? ["nj", state] : [state];
+        for (const region of states) aliases3.push(normalize([value, profile.values.city, region, profile.values.postalCode].join(" ")));
+      }
       const sourceTree = common?.question === "How did you hear about this position?" && normalize(value) === "company website";
       const sourceFallbacks = sourceTree && profile.answers?.some((a) => a.question === "Application source fallbacks" && a.answer === "LinkedIn or Indeed, then a career fair");
       if (sourceFallbacks) {
@@ -1612,6 +1661,7 @@
     const label = (e) => {
       if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
+      if (e.matches("input[type=url],input[type=text]") && /^(?:url|website url|website|link)$/.test(norm(ownLabel(e))) && sectionFor("websites")?.contains(e)) return "Portfolio URL";
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
       if (fieldLabel && (!choice(e) || !fieldLabel.contains(e))) {
@@ -1713,6 +1763,12 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
+        for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+          const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
+          if (langs.length) return { languageRow: langs.length === 1 ? norm(valueText(langs[0])) : "", currentLevel: norm(valueText(e)) };
+        }
+      }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
         const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
         if (!headings.length) continue;
@@ -1756,7 +1812,7 @@
         if (recent.some((s) => /right to work in (?:the )?(?:us|u s|united states)$/.test(s)) && !recent.some((s) => /work in /.test(s) && !/work in (?:the )?(?:us|u s|united states)$/.test(s))) return { workQuestionCountry: "United States" };
       }
       const q = norm(label(e));
-      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -1771,7 +1827,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -1912,7 +1968,27 @@
       }
       return complete;
     }
+    if (action === "advance") {
+      if (location.href !== url || document.querySelector("input[type=password]")) return false;
+      const heading = [...document.querySelectorAll("h1,h2,[aria-current=step]")].filter(visible).map(text).join(" ");
+      if (/review and submit|review your application|submit application|certification|signature/i.test(heading)) return false;
+      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit]")].filter((b) => visible(b) && !disabled(b));
+      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(text(b) || b.value))) return false;
+      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue|next(?: step| section)?)$/i.test((text(b) || b.value || "").trim()));
+      if (next.length !== 1) return false;
+      const current = document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]');
+      if (current && /review|submit|certif|signature|final/i.test(text(current))) return false;
+      if (next[0].type === "submit" && !/save (?:and|&) continue/i.test(text(next[0]) || next[0].value) && !current) return false;
+      if (next[0].form && !next[0].form.checkValidity() || [...document.querySelectorAll("[aria-invalid=true]")].some(visible)) return false;
+      next[0].click();
+      return true;
+    }
     if (action === "prepare-education") {
+      const sites = sectionFor("websites");
+      if (sites && !sites.querySelector('input:not([type=hidden]),a[href^="http"]')) {
+        const adds = [...sites.querySelectorAll("button")].filter((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && norm(text(b)) === "add");
+        if (adds.length === 1) adds[0].click();
+      }
       const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education(?: history)?)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
         for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
@@ -1951,9 +2027,13 @@
         if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
         countries.add(typeof country === "string" ? country : "");
       }
+      if (!countries.size) for (const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')) {
+        const loc = node.getAttribute("data-job-location") || text(node);
+        if (loc && loc.length < 120) countries.add(loc);
+      }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -2009,7 +2089,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -2128,7 +2208,7 @@
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
-            if (query && input.isConnected && input.value === query) setQuery("");
+            if (query && input.isConnected && input.value === query && !/^address line 1\s*\*?$/i.test(f.label.trim())) setQuery("");
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
             skipped++;
@@ -2138,7 +2218,7 @@
           activate(options[0], true);
           let accepted = false, leafChosen = false;
           const rootChoice = optionKey(options[0]);
-          const branchKind = (name) => name === brand || /^(?:company|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
+          const branchKind = (name) => name === brand || /^(?:company|corporate|our) web ?site$/.test(name) ? "company" : /^job boards?$/.test(name) ? "board" : /^recruiting event$/.test(name) ? "event" : "";
           let sourceBranch = f.sourceTree && branchKind(rootChoice), tried = /* @__PURE__ */ new Set([rootChoice]);
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 80));
@@ -2146,7 +2226,7 @@
             if (sourceBranch && !leafChosen) {
               const lists = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && (boxes.includes(n) || !before.has(n)));
               const nodes = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o));
-              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
+              const names = sourceBranch === "board" ? ["linkedin", "linked in", "indeed", "indeed com"] : sourceBranch === "event" ? ["career fair", "job fair", "university career fair"] : ["job search", "company careers website", "company career site", "careers website", "careers site", brand + " career site", brand + " careers site"];
               const matches = nodes.filter((o) => names.includes(optionKey(o)) || sourceBranch === "company" && /\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
               const leaf = matches.find((o) => !matches.some((x) => x !== o && o.contains(x)));
               if (leaf) {
@@ -2177,7 +2257,7 @@
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
           }
-          if (!accepted && query && input.isConnected && input.value === query) setQuery("");
+          if (!accepted && query && input.isConnected && input.value === query && !/^address line 1$/i.test(f.label.trim())) setQuery("");
           if (accepted) filled++;
           else skipped++;
         } else {
@@ -2226,7 +2306,7 @@
   var scanForm = () => formBridge2({ action: "scan" });
   var fillForm = (options) => formBridge2({ ...options, action: "fill" });
 
-  // site/tools/application-helper/answer-memory.mjs
+  // tools/application-helper/answer-memory.mjs
   var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion2 = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion2 = (q) => !reviewedIdentityQuestion2(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
@@ -2268,7 +2348,7 @@
   }
   var scanAnsweredFields = () => formBridge({ action: "remember" });
 
-  // site/tools/application-helper/resume-attachment.mjs
+  // tools/application-helper/resume-attachment.mjs
   async function attachResume({ url, resume }) {
     if (location.href !== url) return { attached: false, message: "The page changed. Scan again before attaching." };
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
@@ -2291,9 +2371,17 @@
       const words = context(e);
       return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) || inputs.length === 1 && pageUpload) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
     });
-    const dropSelector = '[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]';
-    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
-    const zones = candidates.length ? [] : [...document.querySelectorAll(dropSelector)].filter(isResumeZone);
+    const dropSelector = '[ondrop],[data-dropzone],[data-automation-id*="drop" i],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]';
+    const resumeSection = (e) => {
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+        const headings = [...p.querySelectorAll("h1,h2,h3,h4,legend,[role=heading]")];
+        if (headings.length) return headings.length === 1 && /^(?:resume|résumé|cv)(?:\s*\/\s*cv)?$/i.test(text(headings[0])) ? p : null;
+      }
+      return null;
+    };
+    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /drop files? here/i.test(text(e)) && !!resumeSection(e);
+    const eligibleZone = (e) => isResumeZone(e) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
+    const zones = candidates.length ? [] : [...document.querySelectorAll(dropSelector)].filter(eligibleZone);
     const containers = zones.filter((z) => !zones.some((other) => other !== z && z.contains(other)));
     const zone = containers.length === 1 ? containers[0] : null;
     if (candidates.length !== 1 && !zone) return { attached: false, message: "No single supported resume upload found. Use the PDF download to attach it manually." };
@@ -2306,7 +2394,7 @@
     const bytes = Uint8Array.from(atob(resume.base64), (c) => c.charCodeAt(0));
     const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((v) => v.toString(16).padStart(2, "0")).join("");
     if (digest !== resume.sha256 || String.fromCharCode(...bytes.subarray(0, 5)) !== "%PDF-") return { attached: false, message: "Resume verification failed. Prepare it again in Studio." };
-    const sizeText = (input ? context(input) : text(zone)) + (inputs.length === 1 ? " " + text(document.body) : "");
+    const sizeText = (input ? context(input) : text(resumeSection(zone) || zone)) + (inputs.length === 1 ? " " + text(document.body) : "");
     const limits = [...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map((m) => Number(m[1] || m[3]) * ((m[2] || m[4]).toUpperCase() === "MB" ? 1e6 : 1e3));
     if (limits.length && bytes.length > Math.min(...limits)) return { attached: false, message: "The tailored PDF exceeds this uploader\u2019s file-size limit. Use a smaller PDF." };
     if (location.href !== url || !target.isConnected || input?.files?.length || input?.disabled) return { attached: false, message: "The upload changed; no file was replaced." };
@@ -2332,7 +2420,7 @@
     }
   }
 
-  // site/tools/application-helper/answer-pagination.mjs
+  // tools/application-helper/answer-pagination.mjs
   function paginateAnswers(rows, nav, state) {
     const pages = Math.max(1, Math.ceil(rows.length / 10));
     state.page = Math.min(pages, Math.max(1, state.page || 1));
@@ -2361,7 +2449,7 @@
     nav.append(button("Previous answers", state.page === 1, -1), status, button("Next answers", state.page === pages, 1));
   }
 
-  // site/tools/application-helper/memory-panel.mjs
+  // tools/application-helper/memory-panel.mjs
   var normalizedAnswer = (value) => String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
   function answerDifference(item, { origin, context, memory = [], profile }) {
     const current = suggestField({ label: item.question, type: "text" }, profile, memory, origin, context) || memoryMatch2(item.question, memory, origin, context);
@@ -2457,7 +2545,7 @@
     render();
   }
 
-  // site/tools/application-helper/assistant.mjs
+  // tools/application-helper/assistant.mjs
   if (!globalThis.__ducApplicationHelper) {
     let mount = function(next) {
       stop();

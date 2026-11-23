@@ -43,7 +43,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
  if((!label&&!rule)||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
  if(field.emailSave&&field.emailValue&&field.emailValue.toLowerCase()===profile.values?.email?.toLowerCase()&&!field.disabled)return {value:profile.values.email,display:profile.values.email,reason:'Save the matching email in this field'};
- if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||field.filled||field.disabled)return null;
+ if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||(field.filled&&!(field.languageRow==='english'&&field.currentLevel==='basic'&&rule?.value==='Fluent'))||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|school or university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile| account)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
  const fieldAliases={
   'email address username':'email','username email address':'email','state location':'state','location city':'city','city of residence':'city','town or city':'city',
@@ -92,6 +92,10 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  const review=rule?{reason:rule.reason,sourceQuestion:rule.sourceQuestion,requiresReview:rule.requiresReview}:{reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){
   const aliases=rule?.aliases||(key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:(key==='country'||background?.value==='United States')&&['us','usa','united states','united states of america'].includes(normalize(value))?['united states','united states of america','us','usa']:common?.question==='Highest completed degree'&&normalize(value)==='high school diploma'?['high school diploma','high school diploma or equivalent','high school diploma ged','high school or equivalent']:[normalize(value)]);
+  if(common?.question==='Street address'&&profile.values.city&&profile.values.state&&profile.values.postalCode){
+   const state=normalize(profile.values.state),states=state==='new jersey'?['nj',state]:[state];
+   for(const region of states)aliases.push(normalize([value,profile.values.city,region,profile.values.postalCode].join(' ')));
+  }
   const sourceTree=common?.question==='How did you hear about this position?'&&normalize(value)==='company website';
   const sourceFallbacks=sourceTree&&profile.answers?.some(a=>a.question==='Application source fallbacks'&&a.answer==='LinkedIn or Indeed, then a career fair');
   if(sourceFallbacks){
@@ -213,6 +217,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  const label=e=>{
   if(/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id))return /--firstYear/i.test(e.id)?'From':'To (Actual or Expected)';
   if(isReply(e))return chatQuestion(e);
+  if(e.matches('input[type=url],input[type=text]')&&/^(?:url|website url|website|link)$/.test(norm(ownLabel(e)))&&sectionFor('websites')?.contains(e))return 'Portfolio URL';
   const wrapper=e.closest('[data-automation-id^="formField-"]');
   const fieldLabel=wrapper?.querySelector('[data-automation-id="formLabel"],legend')||wrapper?.querySelector('label');
   if(fieldLabel&&(!choice(e)||!fieldLabel.contains(e))){const value=labelText(fieldLabel);if(value&&!/^(yes|no)$/i.test(value))return value;}
@@ -277,6 +282,12 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  };
  const context=e=>{
   const wording=norm(label(e));
+  if(/^(reading|speaking|writing|understanding|listening)$/.test(wording)){
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    const langs=[...p.querySelectorAll(controls)].filter(c=>/^(language|language name)$/.test(norm(label(c)))&&visible(c));
+    if(langs.length)return {languageRow:langs.length===1?norm(valueText(langs[0])):'',currentLevel:norm(valueText(e))};
+   }
+  }
   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
    const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
    if(!headings.length)continue;
@@ -314,11 +325,11 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    const all=elements(),recent=all.slice(Math.max(0,all.indexOf(e)-3),all.indexOf(e)).map(c=>norm(label(c)));
    if(recent.some(s=>/right to work in (?:the )?(?:us|u s|united states)$/.test(s))&&!recent.some(s=>/work in /.test(s)&&!/work in (?:the )?(?:us|u s|united states)$/.test(s)))return {workQuestionCountry:'United States'};
   }
-  const q=norm(label(e));if(!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
+  const q=norm(label(e));if(!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
   const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
   if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
   if(/^(please specify|other please specify|academic standing details)$/.test(q)){const last=before.at(-1);if(last&&!empty(last)&&/current academic standing/.test(norm(label(last)))){parentAnswer=valueText(last);parentQuestion=label(last);}}
-  if(/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$/.test(q)){
+  if(/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$/.test(q)){
    let container=e.parentElement;for(let n=0;n<7&&container&&container!==document.body;n++,container=container.parentElement){
     const schools=all.filter(c=>container.contains(c)&&/^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
     if(schools.length>1)break;if(schools.length===1){educationSchool=valueText(schools[0])||schools[0].value||'';break;}
@@ -419,7 +430,26 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   }
   return complete;
  }
+ if(action==='advance'){
+  if(location.href!==url||document.querySelector('input[type=password]'))return false;
+  const heading=[...document.querySelectorAll('h1,h2,[aria-current=step]')].filter(visible).map(text).join(' ');
+  if(/review and submit|review your application|submit application|certification|signature/i.test(heading))return false;
+  const buttons=[...document.querySelectorAll('button,input[type=button],input[type=submit]')].filter(b=>visible(b)&&!disabled(b));
+  if(buttons.some(b=>/submit (?:my |your )?application|finish application/i.test(text(b)||b.value)))return false;
+  const next=buttons.filter(b=>/^(?:save (?:and|&) continue|continue|next(?: step| section)?)$/i.test((text(b)||b.value||'').trim()));
+  if(next.length!==1)return false;
+  const current=document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]');
+  if(current&&/review|submit|certif|signature|final/i.test(text(current)))return false;
+  if(next[0].type==='submit'&&!/save (?:and|&) continue/i.test(text(next[0])||next[0].value)&&!current)return false;
+  if(next[0].form&&!next[0].form.checkValidity()||[...document.querySelectorAll('[aria-invalid=true]')].some(visible))return false;
+  next[0].click();return true;
+ }
  if(action==='prepare-education'){
+  const sites=sectionFor('websites');
+  if(sites&&!sites.querySelector('input:not([type=hidden]),a[href^="http"]')){
+   const adds=[...sites.querySelectorAll('button')].filter(b=>visible(b)&&!disabled(b)&&(!b.form||b.type==='button')&&norm(text(b))==='add');
+   if(adds.length===1)adds[0].click();
+  }
   const buttons=[...document.querySelectorAll('button')].filter(b=>visible(b)&&!b.disabled&&!b.matches('[type="submit"]')&&(!b.form||b.type==='button')&&/^(?:\+\s*)?add(?: education(?: history)?)?$/i.test(text(b)));
   const education=buttons.filter(b=>{
    for(let section=b.parentElement;section&&section!==document.body;section=section.parentElement){
@@ -448,8 +478,9 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    if(typeof country==='string'&&/^[a-z]{2}$/i.test(country))country=new Intl.DisplayNames(['en'],{type:'region'}).of(country.toUpperCase());
    countries.add(typeof country==='string'?country:'');
   }
+  if(!countries.size)for(const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')){const loc=node.getAttribute('data-job-location')||text(node);if(loc&&loc.length<120)countries.add(loc);}
   const jobLocation=countries.size===1?[...countries][0]:'';
-  const all=elements();return {url:location.href,jobLocation,fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,jobLocation,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -480,7 +511,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     const save=emailSave(e);if(save){save.click();await pause(150);if(!e.isConnected||!emailSave(e))filled++;else skipped++;}else skipped++;
     continue;
    }
-   if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
+   if(location.href!==url||!e||!e.isConnected||(!empty(e)&&!(f.languageRow==='english'&&f.currentLevel==='basic'&&context(e).languageRow==='english'&&norm(valueText(e))==='basic'&&f.display==='Fluent'))||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
    const currentContext=context(e);if(('primaryEmail' in f&&currentContext.primaryEmail&&String(currentContext.primaryEmail).trim().toLowerCase()!==String(f.value).trim().toLowerCase())||(f.degreePair&&(!currentContext.degreePair||f.rowDegree&&f.rowDegree!==currentContext.rowDegree))||(f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
     const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
@@ -548,16 +579,16 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if(f.phoneCountry&&options.length>1&&options.every(o=>optionKey(o)==='united states 1'))options.splice(1);
     if(options.length>1&&aliases.length>1){options.sort((a,b)=>aliases.indexOf(norm(text(a)))-aliases.indexOf(norm(text(b))));if(norm(text(options[0]))!==norm(text(options[1])))options.splice(1);}
     // An open menu's option text must not be mistaken for an existing selection.
-    if(location.href!==url||!e.isConnected||options.length!==1){if(query&&input.isConnected&&input.value===query)setQuery('');e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();skipped++;continue;}
+    if(location.href!==url||!e.isConnected||options.length!==1){if(query&&input.isConnected&&input.value===query&&!/^address line 1\s*\*?$/i.test(f.label.trim()))setQuery('');e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();skipped++;continue;}
     options[0].scrollIntoView?.({block:'nearest'});activate(options[0],true);let accepted=false,leafChosen=false;
     const rootChoice=optionKey(options[0]);
-    const branchKind=name=>name===brand||/^(?:company|our) web ?site$/.test(name)?'company':/^job boards?$/.test(name)?'board':/^recruiting event$/.test(name)?'event':'';
+    const branchKind=name=>name===brand||/^(?:company|corporate|our) web ?site$/.test(name)?'company':/^job boards?$/.test(name)?'board':/^recruiting event$/.test(name)?'event':'';
     let sourceBranch=f.sourceTree&&branchKind(rootChoice),tried=new Set([rootChoice]);
 
     for(let attempt=0;attempt<10;attempt++){await new Promise(r=>setTimeout(r,80));if(location.href!==url||!e.isConnected)break;if(sourceBranch&&!leafChosen){
       const lists=[...document.querySelectorAll(boxSelector)].filter(n=>visible(n)&&(boxes.includes(n)||!before.has(n)));
       const nodes=[...new Set(lists.flatMap(b=>[...b.querySelectorAll(optionSelector)]))].filter(o=>visible(o)&&!disabled(o));
-      const names=sourceBranch==='board'?['linkedin','linked in','indeed','indeed com']:sourceBranch==='event'?['career fair','job fair','university career fair']:['company careers website','company career site','careers website','careers site',brand+' career site',brand+' careers site'];
+      const names=sourceBranch==='board'?['linkedin','linked in','indeed','indeed com']:sourceBranch==='event'?['career fair','job fair','university career fair']:['job search','company careers website','company career site','careers website','careers site',brand+' career site',brand+' careers site'];
       const matches=nodes.filter(o=>names.includes(optionKey(o))||sourceBranch==='company'&&/\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
       const leaf=matches.find(o=>!matches.some(x=>x!==o&&o.contains(x)));
       if(leaf){aliases.push(optionKey(leaf));activate(leaf,true);leafChosen=true;continue;}
@@ -571,7 +602,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
      }
      if(!(sourceBranch==='company'&&brand&&rootChoice===brand&&!leafChosen)&&(aliases.includes(norm(valueText(e)))||(f.phoneCountry&&/^\+1$/.test(valueText(e))&&boxes.every(b=>!b.isConnected||!visible(b))))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
     if(boxes.some(b=>b.isConnected&&visible(b))){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();}
-    if(!accepted&&query&&input.isConnected&&input.value===query)setQuery('');
+    if(!accepted&&query&&input.isConnected&&input.value===query&&!/^address line 1$/i.test(f.label.trim()))setQuery('');
     if(accepted)filled++;else skipped++;
    }else{
     if(e.tagName==='SELECT'&&![...e.options].some(o=>o.value===f.value&&!o.disabled&&text(o)===f.display)){skipped++;continue;}

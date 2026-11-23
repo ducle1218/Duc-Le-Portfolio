@@ -84,7 +84,8 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(commonQuestion(q)?.question==='Phone device type'&&fact('Phone device type')==='Mobile')return confirmed('Mobile','Phone device type',['mobile','mobile phone','cell','cell phone','cellular']);
  if(commonQuestion(q)?.question==='Preferred contact method'&&fact('Preferred contact method')==='Email')
   return confirmed('Email','Preferred contact method',['email','e mail','email address','by email']);
- const employment=q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
+ const mainQuestion=questionKey(String(field.label).split('?')[0]);
+ const employment=mainQuestion.replace(/^are you (?:a |an )?former employee of /,'have you worked for ').replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
  if(/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment)&&
     !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
   return confirmed('No','Employment experience');
@@ -147,8 +148,21 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(citizen||fact(auth)==='Yes'&&fact(sponsor)==='No')return confirmed('Yes',citizen?'Citizenships':auth);
   return {blocked:true};
  }
+ const region=jobJurisdiction(field.jobLocation||field.workQuestionCountry||'');
+ if(/^do you (?:have|hold) a valid driver(?: s)? licen[cs]e for (?:the )?country (?:in which|where) (?:this|the) job (?:resides|is located|is based)$/.test(q)&&unique('Valid driver’s license')==='Yes'&&unique('Driver license issuing country')==='United States'){
+  if(region==='us')return confirmed('Yes','Driver license issuing country');
+  if(region==='foreign'&&unique('Driver license valid for jobs outside the US')==='No')return confirmed('No','Driver license valid for jobs outside the US');
+  return {blocked:true};
+ }
+ if(/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q))return region==='us'&&citizen&&unique(proof)==='Yes'?confirmed('Yes',proof):{blocked:true};
+ if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening)$/.test(q)&&unique('English proficiency')==='Fluent')return confirmed('Fluent','English proficiency',['fluent']);
+ const collegeStart=unique('University start month'),collegeEnd=unique('Expected graduation date');
+ if(field.educationSchool&&questionKey(field.educationSchool)===questionKey(profile.values.school)&&['from','to actual or expected','start date','end date actual or expected'].includes(q)){
+  const month=/^(?:from|start date)$/.test(q)?collegeStart:collegeEnd;
+  if(/^\d{4}-\d{2}$/.test(month||'')&&(field.type==='month'||/^yyyy$/i.test(field.placeholder||'')))return confirmed(field.type==='month'?month:month.slice(0,4),'University attendance dates');
+ }
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
- const visaAssistance=/^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
+ const visaAssistance=q==='will you now or in the future require sponsorship for an immigration related employment benefit'||/^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
  if(visaAssistance||countryDependent||commonQuestion(q)?.question===sponsor){
   const source=visaAssistance||q.includes('sponsorship')?sponsor:auth,region=jobJurisdiction(field.jobLocation||field.workQuestionCountry||'');
   if(region==='us'&&fact(source))return result(fact(source),'Your U.S. work profile and this job’s location');
@@ -236,7 +250,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   if(['fall','autumn','winter'].includes(season))return result('No','Not available full-time in fall or winter');
   return {blocked:true}; // Do not reuse an unconditional old Yes/No for an unknown season.
  }
- if((commonQuestion(q)?.question==='How did you hear about this position?'||/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(q))&&unique('Preferred application source')==='Company website or university')return result('Company Website','Your preferred application source',['company website','our website','company careers website','company career site','employer website','amazon career site','amazon jobs','university college','university recruiting','university','university career center','college university']);
+ if((commonQuestion(q)?.question==='How did you hear about this position?'||/^how (did|do) you (hear|learn|find out) about (this (position|job|role)|us)$/.test(q))&&unique('Preferred application source')==='Company website or university')return result('Company Website','Your preferred application source',['company website','corporate website','our website','company careers website','company career site','employer website','amazon career site','amazon jobs','university college','university recruiting','university','university career center','college university']);
  const date=dateConcept(field.label);
  if(date==='start'||date==='end'){
   if(field.applicationSeason&&field.applicationSeason!=='summer-2027')return {blocked:true};

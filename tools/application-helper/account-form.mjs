@@ -112,6 +112,13 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  if(emailField&&!emailField.readOnly&&!emailField.disabled)fill(emailField,email);
  for(const field of fields)fill(field,password);
  if(!fields.every(el=>el.isConnected&&el.value===password)||emailField&&(!emailField.isConnected||emailField.value.trim().toLowerCase()!==email.toLowerCase()))throw Error('The form changed while filling. Review the account fields.');
+ if(registration&&buttons.length===1){
+  const scope=fields[0].form||buttons[0].closest('[role=dialog]')||fields[0].parentElement;
+  for(const box of scope.querySelectorAll('input[type=checkbox]')){
+   const words=[...(box.labels||[])].map(l=>l.textContent.trim()).join(' ').replace(/\s+/g,' ');
+   if(!box.checked&&!box.disabled&&/^(?:yes,? )?i (?:have read and (?:consent|agree) to|agree to|accept) (?:the |these )?terms (?:and conditions|of use|of service)[. *]*$/i.test(words))box.click();
+  }
+ }
  const button=buttons[0];
  if((registration||automatic)&&buttons.length===1&&visible(button)&&button.getAttribute('aria-disabled')!=='true'&&(!button.formAction||new URL(button.formAction,url).origin===location.origin)&&(!button.form||button.form.checkValidity())){
   button.click();if(!registration)return 'Sign-in requested. Check the website for verification or the next step.';return 'Registration requested. Check the website for confirmation or email verification.';

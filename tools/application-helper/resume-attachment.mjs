@@ -24,9 +24,11 @@ export async function attachResume({url,resume}){
   return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words)||(inputs.length===1&&pageUpload))&&!/cover letter|transcript|passport|photo|certificate/i.test(words);
  });
  // Prefer the file input. Some uploaders expose only a drop target and create the file input on demand.
- const dropSelector='[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]';
- const isResumeZone=e=>/\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e))&&!/cover letter|transcript|passport|photo|certificate/i.test(text(e))&&e.getClientRects().length;
- const zones=candidates.length?[]:[...document.querySelectorAll(dropSelector)].filter(isResumeZone);
+ const dropSelector='[ondrop],[data-dropzone],[data-automation-id*="drop" i],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"]';
+ const resumeSection=e=>{for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role=heading]')];if(headings.length)return headings.length===1&&/^(?:resume|résumé|cv)(?:\s*\/\s*cv)?$/i.test(text(headings[0]))?p:null;}return null;};
+ const isResumeZone=e=>/\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e))||(/drop files? here/i.test(text(e))&&!!resumeSection(e));
+ const eligibleZone=e=>isResumeZone(e)&&!/cover letter|transcript|passport|photo|certificate/i.test(text(e))&&e.getClientRects().length;
+ const zones=candidates.length?[]:[...document.querySelectorAll(dropSelector)].filter(eligibleZone);
  const containers=zones.filter(z=>!zones.some(other=>other!==z&&z.contains(other)));
  const zone=containers.length===1?containers[0]:null;
  if(candidates.length!==1&&!zone)return {attached:false,message:'No single supported resume upload found. Use the PDF download to attach it manually.'};
@@ -37,7 +39,7 @@ export async function attachResume({url,resume}){
  if(!resume||typeof resume.base64!=='string'||resume.base64.length>2_000_000)return {attached:false,message:'Start this job from Studio with its tailored PDF first.'};
  const bytes=Uint8Array.from(atob(resume.base64),c=>c.charCodeAt(0));const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');
  if(digest!==resume.sha256||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-')return {attached:false,message:'Resume verification failed. Prepare it again in Studio.'};
- const sizeText=(input?context(input):text(zone))+(inputs.length===1?' '+text(document.body):'');
+ const sizeText=(input?context(input):text(resumeSection(zone)||zone))+(inputs.length===1?' '+text(document.body):'');
  const limits=[...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map(m=>Number(m[1]||m[3])*((m[2]||m[4]).toUpperCase()==='MB'?1_000_000:1000));
  if(limits.length&&bytes.length>Math.min(...limits))return {attached:false,message:'The tailored PDF exceeds this uploader’s file-size limit. Use a smaller PDF.'};
  if(location.href!==url||!target.isConnected||input?.files?.length||input?.disabled)return {attached:false,message:'The upload changed; no file was replaced.'};

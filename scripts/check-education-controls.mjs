@@ -74,3 +74,13 @@ assert.equal(probe('State')?.value,'New Jersey');
 const updated=structuredClone(prefs);updated.answers.find(a=>a.question==='Employment experience').answer='Internship';
 assert.equal(suggestField({label:'Were you ever employed by Example or one of its affiliates?',type:'combobox'},updated),null);
 console.log('PASS: employer-specific questions follow updated employment history, phone country, SMS, US authorization, confirmed document availability and highest completed degree.');
+{
+ const p={confirmed:true,values:{firstName:'Test',lastName:'Applicant'},answers:[{question:'Employment experience',answer:'None'},{question:'Highest completed degree',answer:'High school diploma'}]};
+ const ask=(label,type='text')=>suggestField({label,type},p)?.value;
+ assert.equal(ask('Are you currently or have you previously worked for Philips, including as a contingent worker/external?'),'No');
+ assert.equal(ask("Do you have a completed Bachelor's degree?"),'No');
+ p.answers[0].answer='One prior job';
+ assert.equal(ask('Are you currently or have you previously worked for Philips, including as a contingent worker/external?'),undefined);
+ assert.equal(ask("Hi! I'm Olivia, your job assistant. To get started, can you please provide me with your first and last name?",'chat-reply'),'Test Applicant');
+ assert.equal(ask('Can you provide your name? What is your salary expectation?','chat-reply'),undefined);
+}

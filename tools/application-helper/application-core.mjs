@@ -24,3 +24,17 @@ export function cleanProfile(input){
  if(answers.some(a=>!a.question||!a.answer||a.question.length>160||a.answer.length>1500))throw new Error('Add a question and answer for each reusable answer without empty questions or answers.');
  return {values,answers,confirmed:true,confirmedAt:new Date().toISOString()};
 }
+
+// Portable metadata only. Ignore extra properties, including credentials.
+export function employerSites(...lists){
+ const entries=new Map();
+ for(const row of lists.filter(Array.isArray).flat()){
+  if(typeof row?.origin!=='string'||typeof row.email!=='string')continue;
+  let url;try{url=new URL(row.origin);}catch{continue;}
+  const email=row.email.trim().toLowerCase();
+  if(url.protocol!=='https:'||url.origin!==row.origin||email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))continue;
+  const scope=typeof row.scope==='string'?row.scope.slice(0,240):'';
+  entries.set(JSON.stringify([url.origin,scope,email]),{origin:url.origin,scope,email});
+ }
+ return [...entries.values()];
+}

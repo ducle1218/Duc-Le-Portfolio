@@ -65,7 +65,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
  ];
  const confirmed=(value,sourceQuestion,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion,requiresReview:true});
- const employment=q.replace(/ this does not include contractor consultant or vendor roles$/,'');
+ const employment=q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
  if(/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment)&&
     !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
   return confirmed('No','Employment experience');
@@ -99,7 +99,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const race=fact('Race / ethnic background');
   if(questionKey(race)==='asian not hispanic or latino')return confirmed(race,'Race / ethnic background',['asian not hispanic latino','asian not hispanic or latino','asian']);
  }
- if(/^please select your protected veteran status\b/.test(q)&&unique('Protected veteran status')==='I am not a protected veteran')
+ if((/^(?:protected )?veteran status$/.test(q)||/^please select your protected veteran status\b/.test(q))&&unique('Protected veteran status')==='I am not a protected veteran')
   return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran']);
  const agreement='I have read and understand and I agree to the above';
  if(q===questionKey(agreement)&&unique(agreement)==='Yes')return result('Yes','Your saved answer for this acknowledgment');
@@ -112,6 +112,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  if(/^are you (a |an )?(u s|us|united states) citizen$/.test(q)&&citizen)return confirmed('Yes','Citizenships');
  const auth='Are you legally authorized to work in the United States?';
+ if(citizen&&/\bare you a (?:u s|us|united states) citizen lawful permanent resident refugee or asylee$/.test(q))return confirmed('Yes','Citizenships');
  const proof='Can provide a valid US passport, US birth certificate or certificate of naturalization on request';
  if(/\bexport control(?:led)?\b/.test(q)&&/\b(?:select|choose) (?:among |one of )?(?:the following|an option|which statement)/.test(q)){
   if(!citizen||unique(proof)!=='Yes')return {blocked:true};
@@ -121,6 +122,11 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(/^are you (?:legally )?(?:authorized|eligible) to work (?:for (?:any|an?) (?:us|u s|united states) employer|in (?:the )?(?:us|u s|united states))$/.test(q)&&(fact(auth)||citizen))
   return confirmed(fact(auth)||'Yes',fact(auth)?auth:'Citizenships');
  const sponsor='Will you now or in the future require sponsorship for employment visa status?';
+ if(/^are you (?:legally )?authorized to work in (?:the )?(?:united states|u s|us) without (?:any |employer |visa )?sponsorship$/.test(q)){
+  if(fact(auth)==='No'||fact(sponsor)==='Yes')return confirmed('No',fact(auth)==='No'?auth:sponsor);
+  if(citizen||fact(auth)==='Yes'&&fact(sponsor)==='No')return confirmed('Yes',citizen?'Citizenships':auth);
+  return {blocked:true};
+ }
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
  if(countryDependent||commonQuestion(q)?.question===sponsor){
   const source=q.includes('sponsorship')?sponsor:auth,region=jobJurisdiction(field.jobLocation||'');
@@ -157,6 +163,13 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  if(/^(zip|postal|zip postal)( code)?$/.test(q)&&zip)return result(zip,'ZIP from your saved address');
  const pursued=fact('Degree being pursued'),school=questionKey(field.educationSchool),college=school&&school===questionKey(profile.values?.school),highSchool=school&&school===questionKey(fact('High school name'));
+ if(/^(?:do you (?:have|hold) (?:a )?(?:completed |earned )?bachelor(?: s|s)? degree|have you (?:already )?(?:completed|earned|obtained) (?:a |your )?bachelor(?: s|s)? degree)$/.test(q)){
+  const highest=questionKey(fact('Highest completed degree'));
+  if(/^(high school diploma|associate(?: s)? degree|some college)$/.test(highest))return confirmed('No','Highest completed degree');
+  if(/^bachelor(?: s)?(?: degree| of .+)$/.test(highest))return confirmed('Yes','Highest completed degree');
+  return {blocked:true};
+ }
+ if(q==='to actual or expected'&&college&&/^\d{4}$/.test(profile.values.graduationYear))return result(profile.values.graduationYear,'Expected graduation year at this school');
  if(q==='degree'||q==='degree type'||commonQuestion(field.label)?.question==='Degree being pursued'){
   if(field.highestEducation&&fact('Highest completed degree'))return confirmed(fact('Highest completed degree'),'Highest completed degree',questionKey(fact('Highest completed degree'))==='high school diploma'?['high school or equivalent','high school diploma ged','high school diploma','secondary education diploma']:undefined);
   if(highSchool)return result(fact('Highest completed degree'),'Completed high-school education',['high school diploma ged','high school diploma','full high school education']);

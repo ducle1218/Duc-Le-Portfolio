@@ -1,6 +1,8 @@
+import {employerSites} from './application-core.mjs';
 const encoder=new TextEncoder();
 const encode=bytes=>Array.from(new Uint8Array(bytes));
 const random=length=>crypto.getRandomValues(new Uint8Array(length));
+const unknown=message=>Object.assign(Error(message),{code:'NO_SAVED_ACCOUNT'});
 const vaultKey='employer-vault-v1';
 async function derive(phrase,salt){
  const material=await crypto.subtle.importKey('raw',encoder.encode(phrase),'PBKDF2',false,['deriveKey']);
@@ -32,7 +34,7 @@ async function deviceKey(value){
 }
 export async function scanCredential(storage,options,keyStore=deviceKey){
  const entry=(await storage.get(vaultKey))[vaultKey];
- if(!entry&&!options.signup)throw Error('No saved login for this employer. Open its Create account form and scan it.');
+ if(!entry&&!options.signup)throw unknown('No saved login for this employer. Open its Create account form and scan it.');
  let key=await keyStore();
  if(!key&&entry){
   if(entry.deviceOnly)throw Error('This browser no longer has the key to its employer vault.');
@@ -50,7 +52,7 @@ export async function scanCredential(storage,options,keyStore=deviceKey){
 }
 export async function accountCredential(storage,{origin,employer,email,phrase,repeat,signup,sitePassword,key:device,scope=''}){
  const entry=(await storage.get(vaultKey))[vaultKey];
- if(!entry&&!signup)throw Error('Create an account with the helper first.');
+ if(!entry&&!signup)throw unknown('Create an account with the helper first.');
  if(!entry&&!device&&(phrase.length<12||phrase!==repeat))throw Error('Choose a vault passphrase of at least 12 characters and enter it twice.');
  const salt=entry?.salt||(!device&&encode(random(16))),key=device||await derive(phrase,salt);
  let vault;
@@ -69,9 +71,19 @@ export async function accountCredential(storage,{origin,employer,email,phrase,re
  if(!label||!identity)throw Error('Enter the employer name and your account email.');
  const saved=vault.accounts.some(a=>a.origin===origin&&a.email===identity&&(a.scope&&scope?a.scope===scope:a.label===label));
  if(saved)return vault.password;
- if(!signup)throw Error('No saved login matches this website, employer name and email.');
+ if(!signup)throw unknown('No saved login matches this website, employer name and email.');
  vault.accounts.push({origin,label,email:identity,scope});
  const iv=random(12),data=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,encoder.encode(JSON.stringify(vault)));
  await storage.set({[vaultKey]:{...(salt?{salt}:{deviceOnly:true}),iv:encode(iv),data:encode(data)}});
  return vault.password;
+}
+
+export async function savedEmployerSites(storage,keyStore=deviceKey){
+ const entry=(await storage.get(vaultKey))[vaultKey];
+ const imported=(await storage.get('employerSites')).employerSites;
+ if(!entry)return employerSites(imported);
+ const key=await keyStore();
+ if(!key)throw Error('Unlock your older employer logins in the helper before exporting the site list.');
+ const bytes=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(entry.iv)},key,new Uint8Array(entry.data));
+ return employerSites(imported,JSON.parse(new TextDecoder().decode(bytes)).accounts);
 }

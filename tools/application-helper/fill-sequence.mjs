@@ -17,7 +17,7 @@ export async function fillWithFollowups({url,reviewed,selected,scan,fill,suggest
   for(const delay of [80,200,400,700]){
    await new Promise(resolve=>setTimeout(resolve,delay));if(!active())return total;
    const form=await scan();if(form.url!==url){total.changed=true;return total;}
-   pending=form.fields.filter(field=>!field.filled&&!excluded.has(questionId(field))&&!attempted.has(identity(field)))
+   pending=form.fields.filter(field=>field.type!=='chat-reply'&&!field.filled&&!excluded.has(questionId(field))&&!attempted.has(identity(field)))
     .flatMap(field=>{const answer=suggest(field,form);return answer?[{...field,...answer}]:[];});
    if(pending.length)break;
   }

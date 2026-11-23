@@ -1,5 +1,6 @@
+import {savedEmployerSites} from './account-vault.mjs';
 import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core.mjs';
-import {cleanProfile} from './application-core.mjs';
+import {cleanProfile,employerSites} from './application-core.mjs';
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
 import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
 import {loadPortfolio} from './portfolio-source.mjs';
@@ -18,11 +19,11 @@ async function loadDeviceProfile(){
   data=await response.json();
  }catch{return;}
  if(data.format!=='duc-application-profile-v1'||!Number.isFinite(Date.parse(data.exportedAt)))return;
- const {deviceProfileRevision,studioProfile}=await chrome.storage.local.get(['deviceProfileRevision','studioProfile']);
+ const {deviceProfileRevision,studioProfile,employerSites:knownSites}=await chrome.storage.local.get(['deviceProfileRevision','studioProfile','employerSites']);
  if(deviceProfileRevision===data.exportedAt)return;
  const profile={...cleanProfile(data.profile),confirmedAt:data.profile.confirmedAt};
  if(studioProfile&&Date.parse(studioProfile.confirmedAt)>Date.parse(profile.confirmedAt))return;
- await chrome.storage.local.set({profile,studioProfile:profile,deviceProfileRevision:data.exportedAt});
+ await chrome.storage.local.set({profile,studioProfile:profile,employerSites:employerSites(knownSites,data.employerAccounts),deviceProfileRevision:data.exportedAt});
 }
 const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
 let memoryWrite=Promise.resolve();
@@ -53,6 +54,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
+   if(message.type==='studio-employer-sites')return {ok:true,sites:await savedEmployerSites(chrome.storage.local)};
    if(message.type==='studio-read-profile'){
     await loadDeviceProfile();
     const {studioProfile}=await chrome.storage.local.get('studioProfile');

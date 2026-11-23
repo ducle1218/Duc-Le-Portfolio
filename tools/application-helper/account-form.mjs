@@ -1,5 +1,5 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
@@ -25,7 +25,7 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   const fields=passwords.filter(el=>(el.form||el.closest('[role="dialog"],main,[role="main"]')||document.body)===scope);
   if(fields.length>2)continue;
   const inputs=[...scope.querySelectorAll('input')].filter(el=>shown(el)&&(!el.form||el.form===scope));
-  const emails=inputs.filter(el=>el.type==='email'||(['text',''].includes(el.type)&&/email|user.?name/i.test([el.name,el.id,el.autocomplete,el.getAttribute('aria-label')].join(' '))));
+  const emails=inputs.filter(el=>el.type==='email'||(['text',''].includes(el.type)&&/email|user.?name/i.test([el.name,el.id,el.autocomplete,el.getAttribute('aria-label'),...[...(el.labels||[])].map(l=>l.textContent)].join(' '))));
   if(emails.length!==1&&!(amazon&&afterEmail&&emails.length===0))continue;
   if(scope.action&&new URL(scope.action,url).origin!==location.origin)continue;
   const controls=[...scope.querySelectorAll('button,input[type=submit],[role=button]')].filter(el=>shown(el)&&(!el.form||el.form===scope));
@@ -60,6 +60,16 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  const {fields,emailField,buttons,registration}=candidates[0];
  if(emailField&&(emailField.readOnly||emailField.disabled)&&!emailField.value.trim())throw Error('The employer must populate the account email before scanning.');
  if(emailField?.value.trim()&&emailField.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The form contains a different email. Check the account before continuing.');
+ if(openRegistration){
+  if(registration)return null;
+  const links=[...document.querySelectorAll('a[href],button,input[type=button],[role=button]')].filter(b=>{
+   if(!visible(b)||b.getAttribute('aria-disabled')==='true'||b.form&&b.type==='submit')return false;
+   if(b.href&&new URL(b.href,url).origin!==location.origin)return false;
+   return /^(?:new user|create (?:an? )?account|sign up|register)$/i.test((b.innerText||b.textContent||b.value||'').trim());
+  });
+  if(links.length!==1)return null;
+  links[0].click();return {opened:true};
+ }
  const max=Math.min(...fields.map(el=>el.maxLength>=0?el.maxLength:Infinity));
  const min=Math.max(1,...fields.map(el=>el.minLength||0));
  if(!password)return automatic?{signup:registration,min,max:Number.isFinite(max)?max:128}:true;

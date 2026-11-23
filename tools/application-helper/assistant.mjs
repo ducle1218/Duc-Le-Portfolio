@@ -1,7 +1,7 @@
 import {fillWithFollowups,questionId} from './fill-sequence.mjs';
 import {addPortfolioEvidence} from './portfolio-ui.mjs';
 import {applicationSeason} from './answer-rules.mjs';
-import {suggestField,scanForm,fillForm} from './application-autofill.mjs';
+import {suggestField,scanForm,fillForm,formBridge} from './application-autofill.mjs';
 import {scanAnsweredFields} from './answer-memory.mjs';
 import {attachResume} from './resume-attachment.mjs';
 import {reviewAnswers} from './memory-panel.mjs';
@@ -42,7 +42,7 @@ if(!globalThis.__ducApplicationHelper){
    status.textContent=review.fields.length?`${review.fields.length} suggested answers. Review and uncheck any you don’t want to fill.`:'Open the employer’s application form or sign in. Supported empty fields will appear here.';
    if(found.embeddedForms)status.textContent+=' Embedded forms may need opening directly and scanning with the extension button.';
   }
-  scan.onclick=()=>scanNow();fill.onclick=async()=>{
+  scan.onclick=async()=>{if(entry?.profile.values.school)await formBridge({action:'prepare-education'});scanNow();};fill.onclick=async()=>{
    if(filling)return;if(!review||Date.now()-review.createdAt>120000){scanNow();status.textContent='Suggestions refreshed. Review them again before filling.';return;}
    const checked=[...list.querySelectorAll('input')].filter(c=>c.checked),fields=checked.filter(c=>c.value!=='resume').map(c=>review.fields[Number(c.value)]),withResume=checked.some(c=>c.value==='resume');
    if(!fields.length&&!withResume){status.textContent='Select an answer or the tailored PDF.';return;}

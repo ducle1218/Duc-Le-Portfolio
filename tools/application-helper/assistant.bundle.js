@@ -26,7 +26,7 @@
           total.changed = true;
           return total;
         }
-        pending = form.fields.filter((field) => !field.filled && !excluded.has(questionId(field)) && !attempted.has(identity(field))).flatMap((field) => {
+        pending = form.fields.filter((field) => field.type !== "chat-reply" && !field.filled && !excluded.has(questionId(field)) && !attempted.has(identity(field))).flatMap((field) => {
           const answer = suggest(field, form);
           return answer ? [{ ...field, ...answer }] : [];
         });
@@ -225,7 +225,7 @@
       ["Previous security clearance", /^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
     ];
     const confirmed = (value, sourceQuestion, aliases3) => ({ ...result(value, "From your application profile", aliases3), sourceQuestion, requiresReview: true });
-    const employment = q.replace(/ this does not include contractor consultant or vendor roles$/, "");
+    const employment = q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
     if (/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment) && !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment) && questionKey(fact("Employment experience")) === "none")
       return confirmed("No", "Employment experience");
     const sms = "SMS contact about my job application";
@@ -257,7 +257,7 @@
       const race = fact("Race / ethnic background");
       if (questionKey(race) === "asian not hispanic or latino") return confirmed(race, "Race / ethnic background", ["asian not hispanic latino", "asian not hispanic or latino", "asian"]);
     }
-    if (/^please select your protected veteran status\b/.test(q) && unique("Protected veteran status") === "I am not a protected veteran")
+    if ((/^(?:protected )?veteran status$/.test(q) || /^please select your protected veteran status\b/.test(q)) && unique("Protected veteran status") === "I am not a protected veteran")
       return confirmed("I am not a protected veteran", "Protected veteran status", ["i am not a protected veteran", "i am not a protected veteran i prefer not to answer", "not a protected veteran"]);
     const agreement = "I have read and understand and I agree to the above";
     if (q === questionKey(agreement) && unique(agreement) === "Yes") return result("Yes", "Your saved answer for this acknowledgment");
@@ -270,6 +270,7 @@
     }
     if (/^are you (a |an )?(u s|us|united states) citizen$/.test(q) && citizen) return confirmed("Yes", "Citizenships");
     const auth = "Are you legally authorized to work in the United States?";
+    if (citizen && /\bare you a (?:u s|us|united states) citizen lawful permanent resident refugee or asylee$/.test(q)) return confirmed("Yes", "Citizenships");
     const proof = "Can provide a valid US passport, US birth certificate or certificate of naturalization on request";
     if (/\bexport control(?:led)?\b/.test(q) && /\b(?:select|choose) (?:among |one of )?(?:the following|an option|which statement)/.test(q)) {
       if (!citizen || unique(proof) !== "Yes") return { blocked: true };
@@ -279,6 +280,11 @@
     if (/^are you (?:legally )?(?:authorized|eligible) to work (?:for (?:any|an?) (?:us|u s|united states) employer|in (?:the )?(?:us|u s|united states))$/.test(q) && (fact(auth) || citizen))
       return confirmed(fact(auth) || "Yes", fact(auth) ? auth : "Citizenships");
     const sponsor = "Will you now or in the future require sponsorship for employment visa status?";
+    if (/^are you (?:legally )?authorized to work in (?:the )?(?:united states|u s|us) without (?:any |employer |visa )?sponsorship$/.test(q)) {
+      if (fact(auth) === "No" || fact(sponsor) === "Yes") return confirmed("No", fact(auth) === "No" ? auth : sponsor);
+      if (citizen || fact(auth) === "Yes" && fact(sponsor) === "No") return confirmed("Yes", citizen ? "Citizenships" : auth);
+      return { blocked: true };
+    }
     const countryDependent = /^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q) || /^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
     if (countryDependent || commonQuestion(q)?.question === sponsor) {
       const source = q.includes("sponsorship") ? sponsor : auth, region = jobJurisdiction(field.jobLocation || "");
@@ -317,6 +323,13 @@
     }
     if (/^(zip|postal|zip postal)( code)?$/.test(q) && zip) return result(zip, "ZIP from your saved address");
     const pursued = fact("Degree being pursued"), school = questionKey(field.educationSchool), college = school && school === questionKey(profile.values?.school), highSchool = school && school === questionKey(fact("High school name"));
+    if (/^(?:do you (?:have|hold) (?:a )?(?:completed |earned )?bachelor(?: s|s)? degree|have you (?:already )?(?:completed|earned|obtained) (?:a |your )?bachelor(?: s|s)? degree)$/.test(q)) {
+      const highest = questionKey(fact("Highest completed degree"));
+      if (/^(high school diploma|associate(?: s)? degree|some college)$/.test(highest)) return confirmed("No", "Highest completed degree");
+      if (/^bachelor(?: s)?(?: degree| of .+)$/.test(highest)) return confirmed("Yes", "Highest completed degree");
+      return { blocked: true };
+    }
+    if (q === "to actual or expected" && college && /^\d{4}$/.test(profile.values.graduationYear)) return result(profile.values.graduationYear, "Expected graduation year at this school");
     if (q === "degree" || q === "degree type" || commonQuestion(field.label)?.question === "Degree being pursued") {
       if (field.highestEducation && fact("Highest completed degree")) return confirmed(fact("Highest completed degree"), "Highest completed degree", questionKey(fact("Highest completed degree")) === "high school diploma" ? ["high school or equivalent", "high school diploma ged", "high school diploma", "secondary education diploma"] : void 0);
       if (highSchool) return result(fact("Highest completed degree"), "Completed high-school education", ["high school diploma ged", "high school diploma", "full high school education"]);
@@ -461,19 +474,28 @@
   }
 
   // tools/application-helper/application-autofill.mjs?v=20261123.3
-  function formBridge({ action = "scan", url, fields = [] } = {}) {
+  function formBridge({ action = "scan", url, fields = [], origins = [] } = {}) {
+    if (action === "scan-chat" && !origins.includes(location.origin)) return null;
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
-    const controls = "input,select,textarea," + comboSelector + ',[role="radio"]';
-    const activate = (e) => {
+    const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
+    const activate = (e, option = false) => {
+      if (option) e.scrollIntoView?.({ block: "nearest" });
       const Mouse = typeof MouseEvent === "undefined" ? Event : MouseEvent;
       if (typeof PointerEvent !== "undefined") e.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerType: "mouse", button: 0 }));
       const down = new Mouse("mousedown", { bubbles: true, cancelable: true, button: 0 });
       e.dispatchEvent(down);
       e.dispatchEvent(new Mouse("mouseup", { bubbles: true, cancelable: true, button: 0 }));
       if (typeof PointerEvent !== "undefined") e.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerType: "mouse", button: 0 }));
+      if (option) {
+        if (e.isConnected && visible(e)) {
+          if (e.closest("a,button,input[type=submit]")) e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
+          e.click();
+        }
+        return;
+      }
       if (!down.defaultPrevented && e.isConnected && visible(e)) {
         e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
         e.click();
@@ -483,7 +505,26 @@
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
     const checkbox = (e) => e.type === "checkbox";
     const choice = (e) => radio(e) || checkbox(e);
-    const type = (e) => radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
+    const isReply = (e) => e.matches('textarea,input:not([type]),input[type="text"],[contenteditable]') && /^(?:write|type|enter|send) (?:a |your )?(?:reply|message)(?: here)?[. …]*$/i.test((e.placeholder || e.getAttribute("data-placeholder") || e.getAttribute("aria-placeholder") || e.getAttribute("aria-label") || "").trim());
+    const chatQuestion = (e) => {
+      const messages = '.ol-text-message,[data-message-id],[data-author],[data-sender],[role="log"] > *,[class*="message-bubble"],[class*="message__text"],[class*="message-text"],[class*="chat-message"],[class*="message-content"]';
+      for (let p = e.parentElement; p; p = p.parentElement) {
+        if ([...p.querySelectorAll(controls)].filter((c) => isReply(c) && visible(c)).length !== 1) break;
+        const rows = [...p.querySelectorAll(messages)].filter((m) => visible(m) && text(m) && !m.contains(e) && !m.matches("input,textarea") && !(m.compareDocumentPosition(e) & 2));
+        const row = rows.at(-1);
+        if (row) {
+          if (row.closest('[data-author="user"],[data-sender="user"],[data-author="candidate"],[class*="outgoing"],[class*="user-message"]')) return "";
+          return text(row).slice(-800);
+        }
+        if (/(?:olivia by paradox|job assistant|recruiting assistant)/i.test(text(p)) && (!p.matches("body,html") || /(^|\.)paradox\.ai$/.test(location.hostname))) {
+          const leaves = [...p.querySelectorAll("p,div,span")].filter((n) => !n.children.length && visible(n) && n.compareDocumentPosition(e) & 4 && text(n).length > 5 && !n.closest("button,label,footer"));
+          const last = leaves.at(-1);
+          if (last && /\?\s*$/.test(text(last))) return text(last).slice(-800);
+        }
+      }
+      return "";
+    };
+    const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
     const group = (e) => {
       const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
@@ -519,6 +560,7 @@
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
         if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
+        if (choice(e) && !candidates.length) candidates.push(...[...parent.querySelectorAll("div,span")].filter((h) => !h.children.length && !h.closest('label,[role="radio"]') && /\?\s*\*?$/.test(text(h))));
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -527,6 +569,7 @@
       return "";
     };
     const label = (e) => {
+      if (isReply(e)) return chatQuestion(e);
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
       if (fieldLabel && (!choice(e) || !fieldLabel.contains(e))) {
@@ -540,7 +583,22 @@
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 800);
     };
-    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+    let shadowEditors = null;
+    const elements = () => {
+      const list = [...document.querySelectorAll(controls)];
+      const shadowReplies = (root) => {
+        for (const host of root.querySelectorAll("*")) if (host.shadowRoot) {
+          shadowEditors.push(...[...host.shadowRoot.querySelectorAll(controls)].filter(isReply));
+          shadowReplies(host.shadowRoot);
+        }
+      };
+      if (!shadowEditors) {
+        shadowEditors = [];
+        shadowReplies(document);
+      }
+      list.push(...shadowEditors);
+      return list.filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+    };
     const selectedValue = (e) => {
       if (e.matches('[data-automation-id="searchBox"]')) {
         const holder = e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]') || e.parentElement;
@@ -561,8 +619,11 @@
       let parent = e;
       for (let n = 0; n < 4 && parent; n++, parent = parent.parentElement) {
         if (parent !== e && parent.querySelectorAll(comboSelector).length > 1) break;
-        const selected = parent.querySelector('[class*="singleValue"],[data-selected-value],.ng-value-label,.select2-selection__rendered,.mat-select-value-text,.ui-select-match-text');
-        if (selected) return text(selected);
+        const selected = parent.querySelector('[class*="singleValue"],[class*="__single-value"],[data-selected-value],.ng-value-label,.select2-selection__rendered,.mat-select-value-text,.ui-select-match-text');
+        if (selected) {
+          if (text(selected) === "+1" && selected.querySelector('.iti__us,[data-country-code="us"]')) return "United States +1";
+          return text(selected);
+        }
       }
       return (e.value || text(e)).trim();
     };
@@ -580,7 +641,7 @@
       return ownLabel(e) || text(e) || e.value || "";
     };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
@@ -603,8 +664,8 @@
       const wording = norm(label(e));
       if (wording.replace(/ required$/, "") === "country" || e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) {
         let box = e.parentElement;
-        for (let depth = 0; box && box !== document.body && depth < 4; depth++, box = box.parentElement) {
-          if (box.matches(".iti,.react-tel-input,.intl-tel-input") || box.querySelector('input[type="tel"]') && box.querySelectorAll("input:not([type=hidden])").length <= 2) return { phoneCountry: true };
+        for (let depth = 0; box && box !== document.body && depth < 13; depth++, box = box.parentElement) {
+          if (box.matches(".iti,.react-tel-input,.intl-tel-input,.phone-input__country,.phone-input") || box.querySelector('input[type="tel"],input[autocomplete="tel"],input[id="phone"]') && [...box.querySelectorAll("input")].filter((i) => visible(i) && i.type !== "hidden" && i.getAttribute("aria-hidden") !== "true").length <= 2) return { phoneCountry: true };
         }
       }
       if (wording === "please indicate if you belong to one of the categories above") return { includesCitizenCategory: citizenList(e) };
@@ -615,7 +676,7 @@
         return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
       const q = norm(label(e));
-      if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -630,7 +691,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/degree|gpa|grade point|overall result|field of study/.test(q)) {
+      if (/degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -654,6 +715,27 @@
       return { parentAnswer, parentQuestion, educationSchool, highestEducation };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    if (action === "prepare-education") {
+      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^add$/i.test(text(b)));
+      const education = buttons.filter((b) => {
+        for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
+          const headings = [...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
+          if (!headings.length) continue;
+          return headings.length === 1 && norm(text(headings[0])) === "education" && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
+        }
+        return false;
+      });
+      if (education.length !== 1) return false;
+      education[0].click();
+      return (async () => {
+        for (let i = 0; i < 20; i++) {
+          if (elements().some((c) => visible(c) && norm(label(c)) === "school or university")) break;
+          await new Promise((r) => setTimeout(r, 60));
+        }
+        return true;
+      })();
+    }
+    if (action === "scan-chat") return { url: location.href, fields: elements().flatMap((e, i) => isReply(e) && visible(e) ? [snapshot(e, i)] : []) };
     if (action === "scan") {
       const countries = /* @__PURE__ */ new Set(), postings = [];
       for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
@@ -672,7 +754,14 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+        try {
+          const u = new URL(frame.src, location.href);
+          return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
+        } catch {
+          return [];
+        }
+      }), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -691,9 +780,14 @@
     }
     return (async () => {
       if (location.href !== url) return { filled: 0, skipped: fields.length, changed: true };
-      const all = elements(), targets = fields.map((f) => [f, all[f.index]]);
       let filled = 0, skipped = 0;
-      for (const [f, e] of targets) {
+      for (const f of fields) {
+        const all = elements();
+        let e = all[f.index];
+        if (f.id && e?.id !== f.id) {
+          const matches = all.filter((c) => c.id === f.id);
+          e = matches.length === 1 ? matches[0] : null;
+        }
         if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !visible(e) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
@@ -724,8 +818,8 @@
           if (selectedRadio(e) === matching[0]) filled++;
           else skipped++;
         } else if (custom(e)) {
-          const boxSelector = '[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-          const optionSelector = '[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
+          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
           e.focus();
@@ -747,18 +841,23 @@
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
-          if (boxes.length === 1 && !available.some((o) => aliases3.includes(norm(text(o))))) {
+          if (boxes.length === 1 && !available.some((o) => aliases3.includes(optionKey(o)))) {
             const scroll = [boxes[0], ...boxes[0].querySelectorAll("ul,div")].find((n) => n.clientHeight > 0 && n.scrollHeight > n.clientHeight + 2);
             if (scroll) {
-              for (let i = 0; i < 45; i++) {
+              scroll.scrollTop = 0;
+              scroll.dispatchEvent(new Event("scroll"));
+              await new Promise((r) => setTimeout(r, 45));
+              available = readOptions();
+              for (let i = 0; i < 45 && !available.some((o) => aliases3.includes(optionKey(o))); i++) {
                 const top = scroll.scrollTop;
                 scroll.scrollTop += scroll.clientHeight;
                 if (scroll.scrollTop === top) break;
                 scroll.dispatchEvent(new Event("scroll"));
                 await new Promise((r) => setTimeout(r, 45));
                 available = readOptions();
-                if (available.some((o) => aliases3.includes(norm(text(o))))) break;
+                if (available.some((o) => aliases3.includes(optionKey(o)))) break;
               }
             }
           }
@@ -770,17 +869,19 @@
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
           }
-          const options = available.filter((o) => aliases3.includes(norm(text(o))));
+          const options = available.filter((o) => aliases3.includes(optionKey(o)));
+          if (f.phoneCountry && options.length > 1 && options.every((o) => optionKey(o) === "united states 1")) options.splice(1);
           if (options.length > 1 && aliases3.length > 1) {
             options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
-            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+            e.blur();
             skipped++;
             continue;
           }
-          activate(options[0]);
+          activate(options[0], true);
           let accepted = false, leafChosen = false;
           const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
           for (let attempt = 0; attempt < 10; attempt++) {
@@ -791,7 +892,7 @@
               const leaves = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o) && /^(?:(?:company|employer) )?careers? (?:web ?site|site|page)$/.test(norm(text(o))));
               if (leaves.length === 1) {
                 aliases3.push(norm(text(leaves[0])));
-                activate(leaves[0]);
+                activate(leaves[0], true);
                 leafChosen = true;
                 continue;
               }
@@ -802,11 +903,22 @@
               break;
             }
           }
+          if (boxes.some((b) => b.isConnected && visible(b))) {
+            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+            e.blur();
+          }
           if (accepted) filled++;
           else skipped++;
         } else {
           if (e.tagName === "SELECT" && ![...e.options].some((o) => o.value === f.value && !o.disabled && text(o) === f.display)) {
             skipped++;
+            continue;
+          }
+          if (isReply(e) && e.hasAttribute("contenteditable")) {
+            e.textContent = f.value;
+            e.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            if (e.isConnected && text(e) === f.value) filled++;
+            else skipped++;
             continue;
           }
           let fillValue = f.value;
@@ -827,7 +939,7 @@
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);
           e.dispatchEvent(new Event("input", { bubbles: true }));
           e.dispatchEvent(new Event("change", { bubbles: true }));
-          e.dispatchEvent(new Event("blur", { bubbles: true }));
+          if (!isReply(e)) e.dispatchEvent(new Event("blur", { bubbles: true }));
           await new Promise((r) => setTimeout(r, 120));
           if (e.isConnected && e.value === fillValue && (!e.validity || e.validity.valid)) filled++;
           else skipped++;
@@ -879,6 +991,16 @@
   var normalize = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   function suggestField(field, profile, memory = [], origin = "", context = "", portfolio = null) {
     if (!profile?.confirmed) return null;
+    if (field.type === "chat-reply") {
+      if (field.filled || field.disabled) return null;
+      const parts = field.label.split(/(?:[.!]\s+(?=[A-Z])|\n+)/);
+      const prompt = parts.at(-1).replace(/^to get started,\s*/i, "").trim();
+      if ((field.label.match(/\?/g) || []).length > 1) return null;
+      const request = normalize(prompt).replace(/^(?:(?:can|could|would) you (?:please )?|please )?(?:provide(?: (?:us|me))?(?: with)?|enter|share|tell (?:us|me)|type) (?:your )?/, "").replace(/^what (?:is|are) your /, "");
+      const contact = /* @__PURE__ */ new Map([["first and last name", "Full name"], ["full name", "Full name"], ["first name", "First name"], ["last name", "Last name"], ["email", "Email"], ["email address", "Email"], ["phone number", "Phone number"], ["mobile number", "Phone number"]]);
+      const answer = suggestField({ ...field, label: contact.get(request) || prompt, type: "text" }, profile, memory, origin, context, portfolio);
+      return answer ? { ...answer, reason: "Draft reply for your review", sourceQuestion: answer.sourceQuestion || contact.get(request) || prompt } : null;
+    }
     const label = normalize(field.label).replace(/\b(required|optional)\b/g, "").trim();
     const common = commonQuestion(label), background = backgroundAnswer(label, profile, memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context));
     const rule = answerRule(field, profile, memory, origin, context);
@@ -886,7 +1008,7 @@
     if (/^(in )?(what|which) country( region)?$/.test(label)) return null;
     if (!label || !rule && !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
-    const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
+    const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile| account)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
     const fieldAliases = {
       "location city": "city",
       "city of residence": "city",
@@ -900,7 +1022,7 @@
       "other website": "portfolio",
       "personal portfolio url": "portfolio"
     };
-    const directLabel = label.replace(/^(?:please (?:enter|provide|indicate) (?:your )?|what is your |what s your )/, "");
+    const directLabel = label.replace(/^(?:please (?:enter|provide|indicate) (?:us )?(?:your )?|what is your |what s your )/, "");
     if ((label === "country" || /^(?:country phone code|phone country(?: code)?|country calling code|dial code)$/.test(label)) && (field.phoneCountry || /phone|dial|calling/i.test(field.id + " " + field.name + " " + label))) {
       const num = String(profile.values.phone || "").replace(/\D/g, "");
       const us = /^(united states(?: of america)?|usa|us)$/.test(normalize(profile.values.country || background?.value));
@@ -955,19 +1077,28 @@
     }
     return { value, display: value, ...review };
   }
-  function formBridge2({ action = "scan", url, fields = [] } = {}) {
+  function formBridge2({ action = "scan", url, fields = [], origins = [] } = {}) {
+    if (action === "scan-chat" && !origins.includes(location.origin)) return null;
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
-    const controls = "input,select,textarea," + comboSelector + ',[role="radio"]';
-    const activate = (e) => {
+    const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
+    const activate = (e, option = false) => {
+      if (option) e.scrollIntoView?.({ block: "nearest" });
       const Mouse = typeof MouseEvent === "undefined" ? Event : MouseEvent;
       if (typeof PointerEvent !== "undefined") e.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerType: "mouse", button: 0 }));
       const down = new Mouse("mousedown", { bubbles: true, cancelable: true, button: 0 });
       e.dispatchEvent(down);
       e.dispatchEvent(new Mouse("mouseup", { bubbles: true, cancelable: true, button: 0 }));
       if (typeof PointerEvent !== "undefined") e.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerType: "mouse", button: 0 }));
+      if (option) {
+        if (e.isConnected && visible(e)) {
+          if (e.closest("a,button,input[type=submit]")) e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
+          e.click();
+        }
+        return;
+      }
       if (!down.defaultPrevented && e.isConnected && visible(e)) {
         e.addEventListener("click", (event) => event.preventDefault(), { once: true, capture: true });
         e.click();
@@ -977,7 +1108,26 @@
     const radio = (e) => e.type === "radio" || e.getAttribute("role") === "radio";
     const checkbox = (e) => e.type === "checkbox";
     const choice = (e) => radio(e) || checkbox(e);
-    const type = (e) => radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
+    const isReply = (e) => e.matches('textarea,input:not([type]),input[type="text"],[contenteditable]') && /^(?:write|type|enter|send) (?:a |your )?(?:reply|message)(?: here)?[. …]*$/i.test((e.placeholder || e.getAttribute("data-placeholder") || e.getAttribute("aria-placeholder") || e.getAttribute("aria-label") || "").trim());
+    const chatQuestion = (e) => {
+      const messages = '.ol-text-message,[data-message-id],[data-author],[data-sender],[role="log"] > *,[class*="message-bubble"],[class*="message__text"],[class*="message-text"],[class*="chat-message"],[class*="message-content"]';
+      for (let p = e.parentElement; p; p = p.parentElement) {
+        if ([...p.querySelectorAll(controls)].filter((c) => isReply(c) && visible(c)).length !== 1) break;
+        const rows = [...p.querySelectorAll(messages)].filter((m) => visible(m) && text(m) && !m.contains(e) && !m.matches("input,textarea") && !(m.compareDocumentPosition(e) & 2));
+        const row = rows.at(-1);
+        if (row) {
+          if (row.closest('[data-author="user"],[data-sender="user"],[data-author="candidate"],[class*="outgoing"],[class*="user-message"]')) return "";
+          return text(row).slice(-800);
+        }
+        if (/(?:olivia by paradox|job assistant|recruiting assistant)/i.test(text(p)) && (!p.matches("body,html") || /(^|\.)paradox\.ai$/.test(location.hostname))) {
+          const leaves = [...p.querySelectorAll("p,div,span")].filter((n) => !n.children.length && visible(n) && n.compareDocumentPosition(e) & 4 && text(n).length > 5 && !n.closest("button,label,footer"));
+          const last = leaves.at(-1);
+          if (last && /\?\s*$/.test(text(last))) return text(last).slice(-800);
+        }
+      }
+      return "";
+    };
+    const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
     const group = (e) => {
       const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
@@ -1013,6 +1163,7 @@
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
         if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
+        if (choice(e) && !candidates.length) candidates.push(...[...parent.querySelectorAll("div,span")].filter((h) => !h.children.length && !h.closest('label,[role="radio"]') && /\?\s*\*?$/.test(text(h))));
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -1021,6 +1172,7 @@
       return "";
     };
     const label = (e) => {
+      if (isReply(e)) return chatQuestion(e);
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
       if (fieldLabel && (!choice(e) || !fieldLabel.contains(e))) {
@@ -1034,7 +1186,22 @@
       }
       return (ownLabel(e) || (custom(e) && e.querySelector("input") ? ownLabel(e.querySelector("input")) : "") || (original(e) ? ownLabel(original(e)) : "") || nearbyLabel(e) || e.placeholder || "").trim().slice(0, 800);
     };
-    const elements = () => [...document.querySelectorAll(controls)].filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+    let shadowEditors = null;
+    const elements = () => {
+      const list = [...document.querySelectorAll(controls)];
+      const shadowReplies = (root) => {
+        for (const host of root.querySelectorAll("*")) if (host.shadowRoot) {
+          shadowEditors.push(...[...host.shadowRoot.querySelectorAll(controls)].filter(isReply));
+          shadowReplies(host.shadowRoot);
+        }
+      };
+      if (!shadowEditors) {
+        shadowEditors = [];
+        shadowReplies(document);
+      }
+      list.push(...shadowEditors);
+      return list.filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+    };
     const selectedValue = (e) => {
       if (e.matches('[data-automation-id="searchBox"]')) {
         const holder = e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]') || e.parentElement;
@@ -1055,8 +1222,11 @@
       let parent = e;
       for (let n = 0; n < 4 && parent; n++, parent = parent.parentElement) {
         if (parent !== e && parent.querySelectorAll(comboSelector).length > 1) break;
-        const selected = parent.querySelector('[class*="singleValue"],[data-selected-value],.ng-value-label,.select2-selection__rendered,.mat-select-value-text,.ui-select-match-text');
-        if (selected) return text(selected);
+        const selected = parent.querySelector('[class*="singleValue"],[class*="__single-value"],[data-selected-value],.ng-value-label,.select2-selection__rendered,.mat-select-value-text,.ui-select-match-text');
+        if (selected) {
+          if (text(selected) === "+1" && selected.querySelector('.iti__us,[data-country-code="us"]')) return "United States +1";
+          return text(selected);
+        }
       }
       return (e.value || text(e)).trim();
     };
@@ -1074,7 +1244,7 @@
       return ownLabel(e) || text(e) || e.value || "";
     };
     const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
-    const empty = (e) => choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
+    const empty = (e) => isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
     const citizenList = (e) => {
@@ -1097,8 +1267,8 @@
       const wording = norm(label(e));
       if (wording.replace(/ required$/, "") === "country" || e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) {
         let box = e.parentElement;
-        for (let depth = 0; box && box !== document.body && depth < 4; depth++, box = box.parentElement) {
-          if (box.matches(".iti,.react-tel-input,.intl-tel-input") || box.querySelector('input[type="tel"]') && box.querySelectorAll("input:not([type=hidden])").length <= 2) return { phoneCountry: true };
+        for (let depth = 0; box && box !== document.body && depth < 13; depth++, box = box.parentElement) {
+          if (box.matches(".iti,.react-tel-input,.intl-tel-input,.phone-input__country,.phone-input") || box.querySelector('input[type="tel"],input[autocomplete="tel"],input[id="phone"]') && [...box.querySelectorAll("input")].filter((i) => visible(i) && i.type !== "hidden" && i.getAttribute("aria-hidden") !== "true").length <= 2) return { phoneCountry: true };
         }
       }
       if (wording === "please indicate if you belong to one of the categories above") return { includesCitizenCategory: citizenList(e) };
@@ -1109,7 +1279,7 @@
         return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
       const q = norm(label(e));
-      if (!/degree|gpa|grade point|overall result|field of study|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -1124,7 +1294,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/degree|gpa|grade point|overall result|field of study/.test(q)) {
+      if (/degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -1148,6 +1318,27 @@
       return { parentAnswer, parentQuestion, educationSchool, highestEducation };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    if (action === "prepare-education") {
+      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^add$/i.test(text(b)));
+      const education = buttons.filter((b) => {
+        for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
+          const headings = [...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
+          if (!headings.length) continue;
+          return headings.length === 1 && norm(text(headings[0])) === "education" && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
+        }
+        return false;
+      });
+      if (education.length !== 1) return false;
+      education[0].click();
+      return (async () => {
+        for (let i = 0; i < 20; i++) {
+          if (elements().some((c) => visible(c) && norm(label(c)) === "school or university")) break;
+          await new Promise((r) => setTimeout(r, 60));
+        }
+        return true;
+      })();
+    }
+    if (action === "scan-chat") return { url: location.href, fields: elements().flatMap((e, i) => isReply(e) && visible(e) ? [snapshot(e, i)] : []) };
     if (action === "scan") {
       const countries = /* @__PURE__ */ new Set(), postings = [];
       for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
@@ -1166,7 +1357,14 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+        try {
+          const u = new URL(frame.src, location.href);
+          return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
+        } catch {
+          return [];
+        }
+      }), hasPasswordField: !!document.querySelector("input[type=password i]"), embeddedForms: document.querySelectorAll("iframe").length };
     }
     if (action === "remember") {
       const blocked = /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/i;
@@ -1185,9 +1383,14 @@
     }
     return (async () => {
       if (location.href !== url) return { filled: 0, skipped: fields.length, changed: true };
-      const all = elements(), targets = fields.map((f) => [f, all[f.index]]);
       let filled = 0, skipped = 0;
-      for (const [f, e] of targets) {
+      for (const f of fields) {
+        const all = elements();
+        let e = all[f.index];
+        if (f.id && e?.id !== f.id) {
+          const matches = all.filter((c) => c.id === f.id);
+          e = matches.length === 1 ? matches[0] : null;
+        }
         if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !visible(e) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
@@ -1218,8 +1421,8 @@
           if (selectedRadio(e) === matching[0]) filled++;
           else skipped++;
         } else if (custom(e)) {
-          const boxSelector = '[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-          const optionSelector = '[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
+          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
           e.focus();
@@ -1241,18 +1444,23 @@
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
-          if (boxes.length === 1 && !available.some((o) => aliases3.includes(norm(text(o))))) {
+          if (boxes.length === 1 && !available.some((o) => aliases3.includes(optionKey(o)))) {
             const scroll = [boxes[0], ...boxes[0].querySelectorAll("ul,div")].find((n) => n.clientHeight > 0 && n.scrollHeight > n.clientHeight + 2);
             if (scroll) {
-              for (let i = 0; i < 45; i++) {
+              scroll.scrollTop = 0;
+              scroll.dispatchEvent(new Event("scroll"));
+              await new Promise((r) => setTimeout(r, 45));
+              available = readOptions();
+              for (let i = 0; i < 45 && !available.some((o) => aliases3.includes(optionKey(o))); i++) {
                 const top = scroll.scrollTop;
                 scroll.scrollTop += scroll.clientHeight;
                 if (scroll.scrollTop === top) break;
                 scroll.dispatchEvent(new Event("scroll"));
                 await new Promise((r) => setTimeout(r, 45));
                 available = readOptions();
-                if (available.some((o) => aliases3.includes(norm(text(o))))) break;
+                if (available.some((o) => aliases3.includes(optionKey(o)))) break;
               }
             }
           }
@@ -1264,17 +1472,19 @@
             const careerSites = available.map((o) => norm(text(o))).filter((v) => /\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
             if (careerSites.length === 1) aliases3.push(careerSites[0]);
           }
-          const options = available.filter((o) => aliases3.includes(norm(text(o))));
+          const options = available.filter((o) => aliases3.includes(optionKey(o)));
+          if (f.phoneCountry && options.length > 1 && options.every((o) => optionKey(o) === "united states 1")) options.splice(1);
           if (options.length > 1 && aliases3.length > 1) {
             options.sort((a, b) => aliases3.indexOf(norm(text(a))) - aliases3.indexOf(norm(text(b))));
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
-            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+            e.blur();
             skipped++;
             continue;
           }
-          activate(options[0]);
+          activate(options[0], true);
           let accepted = false, leafChosen = false;
           const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
           for (let attempt = 0; attempt < 10; attempt++) {
@@ -1285,7 +1495,7 @@
               const leaves = [...new Set(lists.flatMap((b) => [...b.querySelectorAll(optionSelector)]))].filter((o) => visible(o) && !disabled(o) && /^(?:(?:company|employer) )?careers? (?:web ?site|site|page)$/.test(norm(text(o))));
               if (leaves.length === 1) {
                 aliases3.push(norm(text(leaves[0])));
-                activate(leaves[0]);
+                activate(leaves[0], true);
                 leafChosen = true;
                 continue;
               }
@@ -1296,11 +1506,22 @@
               break;
             }
           }
+          if (boxes.some((b) => b.isConnected && visible(b))) {
+            e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+            e.blur();
+          }
           if (accepted) filled++;
           else skipped++;
         } else {
           if (e.tagName === "SELECT" && ![...e.options].some((o) => o.value === f.value && !o.disabled && text(o) === f.display)) {
             skipped++;
+            continue;
+          }
+          if (isReply(e) && e.hasAttribute("contenteditable")) {
+            e.textContent = f.value;
+            e.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            if (e.isConnected && text(e) === f.value) filled++;
+            else skipped++;
             continue;
           }
           let fillValue = f.value;
@@ -1321,7 +1542,7 @@
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);
           e.dispatchEvent(new Event("input", { bubbles: true }));
           e.dispatchEvent(new Event("change", { bubbles: true }));
-          e.dispatchEvent(new Event("blur", { bubbles: true }));
+          if (!isReply(e)) e.dispatchEvent(new Event("blur", { bubbles: true }));
           await new Promise((r) => setTimeout(r, 120));
           if (e.isConnected && e.value === fillValue && (!e.validity || e.validity.valid)) filled++;
           else skipped++;
@@ -1703,7 +1924,10 @@
         status.textContent = review.fields.length ? `${review.fields.length} suggested answers. Review and uncheck any you don\u2019t want to fill.` : "Open the employer\u2019s application form or sign in. Supported empty fields will appear here.";
         if (found.embeddedForms) status.textContent += " Embedded forms may need opening directly and scanning with the extension button.";
       }
-      scan.onclick = () => scanNow();
+      scan.onclick = async () => {
+        if (entry?.profile.values.school) await formBridge2({ action: "prepare-education" });
+        scanNow();
+      };
       fill.onclick = async () => {
         if (filling) return;
         if (!review || Date.now() - review.createdAt > 12e4) {

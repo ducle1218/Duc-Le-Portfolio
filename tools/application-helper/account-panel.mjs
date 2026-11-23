@@ -4,6 +4,7 @@ import {employerAccountForm} from './account-form.mjs';
 function accountScope(url,employer){
  const parts=url.pathname.split('/').filter(Boolean);
  if(/\.(?:myworkdayjobs\.com|eightfold\.ai|icims\.com)$/.test(url.hostname))return url.hostname;
+ if(url.hostname.endsWith('.taleo.net')&&parts[0]==='careersection'&&parts[1])return 'careersection/'+parts[1];
  if(url.hostname.endsWith('.myworkdaysite.com')&&parts[0]==='recruiting'&&parts[1])return 'recruiting/'+parts[1];
  if(/^(?:jobs\.lever\.co|jobs\.ashbyhq\.com|job-boards\.greenhouse\.io)$/.test(url.hostname)&&parts[0])return 'tenant/'+parts[0];
  return employer.toLowerCase();
@@ -54,6 +55,22 @@ export function setupAccounts(getEmail,getEmployer){
     signup:registration,min:scan.result.min,max:scan.result.max
    }));
   }catch(error){
+   if(error.code==='NO_SAVED_ACCOUNT'&&automatic&&!registration&&signup===undefined&&!afterEmail){
+    const saved=(await chrome.storage.local.get('employerSites')).employerSites||[];
+    if(saved.some(row=>row.origin===url.origin&&row.email===email.toLowerCase()&&row.scope===accountScope(url,employer)))return 'This profile lists an existing account here. Sign in with its saved password.';
+    const [opened]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,openRegistration:true}]});
+    if(opened?.result?.opened){
+     for(let i=0;i<15;i++){
+      await new Promise(r=>setTimeout(r,350));
+      const [current]=await chrome.tabs.query({active:true,currentWindow:true});
+      if(current?.id!==tab.id||!current.url||new URL(current.url).origin!==url.origin)break;
+      if(current.status==='loading')continue;
+      const next=await useAccount(current,true,true);
+      if(next)return next;
+     }
+     return 'Opened registration. Complete the next step on the employer website.';
+    }
+   }
    if(error.code==='LEGACY_VAULT'){panel.open=true;el('legacy-unlock').hidden=false;el('account-passphrase').focus();}
    throw error;
   }finally{el('account-passphrase').value='';}

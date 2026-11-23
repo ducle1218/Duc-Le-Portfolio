@@ -85,3 +85,8 @@ button.textContent='Reset password';assert.equal(employerAccountForm(auto),null)
 button.textContent='Submit application';assert.equal(employerAccountForm(auto),null);
 assert.equal(registrations,3);
 console.log('PASS: automatic account recognition, generated shared password, remembered key, repeat sign-in and existing vault migration.');
+const {savedEmployerSites}=await import('../tools/application-helper/account-vault.mjs');
+const sites=await savedEmployerSites(chrome.storage.local,keys);
+assert.equal(sites.length,2);
+assert(sites.every(row=>Object.keys(row).sort().join(',')==='email,origin,scope'));
+assert(!JSON.stringify(sites).includes(shared));

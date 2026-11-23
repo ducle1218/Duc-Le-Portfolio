@@ -32,8 +32,7 @@ const fileOptions={id:'duc-profile',startIn:'downloads',types:[{description:'App
 function showEditor(ready){
  $('profile-form').hidden=!ready;
  $('use-device-draft').hidden=ready;
- $('download-profile').disabled=$('export-profile').disabled=!ready;
- if(!ready)$('profile-origin').textContent='Open Duc_Application_Profile.json from Downloads to load your private answers.';
+ if(!ready)$('profile-origin').textContent='Download your saved profile from Studio or open an existing file.';
 }
 
 function editorSnapshot(){
@@ -49,9 +48,9 @@ function revealAnswer(row,selector='.answer-value'){
 }
 function answerStatus(text){$('answer-action-status').textContent=text;}
 const exportStatus=text=>{$('profile-download-status').textContent=text;};
-async function downloadProfile(confirmed){
+async function downloadProfile(confirmed,saveInPlace){
  const content=JSON.stringify({format:'duc-application-profile-v1',exportedAt:new Date().toISOString(),profile:confirmed},null,2);
- if(fileHandle||typeof globalThis.showSaveFilePicker==='function'){
+ if(saveInPlace&&(fileHandle||typeof globalThis.showSaveFilePicker==='function')){
   const handle=fileHandle||await globalThis.showSaveFilePicker({...fileOptions,suggestedName:profileName});
   if(fileHandle&&(await (await handle.getFile()).text())!==fileContents)throw Error('This file was edited outside Studio. Reopen it before saving.');
   const writer=await handle.createWritable();
@@ -60,7 +59,7 @@ async function downloadProfile(confirmed){
  }
  const url=URL.createObjectURL(new Blob([content],{type:'application/json'}));
  const link=node('a');link.href=url;link.download='Duc_Application_Profile.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
- exportStatus('Downloaded Duc_Application_Profile.json · ready to import in the helper.');
+ exportStatus('Downloaded '+profileName+' · '+confirmed.answers.length+' answers.');
 }
 function readProfile(){
  const rows=[...$('reusable-answers').children],incomplete=rows.find(row=>!row.querySelector('.answer-question').value.trim()||!row.querySelector('.answer-value').value.trim());
@@ -121,10 +120,30 @@ $('add-common-question').onclick=()=>{
  if(existing){revealAnswer(existing);answerStatus('This question is already saved. Its answer is ready to edit.');return;}
  const row=addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();revealAnswer(row);answerStatus('Added '+question+'. Enter your answer below.');
 };
-async function exportDraft(){if(savingFile)return;savingFile=true;try{
+async function exportDraft(saveInPlace=false){if(savingFile)return;savingFile=true;try{
  if(!workingLocally&&!verifiedHere)throw Error('This device has an older profile. Reload your updated helper or open your private profile JSON to restore your saved answers.');
- const reviewed=readProfile();await downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){if(error.name!=='AbortError'){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}finally{savingFile=false;}}
-$('export-profile').onclick=$('download-profile').onclick=exportDraft;
+ const reviewed=readProfile();await downloadProfile(reviewed,saveInPlace);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · '+reviewed.answers.length+' answers';}catch(error){if(error.name!=='AbortError'){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}finally{savingFile=false;}}
+let downloadAfterUnlock=false;
+async function downloadFromStudio(){
+ if(verifiedHere||workingLocally)return exportDraft();
+ if(connected()){
+  try{
+   const {profile:saved}=await cloudRequest('/application-profile');
+   if(!saved)throw Error('No profile has been saved online yet.');
+   applySavedProfile(saved);
+   await exportDraft();
+  }catch(error){exportStatus(error.message);}
+  return;
+ }
+ downloadAfterUnlock=true;
+ const instruction='Enter your owner key and choose Enable owner controls to download your saved profile.';
+ exportStatus(instruction);
+ const library=$('cloud-library');library.open=true;
+ library.scrollIntoView?.({behavior:'smooth',block:'center'});
+ $('cloud-key').focus();
+ $('cloud-status').textContent=instruction;
+}
+$('export-profile').onclick=$('download-profile').onclick=downloadFromStudio;
 async function openFile(file,handle=null,restoring=false){
  if(!file)return;
  if(file.size>2000000)throw Error('Choose an exported Application Studio profile JSON.');
@@ -132,7 +151,7 @@ async function openFile(file,handle=null,restoring=false){
  if(data.format!=='duc-application-profile-v1')throw Error('Choose an exported Application Studio profile JSON.');
  const saved=cleanProfile(data.profile);fileHandle=handle;fileContents=handle?content:null;
  if(restoring){applySavedProfile(saved);return;}
- fileSelection++;verifiedHere=true;profile=saved;fillProfile();baseline=editorSnapshot();workingLocally=true;saveDraft();showEditor(true);await linkedFile(handle).catch(()=>{});
+ downloadAfterUnlock=false;fileSelection++;verifiedHere=true;profile=saved;fillProfile();baseline=editorSnapshot();workingLocally=true;saveDraft();showEditor(true);await linkedFile(handle).catch(()=>{});
  $('application-profile').open=true;exportStatus('Opened '+profile.answers.length+' answers from '+(file.name||profileName)+'.');
  $('draft-status').textContent='File loaded. Save your profile file after editing.';
 }
@@ -144,11 +163,11 @@ $('open-profile').onclick=async()=>{
 $('profile-file').onchange=async()=>{
  const input=$('profile-file');try{await openFile(input.files[0]);}catch(error){exportStatus(error.message);}finally{input.value='';}
 };
-$('use-device-draft').onclick=()=>{workingLocally=true;showEditor(true);saveDraft();$('profile-origin').textContent='Local draft · '+editorSnapshot().answers.length+' answers';};
+$('use-device-draft').onclick=()=>{downloadAfterUnlock=false;workingLocally=true;showEditor(true);saveDraft();$('profile-origin').textContent='Local draft · '+editorSnapshot().answers.length+' answers';};
 $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();});$('profile-form').addEventListener('change',()=>{profileEdited=true;saveDraft();});
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
 $('add-answer').addEventListener('click',()=>{profileEdited=true;});
-$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){return exportDraft();}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;verifiedHere=true;fillProfile();showEditor(true);baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
+$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){return exportDraft(true);}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;verifiedHere=true;fillProfile();showEditor(true);baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
 const draftKey='duc-application-draft-v1',bankKey='duc-imported-answers-v1';let legacyNeedsSync=false,hasDraft=false,answerBank=[],needsStarterMigration=true,needsEducationMigration=true;
 function saveDraft(){try{const draft={localProfileVersion:legacyNeedsSync&&!baseline?0:1,starterAnswersVersion:1,educationAnswersVersion:1,workingLocally,verifiedHere,baseline,helperSnapshotRevision,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
 try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;verifiedHere=draft.verifiedHere===true;workingLocally=draft.workingLocally===true;helperSnapshotRevision=draft.helperSnapshotRevision||null;legacyNeedsSync=!baseline&&draft.localProfileVersion!==1;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
@@ -161,7 +180,7 @@ if(hasDraft){
  exportStatus(legacyNeedsSync?'Older device copy · reconnect your helper or open your saved profile before downloading.':initialEditor.answers.length+' answers ready.');
 }
 showEditor(verifiedHere||workingLocally);
-if(!verifiedHere&&!workingLocally)exportStatus('Private profile not loaded. Choose Open from Downloads or unlock owner access.');
+if(!verifiedHere&&!workingLocally)exportStatus('Choose Download profile for your private online copy, or open a file you already have.');
 // Chrome can reopen a chosen file while its read permission remains granted.
 async function restoreLinkedFile(){
  const selection=fileSelection;
@@ -203,7 +222,12 @@ $('export-answer-bank').onclick=()=>{const url=URL.createObjectURL(new Blob([JSO
 function renderHistory(){const container=$('application-history');container.replaceChildren();$('application-count').textContent=connected()?applications.length+' saved applications':'Owner access required';if(!applications.length)container.append(node('p','Choose “Prepare application” beside a job to start. Save drafts here to find them again on your phone.','hint'));
  for(const app of applications){const row=node('div',undefined,'application-history-row'),text=node('div');text.append(node('strong',app.title),node('p',app.company+' · '+app.status+' · '+new Date(app.updatedAt).toLocaleDateString(),'hint'));const open=node('button','Continue ↗','quiet');open.onclick=()=>openApplication(app);row.append(text,open);container.append(row);}}
 async function refresh(){if(!connected()){profile=null;applications=[];if(!hasDraft)fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);applications=a.applications;if(p.profile&&!fileHandle)applySavedProfile(p.profile);renderHistory();message('Private application workspace connected.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);}}
-document.addEventListener('application-auth',refresh);
+document.addEventListener('application-auth',async()=>{
+ const requested=downloadAfterUnlock;
+ downloadAfterUnlock=false;
+ await refresh();
+ if(requested)await downloadFromStudio();
+});
 $('refresh-applications').onclick=()=>{if(needOwner())refresh();};
 $('edit-profile').onclick=()=>{$('application-profile').open=!$('application-profile').open;if($('application-profile').open)($('profile-form').hidden?$('open-profile'):$('app-firstName')).focus();};
 document.addEventListener('prepare-application',e=>openApplication(e.detail));renderHistory();

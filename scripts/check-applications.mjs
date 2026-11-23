@@ -48,7 +48,7 @@ assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Known c
 const byId=id=>ui.document.getElementById(id),downloads=[];
 for(const id of ['application-profile','profile-download-status'])byId(id).scrollIntoView=()=>{};
 assert(byId('profile-form').hidden,'An anonymous fresh session shows the file chooser before starter answers');
-assert(byId('download-profile').disabled);
+assert(!byId('download-profile').disabled);
 byId('use-device-draft').onclick();
 const originalCreate=URL.createObjectURL;URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test-profile';};
 byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18);byId('add-background').onclick();assert.equal(ui.document.querySelectorAll('.reusable-answer').length,18,'Background defaults do not duplicate cards');
@@ -77,8 +77,10 @@ let disk=JSON.stringify({...savedExport,profile:{...savedExport.profile,answers:
 const handle={name:'Duc_Application_Profile.json',getFile:async()=>({name:'Duc_Application_Profile.json',size:disk.length,text:async()=>disk}),createWritable:async()=>({write:async text=>{disk=text;},close:async()=>{}})};
 globalThis.showOpenFilePicker=async opts=>{assert.equal(opts.startIn,'downloads');return [handle];};
 await byId('open-profile').onclick();assert.equal(byId('reusable-answers').children.length,40);assert(!byId('profile-form').hidden);
-byId('app-firstName').value='Latest edit';await byId('download-profile').onclick();assert.equal(JSON.parse(disk).profile.values.firstName,'Latest edit');
-const changedOnDisk=disk+' ';disk=changedOnDisk;await byId('export-profile').onclick();assert.equal(disk,changedOnDisk);assert.match(byId('profile-download-status').textContent,/edited outside Studio/);
+const saveFile=()=>byId('profile-form').onsubmit({preventDefault(){},submitter:byId('download-reviewed-profile')});
+byId('app-firstName').value='Edited file';await byId('download-profile').onclick();assert.equal(JSON.parse(await downloads.at(-1).text()).profile.values.firstName,'Edited file');assert.notEqual(JSON.parse(disk).profile.values.firstName,'Edited file');
+byId('app-firstName').value='Latest edit';await saveFile();assert.equal(JSON.parse(disk).profile.values.firstName,'Latest edit');
+const changedOnDisk=disk+' ';disk=changedOnDisk;await saveFile();assert.equal(disk,changedOnDisk);assert.match(byId('profile-download-status').textContent,/edited outside Studio/);
 delete globalThis.showOpenFilePicker;
 URL.createObjectURL=originalCreate;
 
@@ -140,3 +142,23 @@ assert.equal(newRow.hidden,false);assert.equal(scrolled,newRow);assert.equal(foc
 assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,37);
 assert.equal(editor.getElementById('add-answer').type,'button');assert.equal(editor.getElementById('add-common-question').type,'button');
 console.log('PASS: real Add button clicks reveal and focus cards, duplicates open existing answers, and drafts persist without a confirmation checkbox.');
+
+// A new browser can download the owner profile without an existing JSON file.
+browserStore.clear();
+globalThis.document=dom.parseHTML(html).document;
+await setupCloud(()=>{});
+const fresh=id=>globalThis.document.getElementById(id);
+fresh('cloud-key').value='';await fresh('cloud-unlock').onclick();
+savedProfile=cleanProfile({...profile,answers:Array.from({length:40},(_,i)=>({question:'Saved question '+i,answer:'Saved answer '+i}))});
+await import('../resume/generator/applications.mjs?fresh-download');
+const directDownloads=[];
+URL.createObjectURL=blob=>{directDownloads.push(blob);return 'blob:fresh-download';};
+await fresh('download-profile').onclick();
+assert(fresh('cloud-library').open);assert.equal(directDownloads.length,0);
+fresh('cloud-key').value='test-only';await fresh('cloud-unlock').onclick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(directDownloads.length,1);
+assert.deepEqual(JSON.parse(await directDownloads[0].text()).profile.answers,savedProfile.answers);
+assert.equal(fresh('reusable-answers').children.length,40);
+URL.createObjectURL=originalCreate;
+console.log('PASS: a fresh browser downloads all 40 saved answers after owner unlock with no local file.');

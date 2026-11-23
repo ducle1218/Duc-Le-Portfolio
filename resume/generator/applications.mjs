@@ -11,7 +11,12 @@ const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.c
 let profile=null,applications=[],dialog=null,pdfURL=null;
 const targetParams=typeof location!=='undefined'?new URL(location.href).searchParams:new URLSearchParams(),targetToken=/^[a-f0-9-]{36}$/.test(targetParams.get('applicationTarget')||'')?targetParams.get('applicationTarget'):null,targetHost=targetParams.get('applicationHost')||'the open employer application';
 let helperReady=false,helperResumeReady=false,helperControlReady=false,helperUploadReady=false;
-let profileEdited=false;
+let profileEdited=false,baseline=null;
+function editorSnapshot(){
+ const values=Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value]));
+ const answers=[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value}));
+ return {values,answers};
+}
 const answerPages={page:1},bankPages={page:1};
 function showAnswerPage(last=false){const rows=[...$('reusable-answers').children];if(last)answerPages.page=Math.ceil(rows.length/10);paginateAnswers(rows,$('answer-pagination'),answerPages);}
 function revealAnswer(row,selector='.answer-value'){
@@ -56,13 +61,13 @@ function addMissingAnswers(items){
 }
 function answerIdentity(question){return (commonQuestion(question)?.question||question).trim().toLowerCase();}
 function addStarterAnswers(){return addMissingAnswers([{question:'Sex',answer:'Male'},...COMMON_QUESTIONS.filter(q=>q.defaultAnswer).map(q=>({question:q.question,answer:q.defaultAnswer}))]);}
-function fillProfile(){
- for(const [key,,seed] of PROFILE_FIELDS)$('app-'+key).value=profile?.values[key]??seed;
+function fillProfile(source=profile){
+ for(const [key,,seed] of PROFILE_FIELDS)$('app-'+key).value=source?.values[key]??seed;
  $('reusable-answers').replaceChildren();
- for(const answer of profile?.answers||[])addAnswer(answer.question,answer.answer);
- const addSex=!(profile?.answers||[]).some(a=>commonQuestion(a.question)?.question==='Sex');
- if(addSex)addAnswer('Sex','Male');if(!profile)addStarterAnswers();answerPages.page=1;showAnswerPage();profileEdited=!!profile&&addSex;
- $('profile-origin').textContent=profile?'Saved online · confirmed '+new Date(profile.confirmedAt).toLocaleDateString():'Starting values come from your published resume. Review them before using them.';
+ for(const answer of source?.answers||[])addAnswer(answer.question,answer.answer);
+ if(!source)addStarterAnswers();
+ answerPages.page=1;showAnswerPage();profileEdited=false;
+ $('profile-origin').textContent=source?'Your profile · '+source.answers.length+' answers':'Starting values come from your published resume.';
  exportStatus(profileEdited?'Your new answer is ready to edit.':profile?'Your saved profile is ready.':'Download your current answers or save them online.');
 }
 for(const [key,label] of PROFILE_FIELDS){const wrap=node('label',label),input=node('input');input.id='app-'+key;input.name=key;input.maxLength=220;input.type=key==='email'?'email':['portfolio','linkedin','github'].includes(key)?'url':'text';input.autocomplete='off';wrap.append(input);$('app-profile-fields').append(wrap);}
@@ -75,30 +80,60 @@ $('add-common-question').onclick=()=>{
  const row=addAnswer(question,question==='Sex'?'Male':commonQuestion(question)?.defaultAnswer||'');profileEdited=true;saveDraft();revealAnswer(row);answerStatus('Added '+question+'. Enter your answer below.');
 };
 function exportDraft(){try{const reviewed=readProfile();downloadProfile(reviewed);profile=reviewed;profileEdited=false;saveDraft();$('profile-origin').textContent='Current profile · downloaded to this device';}catch(error){exportStatus(error.message);answerStatus(error.message);$('application-profile').open=true;}}
-$('download-profile').onclick=exportDraft;
-$('export-profile').onclick=$('download-online-profile').onclick=async()=>{
- if(!needOwner()){exportStatus('Unlock owner access in Online library, then export your saved online profile.');return;}
- const button=$('download-online-profile');button.disabled=true;
+$('export-profile').onclick=$('download-profile').onclick=exportDraft;
+$('open-profile').onclick=()=>$('profile-file').click();
+$('profile-file').onchange=async()=>{
+ const input=$('profile-file');
  try{
-  const result=await cloudRequest('/application-profile');
-  if(!result.profile)throw new Error('No profile is saved online yet. Review your profile below and choose Save profile online.');
-  const saved={...cleanProfile(result.profile),confirmedAt:result.profile.confirmedAt};
-  downloadProfile(saved);
-  exportStatus('Downloaded your latest saved online profile. Your current browser draft was kept. Import Duc_Application_Profile.json in the helper’s Profile settings.');
- }catch(error){exportStatus(error.message);}finally{button.disabled=false;}
+  const file=input.files[0];if(!file)return;
+  if(file.size>2000000)throw Error('Choose an exported Application Studio profile JSON.');
+  const data=JSON.parse(await file.text());
+  if(data.format!=='duc-application-profile-v1')throw Error('Choose an exported Application Studio profile JSON.');
+  profile=cleanProfile(data.profile);fillProfile();baseline=editorSnapshot();saveDraft();
+  $('application-profile').open=true;
+  exportStatus('Opened '+profile.answers.length+' answers. Download profile includes these details.');
+  $('draft-status').textContent='Profile opened on this device. Save online to sync changes.';
+ }catch(error){exportStatus(error.message);}finally{input.value='';}
 };
 $('profile-form').addEventListener('input',()=>{profileEdited=true;saveDraft();});$('profile-form').addEventListener('change',()=>{profileEdited=true;saveDraft();});
 $('reusable-answers').addEventListener('click',e=>{if(e.target.closest('button'))profileEdited=true;});
 $('add-answer').addEventListener('click',()=>{profileEdited=true;});
-$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){exportDraft();return;}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;fillProfile();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
+$('profile-form').onsubmit=async e=>{e.preventDefault();if(e.submitter?.id==='download-reviewed-profile'){exportDraft();return;}if(!needOwner())return;const button=$('save-profile');button.disabled=true;try{const result=await cloudRequest('/application-profile','PUT',readProfile());profile=result.profile;fillProfile();baseline=editorSnapshot();saveDraft();message('Profile and reusable answers saved online.');answerStatus('Saved online. Your answers are ready to reuse.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);answerStatus(error.message);}finally{button.disabled=false;}};
 const draftKey='duc-application-draft-v1',bankKey='duc-imported-answers-v1';let hasDraft=false,answerBank=[],needsStarterMigration=true,needsEducationMigration=true;
-function saveDraft(){try{const draft={starterAnswersVersion:1,educationAnswersVersion:1,values:Object.fromEntries(PROFILE_FIELDS.map(([key])=>[key,$('app-'+key).value])),answers:[...$('reusable-answers').children].map(row=>({question:row.querySelector('.answer-question').value,answer:row.querySelector('.answer-value').value}))};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
-try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
+function saveDraft(){try{const draft={starterAnswersVersion:1,educationAnswersVersion:1,baseline,...editorSnapshot()};localStorage.setItem(draftKey,JSON.stringify(draft));hasDraft=true;$('draft-status').textContent='Draft saved on this device · Save online to sync across devices.';}catch{$('draft-status').textContent='Browser storage is unavailable. Save your profile online or download a backup before leaving.';}}
+try{const raw=localStorage.getItem(draftKey);if(raw){const draft=JSON.parse(raw);baseline=draft.baseline||null;needsStarterMigration=draft.starterAnswersVersion!==1;needsEducationMigration=draft.educationAnswersVersion!==1;if(!draft.values||!Array.isArray(draft.answers))throw Error();for(const [key] of PROFILE_FIELDS)if(typeof draft.values[key]==='string')$('app-'+key).value=draft.values[key].slice(0,220);$('reusable-answers').replaceChildren();for(const a of draft.answers)addAnswer(String(a.question||'').slice(0,160),String(a.answer||'').slice(0,1500));hasDraft=profileEdited=true;$('draft-status').textContent='Draft restored from this device.';}}catch{}
 if(needsStarterMigration){const added=addStarterAnswers();saveDraft();if(added||!hasDraft)$('draft-status').textContent='Background answers are ready to edit.';}
 if(needsEducationMigration){const names=['Degree being pursued','Current academic standing','Preferred work regions','College GPA','College GPA scale','High school GPA','Full-time student enrollment'];addMissingAnswers(COMMON_QUESTIONS.filter(q=>names.includes(q.question)).map(q=>({question:q.question,answer:q.defaultAnswer})));saveDraft();}
-$('background-status').textContent='Existing answers are kept when restoring or syncing.';
-function mergeOnlineAnswers(){const added=addMissingAnswers(profile?.answers||[]);if(added){profileEdited=true;saveDraft();$('draft-status').textContent=added+' saved online answers added to your cards. Existing answers and contact details were kept.';}return added;}
-$('load-online-answers').onclick=async()=>{if(!needOwner())return;const button=$('load-online-answers');button.disabled=true;try{const result=await cloudRequest('/application-profile');if(!result.profile)throw Error('No profile is saved online yet.');profile={...cleanProfile(result.profile),confirmedAt:result.profile.confirmedAt};const added=mergeOnlineAnswers();$('draft-status').textContent=added+' saved online answers added. Existing answers and contact details were kept. Review the cards below.';}catch(error){$('draft-status').textContent=error.message;}finally{button.disabled=false;}};
+$('background-status').textContent='Sync loads your private online profile and keeps edits made since your last sync.';
+const initialEditor=editorSnapshot();
+if(hasDraft){
+ $('profile-origin').textContent='On this device · '+initialEditor.answers.length+' answers';
+ exportStatus(initialEditor.answers.length+' answers ready. Open a saved profile file or unlock owner access to sync.');
+}
+// On a legacy device, migrate shared answers from the server and retain unique local questions.
+function applySavedProfile(saved){
+ const local=editorSnapshot(),old=baseline||initialEditor;
+ const values={...saved.values};
+ for(const [key] of PROFILE_FIELDS)if(local.values[key]!==old.values[key])values[key]=local.values[key];
+ const byQuestion=items=>new Map(items.map(item=>[answerIdentity(item.question),item]));
+ const prior=byQuestion(old.answers),current=byQuestion(local.answers),merged=byQuestion(saved.answers);
+ for(const id of prior.keys())if(!current.has(id))merged.delete(id);
+ for(const [id,item] of current){
+  if(!id)continue;
+  const changed=prior.get(id)?.answer!==item.answer||prior.get(id)?.question!==item.question;
+  const legacyAddition=!baseline&&!merged.has(id)&&!commonQuestion(item.question)?.defaultAnswer&&id!=='sex';
+  if(changed||legacyAddition)merged.set(id,item);
+ }
+ profile=saved;baseline={values:{...saved.values},answers:saved.answers};
+ const answers=[...merged.values(),...local.answers.filter(item=>!item.question.trim())];
+ fillProfile({values,answers});saveDraft();
+ $('draft-status').textContent=answers.length+' answers in this profile. Downloads include your edits.';
+}
+$('load-online-answers').onclick=async()=>{
+ if(!needOwner())return;const button=$('load-online-answers');button.disabled=true;
+ try{const {profile:saved}=await cloudRequest('/application-profile');if(!saved)throw Error('No profile is saved online yet.');applySavedProfile(saved);}
+ catch(error){$('draft-status').textContent=error.message;}finally{button.disabled=false;}
+};
 function saveBank(){try{localStorage.setItem(bankKey,JSON.stringify(answerBank));$('answer-import-status').textContent=answerBank.length+' imported answers saved on this browser. Add reusable answers to your profile and save online for cross-device access.';}catch{$('answer-import-status').textContent='Could not save on this browser. Export a backup before leaving.';}}
 function renderBank(){const list=$('imported-answer-list');list.replaceChildren();for(const item of answerBank){const card=node('details',undefined,'imported-answer'),summary=node('summary',item.question),scope=node('p',item.scope==='*'?'Reusable across employers':'Employer only · '+item.context,'hint'),ql=node('label','Question'),q=node('input'),al=node('label','Your saved answer'),a=node('textarea');q.value=item.question;q.maxLength=250;a.value=item.answer;a.maxLength=1500;a.rows=2;ql.append(q);al.append(a);const save=node('button','Save edit','quiet'),use=node('button','Add to my profile','quiet');save.type=use.type='button';use.disabled=item.scope!=='*';save.onclick=()=>{try{const changed=importAnswers({format:'duc-answer-memory-v1',items:[{...item,question:q.value,answer:a.value,updatedAt:new Date().toISOString()}]});if(answerBank.some(other=>other!==item&&other.id===changed.items[0].id))throw Error('That question already exists in this library.');answerBank=answerBank.map(old=>old===item?changed.items[0]:old);saveBank();renderBank();}catch(error){$('answer-import-status').textContent=error.message;}};use.onclick=()=>{if([...$('reusable-answers').children].some(row=>row.querySelector('.answer-question').value.trim().toLowerCase()===item.question.toLowerCase())){$('answer-import-status').textContent='This question is already in your profile. Edit its existing card instead.';return;}if(item.question.length>160){$('answer-import-status').textContent='Shorten this question to 160 characters before adding it to your profile.';return;}addAnswer(item.question,item.answer);profileEdited=true;showAnswerPage(true);saveDraft();$('application-profile').open=true;$('reusable-answers').lastElementChild.scrollIntoView({behavior:'smooth',block:'center'});};card.append(summary,scope,ql,al,save,use);list.append(card);}paginateAnswers([...list.children],$('bank-pagination'),bankPages);}
 try{const stored=localStorage.getItem(bankKey);if(stored)answerBank=importAnswers({format:'duc-answer-memory-v1',items:JSON.parse(stored)}).items;}catch{}renderBank();
@@ -106,7 +141,7 @@ $('answer-import-file').onchange=async()=>{try{const file=$('answer-import-file'
 $('export-answer-bank').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({format:'duc-answer-memory-v1',items:answerBank},null,2)],{type:'application/json'})),a=node('a');a.href=url;a.download='Application-Answers-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
 function renderHistory(){const container=$('application-history');container.replaceChildren();$('application-count').textContent=connected()?applications.length+' saved applications':'Owner access required';if(!applications.length)container.append(node('p','Choose “Prepare application” beside a job to start. Save drafts here to find them again on your phone.','hint'));
  for(const app of applications){const row=node('div',undefined,'application-history-row'),text=node('div');text.append(node('strong',app.title),node('p',app.company+' · '+app.status+' · '+new Date(app.updatedAt).toLocaleDateString(),'hint'));const open=node('button','Continue ↗','quiet');open.onclick=()=>openApplication(app);row.append(text,open);container.append(row);}}
-async function refresh(){if(!connected()){profile=null;applications=[];if(!hasDraft)fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);profile=p.profile;applications=a.applications;if(!hasDraft)fillProfile();else{profileEdited=true;mergeOnlineAnswers();}renderHistory();message('Private application workspace connected.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);}}
+async function refresh(){if(!connected()){profile=null;applications=[];if(!hasDraft)fillProfile();renderHistory();return;}try{const [p,a]=await Promise.all([cloudRequest('/application-profile'),cloudRequest('/applications')]);profile=p.profile;applications=a.applications;if(profile)applySavedProfile(profile);renderHistory();message('Private application workspace connected.');if(typeof window!=='undefined')await detectHelper();}catch(error){message(error.message);}}
 document.addEventListener('application-auth',refresh);
 $('refresh-applications').onclick=()=>{if(needOwner())refresh();};
 $('edit-profile').onclick=()=>{$('application-profile').open=!$('application-profile').open;if($('application-profile').open)$('app-firstName').focus();};

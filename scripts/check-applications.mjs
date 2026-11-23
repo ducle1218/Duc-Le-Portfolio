@@ -39,7 +39,7 @@ const filled=await fillForm({url:scan.url,fields});assert.deepEqual(filled,{fill
 location.href='https://employer.example/new';assert.equal((await fillForm({url:scan.url,fields})).changed,true);
 // Exercise real profile UI handlers against an isolated in-memory cloud response.
 const ui=dom.parseHTML(html);globalThis.document=ui.document;globalThis.Event=ui.window.Event;
-let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[]});
+let savedProfile=cleanProfile({confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[{question:'Sex',answer:'Male'}]});
 globalThis.fetch=async(input,options={})=>{const path=String(input);if(path==='./cloud-config.json')return Response.json({endpoint:'https://test.workers.dev'});if(path.endsWith('/application-profile')){if(options.method==='PUT')savedProfile=cleanProfile(JSON.parse(options.body));return Response.json({profile:savedProfile});}if(path.endsWith('/applications'))return Response.json({applications:[]});if(path.endsWith('/jobs'))return Response.json({jobs:[],searchEnabled:false});if(path.endsWith('/automation'))return Response.json({enabled:true});throw new Error('Unexpected test request');};
 const browserStore=new Map();globalThis.localStorage={getItem:key=>browserStore.get(key)||null,setItem:(key,value)=>browserStore.set(key,value)};
 await import('../resume/generator/applications.mjs');
@@ -59,15 +59,16 @@ ui.document.getElementById('add-answer').onclick();ui.document.querySelector('.r
 await ui.document.getElementById('profile-form').onsubmit({preventDefault(){}});assert.equal(savedProfile.answers.find(a=>a.question==='When can you start?').answer,'June 1, 2027');assert.equal(savedProfile.answers.find(a=>a.question==='Sex').answer,'Male');assert.match(ui.document.getElementById('application-status').textContent,/saved online/);
 byId('download-profile').onclick();assert.equal(downloads.length,2,'Confirmed cloud profile downloads in one click');
 byId('app-firstName').value='Latest edit';byId('app-firstName').dispatchEvent(new ui.window.Event('input',{bubbles:true}));byId('download-profile').onclick();assert.equal(downloads.length,3,'Download uses the latest draft in one click');assert.equal(JSON.parse(await downloads[2].text()).profile.values.firstName,'Latest edit');
-const countBeforeOnline=downloads.length;
-savedProfile={...savedProfile,values:{...savedProfile.values,firstName:'Latest online'}};
-await byId('download-online-profile').onclick();
-assert.equal(downloads.length,countBeforeOnline+1);
-assert.equal(JSON.parse(await downloads.at(-1).text()).profile.values.firstName,'Latest online','Online export fetches fresh server data, not a stale draft');
-assert.equal(byId('app-firstName').value,'Latest edit','Online export does not overwrite the local draft');
-assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).values.firstName,'Latest edit');
-const savedBeforeMissing=savedProfile;savedProfile=null;
-await byId('download-online-profile').onclick();assert.equal(downloads.length,countBeforeOnline+1,'Missing online profile must not export a fallback');assert.match(byId('profile-download-status').textContent,/No profile is saved online/);savedProfile=savedBeforeMissing;
+await byId('export-profile').onclick();
+assert.deepEqual(JSON.parse(await downloads.at(-1).text()).profile.answers,JSON.parse(await downloads[2].text()).profile.answers);
+assert.equal(JSON.parse(await downloads.at(-1).text()).profile.values.firstName,'Latest edit');
+assert.equal(byId('download-online-profile'),null);
+const savedExport={format:'duc-application-profile-v1',profile:{...savedProfile,answers:Array.from({length:39},(_,i)=>({question:'Question '+i,answer:'Answer '+i}))}};
+byId('profile-file').files=[{size:9000,text:async()=>JSON.stringify(savedExport)}];await byId('profile-file').onchange();
+assert.equal(byId('reusable-answers').children.length,39);
+assert.match(byId('answer-pagination').textContent,/Page 1 of 4/);
+byId('app-firstName').value='Latest edit';byId('export-profile').onclick();
+assert.deepEqual(JSON.parse(await downloads.at(-1).text()).profile.answers,savedExport.profile.answers);
 URL.createObjectURL=originalCreate;
 
 console.log('PASS: confirmed profile, safe import/links, aliases, minimal extension permissions, exact field suggestions, unchanged private questions, preserved edits and no submission.');
@@ -88,10 +89,10 @@ assert.equal(legacy.document.getElementById('app-firstName').value,'My edited na
 assert.equal(legacy.document.getElementById('profile-confirm'),null);
 savedProfile=cleanProfile({confirmed:true,values:{firstName:'Online',lastName:'Applicant'},answers:[{question:'Are you 18 years or older?',answer:'Yes'},{question:'Sex',answer:'Different saved value'}]});
 await legacy.document.getElementById('load-online-answers').onclick();
-assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,19);
-assert.equal(legacy.document.querySelector('.answer-value').value,'Male','Existing answer wins over conflicting online value');
-assert.equal(legacy.document.getElementById('app-firstName').value,'My edited name');
-assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,19);
+assert.equal(legacy.document.querySelectorAll('.reusable-answer').length,2);
+assert.equal(legacy.document.querySelectorAll('.answer-value')[1].value,'Different saved value','Saved answer replaces stale starter');
+assert.equal(legacy.document.getElementById('app-firstName').value,'Online');
+assert.equal(JSON.parse(browserStore.get('duc-application-draft-v1')).answers.length,2);
 // Once migrated, intentionally removed defaults stay removed after reload.
 browserStore.set('duc-application-draft-v1',JSON.stringify({starterAnswersVersion:1,educationAnswersVersion:1,values:{firstName:'Edited',lastName:'Applicant'},answers:[]}));
 const removed=dom.parseHTML(html);globalThis.document=removed.document;await import('../resume/generator/applications.mjs?removed-prefill');

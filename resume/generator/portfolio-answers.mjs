@@ -32,6 +32,15 @@ export function portfolioAnswer(field,knowledge){
  if(/\b(not|never|without|lack|professional|professionally|commercial|industry|industrial|paid|employed|employment|years|months|year|month|expert|expertise|proficient|advanced|certified|certification|license|licensed|citizen|citizenship|visa|sponsor|authorized|authorization|gpa|salary|gender|race|ethnicity|disability|veteran|birth|age|agree|certify|completed|successful|successfully|production|productionized|fluent|fully|functional|deployed|operational|independently|alone|sole)\b/.test(q)||/\d/.test(q.replace(/3d/g,'')))return null;
  const answer=(value,sources,reason='Draft from documented portfolio evidence')=>sources.length&&(!field.maxLength||field.maxLength<0||value.length<=field.maxLength)?{value,display:value,requiresReview:true,reason,sourceQuestion:'Portfolio · '+knowledge.reviewedOn,sources:uniqueSources(sources),portfolioDerived:true}:null;
  const allSkills=new Map();
+ if(/^(summary|professional summary|cover letter)( required)?$/.test(q)){
+  const project=knowledge.projects.find(p=>p.claims.length);
+  if(!project)return null;
+  const claim=project.claims[0];
+  const intro='I am studying mechanical engineering at Rutgers University.';
+  const experience='My project experience includes '+project.title+'. '+claim.text;
+  const draft=q.startsWith('cover letter')?'Dear Hiring Team,\n\n'+intro+' I am applying for your internship. '+experience+'\n\nThank you for considering my application.':intro+' '+experience;
+  return answer(draft,[...knowledge.educationSources,...claim.sources],'Portfolio draft for your review');
+ }
  for(const s of knowledge.skills)allSkills.set(s.key,{...s,project:false});
  for(const p of knowledge.projects)for(const t of p.tools){const previous=allSkills.get(t.key);allSkills.set(t.key,{...t,project:true,sources:uniqueSources([...(previous?.sources||[]),...t.sources])});}
  // CAD is a broader skill supported by actual use of a CAD tool.

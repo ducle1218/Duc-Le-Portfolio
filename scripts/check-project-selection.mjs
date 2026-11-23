@@ -22,7 +22,7 @@ assert.equal(selectProjects(library,'unrelated hospital nursing')[0].id,'box-11'
 const tallest=[...library.projects].sort((a,b)=>b.height-a.height).slice(0,5);
 const denseSlots=projectSlots(tallest),footerRect=projectFooterRect(denseSlots);
 assert(footerRect[1]<=573 && footerRect[3]<=738,'Every five-project combination must fit above the original page bottom');
-for(let i=1;i<denseSlots.length;i++)assert.equal(denseSlots[i].rect[1]-denseSlots[i-1].rect[3],12,'Project spacing must follow content height');
+for(let i=1;i<denseSlots.length;i++)assert.equal(denseSlots[i].rect[1],denseSlots[i-1].rect[3],'The cropped blocks already include the original paragraph spacing');
 assert(projectSlots(library.projects.filter(p=>p.id==='box-3'))[0].rect[3]-223<57,'Short entries must not retain a full-height empty slot');
 const require=createRequire(import.meta.url),{PDFDocument}=require('../resume/generator/pdf-lib.min.js');
 await mkdir(new URL('../../tmp/web-resume/',import.meta.url),{recursive:true});

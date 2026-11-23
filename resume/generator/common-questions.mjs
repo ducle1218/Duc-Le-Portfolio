@@ -1,6 +1,9 @@
 // Explicitly confirmed answers only. Different age thresholds and sponsorship
 // timeframes intentionally remain separate questions.
 export const COMMON_QUESTIONS=[
+ {question:'Valid driver’s license',aliases:['valid driver s license','do you possess a valid driver s license','do you have a valid drivers license','do you have a valid driver s license'],options:['Yes','No'],review:true},
+ {question:'Reliable transportation to project sites and offices',aliases:['reliable transportation to project sites and offices','do you have reliable transportation to project sites and office locations'],options:['Yes','No'],review:true},
+ {question:'Compensation expectations',aliases:['compensation expectations','compensation expectations you may provide a range','what are your compensation expectations','what are your salary expectations'],review:true},
  {question:'Street address',aliases:['address','address line','address line 1','street address','street address line 1','address 1']},
  {question:'Degree being pursued',aliases:['degree being pursued','current degree program','what degree are you pursuing'],defaultAnswer:'Bachelor of Science in Mechanical Engineering'},
  {question:'Current academic standing',aliases:['current academic standing','academic standing','class standing','current year of study','please indicate your current academic standing select one'],defaultAnswer:'Freshman'},
@@ -38,6 +41,7 @@ export const COMMON_QUESTIONS=[
 export const questionKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(required|optional)\b/g,'').replace(/\s+/g,' ').trim();
 export const commonQuestion=q=>{
  const key=questionKey(q);
+ if(key==='will you now or will you in the future require employment visa sponsorship')return COMMON_QUESTIONS.find(item=>item.question.startsWith('Will you now or in the future require sponsorship'));
  if(/^do you have the legal right to work in the u s(?: note .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Are you legally authorized to work in the United States?');
  if(/^will you now or in the future require sponsorship of a temporary work visa(?: e g .*)?$/.test(key))return COMMON_QUESTIONS.find(item=>item.question==='Will you now or in the future require sponsorship for employment visa status?');
  return COMMON_QUESTIONS.find(item=>item.aliases.includes(key));

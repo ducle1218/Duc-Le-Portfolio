@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
-  "sha256": "6083249d85e0980ff18adef3ed951ccd28eba1ce7b9d848812a966facdf5ae42",
+  "version": "1.9.2",
+  "sha256": "cc5be13091bf90dca848b7e9af01e3ba054ea65702de582516133bfe8c4ab869",
   "files": [
     "manifest.json",
     "popup.html",

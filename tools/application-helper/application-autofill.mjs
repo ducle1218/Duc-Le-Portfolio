@@ -1,7 +1,7 @@
-import {memoryMatch} from './answer-memory.mjs?v=20261115.13';
-import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261115.13';
-import {answerRule} from './answer-rules.mjs?v=20261115.13';
-import {portfolioAnswer} from './portfolio-answers.mjs?v=20261115.13';
+import {memoryMatch} from './answer-memory.mjs?v=20261123.1';
+import {commonQuestion,backgroundAnswer} from './common-questions.mjs?v=20261123.1';
+import {answerRule} from './answer-rules.mjs?v=20261123.1';
+import {portfolioAnswer} from './portfolio-answers.mjs?v=20261123.1';
 const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
  if(!profile?.confirmed)return null;
@@ -12,7 +12,16 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  if(!label||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
  if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||field.filled||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|school or university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
- const key=Object.keys(patterns).find(k=>patterns[k].test(label));const custom=(profile.answers||[]).filter(a=>normalize(a.question)===label||(common&&commonQuestion(a.question)?.question===common.question));
+ const fieldAliases={
+  'location city':'city','city of residence':'city','town or city':'city',
+  'discipline':'major','academic discipline':'major','primary field of study':'major',
+  'school affiliation':'school','university affiliation':'school','college or university name':'school',
+  'other website':'portfolio','personal portfolio url':'portfolio'
+ };
+ const directLabel=label.replace(/^(?:please (?:enter|provide|indicate) (?:your )?|what is your |what s your )/,'');
+ // A country selector paired with a phone input may represent a calling code.
+ if(label==='country'&&/phone|dial|calling/i.test(field.id+' '+field.name))return null;
+ const key=fieldAliases[directLabel]||Object.keys(patterns).find(k=>patterns[k].test(directLabel));const custom=(profile.answers||[]).filter(a=>normalize(a.question)===label||(common&&commonQuestion(a.question)?.question===common.question));
  const remembered=!key?memoryMatch(field.label,memory,origin,context):null;
  const value=rule?.value||(key==='fullName'?[profile.values.firstName,profile.values.lastName].filter(Boolean).join(' '):key?(profile.values[key]||background?.value):common?.question==='How did you hear about this position?'&&remembered?remembered.value:custom.length&&new Set(custom.map(a=>a.answer.trim())).size===1?custom[0].answer:background?.value||remembered?.value);
  if(!value){

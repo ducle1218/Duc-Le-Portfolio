@@ -1,10 +1,10 @@
 (() => {
-  // tools/application-helper/portfolio-answers.mjs
+  // site/tools/application-helper/portfolio-answers.mjs
   var PORTFOLIO_URL = "https://ducle1218.github.io/Duc-Le-Portfolio/";
   var aliases = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
 
-  // tools/application-helper/portfolio-ui.mjs
+  // site/tools/application-helper/portfolio-ui.mjs
   function addPortfolioEvidence(container, suggestion) {
     if (!suggestion.portfolioDerived || !suggestion.sources?.length) return;
     const details = document.createElement("details"), summary = document.createElement("summary");
@@ -27,8 +27,11 @@
     container.append(details);
   }
 
-  // tools/application-helper/common-questions.mjs?v=20261115.13
+  // site/tools/application-helper/common-questions.mjs?v=20261123.1
   var COMMON_QUESTIONS = [
+    { question: "Valid driver\u2019s license", aliases: ["valid driver s license", "do you possess a valid driver s license", "do you have a valid drivers license", "do you have a valid driver s license"], options: ["Yes", "No"], review: true },
+    { question: "Reliable transportation to project sites and offices", aliases: ["reliable transportation to project sites and offices", "do you have reliable transportation to project sites and office locations"], options: ["Yes", "No"], review: true },
+    { question: "Compensation expectations", aliases: ["compensation expectations", "compensation expectations you may provide a range", "what are your compensation expectations", "what are your salary expectations"], review: true },
     { question: "Street address", aliases: ["address", "address line", "address line 1", "street address", "street address line 1", "address 1"] },
     { question: "Degree being pursued", aliases: ["degree being pursued", "current degree program", "what degree are you pursuing"], defaultAnswer: "Bachelor of Science in Mechanical Engineering" },
     { question: "Current academic standing", aliases: ["current academic standing", "academic standing", "class standing", "current year of study", "please indicate your current academic standing select one"], defaultAnswer: "Freshman" },
@@ -66,6 +69,7 @@
   var questionKey = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var commonQuestion = (q) => {
     const key2 = questionKey(q);
+    if (key2 === "will you now or will you in the future require employment visa sponsorship") return COMMON_QUESTIONS.find((item) => item.question.startsWith("Will you now or in the future require sponsorship"));
     if (/^do you have the legal right to work in the u s(?: note .*)?$/.test(key2)) return COMMON_QUESTIONS.find((item) => item.question === "Are you legally authorized to work in the United States?");
     if (/^will you now or in the future require sponsorship of a temporary work visa(?: e g .*)?$/.test(key2)) return COMMON_QUESTIONS.find((item) => item.question === "Will you now or in the future require sponsorship for employment visa status?");
     return COMMON_QUESTIONS.find((item) => item.aliases.includes(key2));
@@ -95,7 +99,7 @@
     return null;
   }
 
-  // tools/application-helper/answer-rules.mjs
+  // site/tools/application-helper/answer-rules.mjs
   function applicationSeason(title = "") {
     const s = questionKey(title);
     const seasons = ["summer", "fall", "autumn", "winter", "spring"].filter((x) => new RegExp("\\b" + x + "\\b").test(s));
@@ -107,7 +111,7 @@
     return seasons[0];
   }
 
-  // tools/application-helper/answer-rules.mjs?v=20261115.13
+  // site/tools/application-helper/answer-rules.mjs?v=20261123.1
   function ageThreshold(q) {
     const s = questionKey(q);
     const m = s.match(/^are you (?:at least )?(\d{1,2})(?: years)?(?: of age| old)?(?: or (?:older|over|above))?$/) || s.match(/^are you (\d{1,2}) years old or older$/);
@@ -142,6 +146,22 @@
       const values = entries.filter((a) => commonQuestion(a.question)?.question === name).map((a) => a.answer.trim());
       return new Set(values).size === 1 ? values[0] : null;
     };
+    const privateRules = [
+      ["Preferred first name", /^(preferred first name|what is your preferred first name)$/],
+      ["Military service", /^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/],
+      ["Government employment", /^have you (ever )?(held a (u s |united states )?government position|been (a |an )?(u s |united states )?government employee)$/],
+      ["Belgian work visa", /^do you have a visa to work in belgium$/],
+      ["Belgian residence", /^do you (currently )?(live|reside) in belgium$/],
+      ["Active security clearance", /^(security clearance active|do you (currently )?(have|hold) an active security clearance)$/],
+      ["Previous security clearance", /^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
+    ];
+    for (const [name, pattern] of privateRules) {
+      const wording = q.replace(/^including your current position /, "");
+      if (pattern.test(wording) && unique(name)) return { ...result(unique(name), "Your confirmed private answer"), requiresReview: true };
+    }
+    if (q === "country of citizenship" || commonQuestion(field.label)?.question === "Country of citizenship") {
+      if (unique("Citizenships") && unique("Citizenships").includes(";")) return { blocked: true };
+    }
     const address = fact("Street address"), city = profile.values?.city || "", state = profile.values?.state || "";
     let street = address, zip = "";
     if (address && city && state) {
@@ -213,7 +233,7 @@
     return null;
   }
 
-  // tools/application-helper/portfolio-answers.mjs?v=20261115.13
+  // site/tools/application-helper/portfolio-answers.mjs?v=20261123.1
   var key = (s) => String(s || "").toLowerCase().replace(/c\+\+/g, "cplusplus").replace(/c#/g, "csharp").replace(/[^a-z0-9]+/g, " ").trim();
   var aliases2 = { cad: ["cad", "computer aided design", "computer aided drafting"], solidworks: ["solidworks", "solid works"], onshape: ["onshape"], autocad: ["autocad", "auto cad"], fea: ["fea", "finite element analysis"], matlab: ["matlab"], python: ["python"], cplusplus: ["cplusplus"], excel: ["excel", "microsoft excel"], "3d printing": ["3d printing", "additive manufacturing", "fdm"], "mechanical design": ["mechanical design"], assembly: ["assembly", "mechanical assembly"], "structural analysis": ["structural analysis"], documentation: ["documentation", "technical documentation"], "arduino uno": ["arduino", "arduino uno"], pneumatics: ["pneumatics", "pneumatic systems"], "hand fabrication": ["hand fabrication"] };
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
@@ -225,6 +245,15 @@
     if (/\b(not|never|without|lack|professional|professionally|commercial|industry|industrial|paid|employed|employment|years|months|year|month|expert|expertise|proficient|advanced|certified|certification|license|licensed|citizen|citizenship|visa|sponsor|authorized|authorization|gpa|salary|gender|race|ethnicity|disability|veteran|birth|age|agree|certify|completed|successful|successfully|production|productionized|fluent|fully|functional|deployed|operational|independently|alone|sole)\b/.test(q) || /\d/.test(q.replace(/3d/g, ""))) return null;
     const answer = (value, sources, reason = "Draft from documented portfolio evidence") => sources.length && (!field.maxLength || field.maxLength < 0 || value.length <= field.maxLength) ? { value, display: value, requiresReview: true, reason, sourceQuestion: "Portfolio \xB7 " + knowledge.reviewedOn, sources: uniqueSources(sources), portfolioDerived: true } : null;
     const allSkills = /* @__PURE__ */ new Map();
+    if (/^(summary|professional summary|cover letter)( required)?$/.test(q)) {
+      const project = knowledge.projects.find((p2) => p2.claims.length);
+      if (!project) return null;
+      const claim = project.claims[0];
+      const intro = "I am studying mechanical engineering at Rutgers University.";
+      const experience = "My project experience includes " + project.title + ". " + claim.text;
+      const draft = q.startsWith("cover letter") ? "Dear Hiring Team,\n\n" + intro + " I am applying for your internship. " + experience + "\n\nThank you for considering my application." : intro + " " + experience;
+      return answer(draft, [...knowledge.educationSources, ...claim.sources], "Portfolio draft for your review");
+    }
     for (const s of knowledge.skills) allSkills.set(s.key, { ...s, project: false });
     for (const p2 of knowledge.projects) for (const t of p2.tools) {
       const previous = allSkills.get(t.key);
@@ -293,7 +322,7 @@
     return answer(text, claims.flatMap((c) => c.sources));
   }
 
-  // tools/application-helper/application-autofill.mjs?v=20261115.13
+  // site/tools/application-helper/application-autofill.mjs?v=20261123.1
   function formBridge({ action = "scan", url, fields = [] } = {}) {
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -560,7 +589,7 @@
     })();
   }
 
-  // tools/application-helper/answer-memory.mjs?v=20261115.13
+  // site/tools/application-helper/answer-memory.mjs?v=20261123.1
   var normalizeQuestion = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion = (q) => !reviewedIdentityQuestion(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion(q));
@@ -598,7 +627,7 @@
     return { value: matches[0].answer, question: matches[0].question, reason: kind, requiresReview: reviewedIdentityQuestion(question) };
   }
 
-  // tools/application-helper/application-autofill.mjs
+  // site/tools/application-helper/application-autofill.mjs
   var normalize = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   function suggestField(field, profile, memory = [], origin = "", context = "", portfolio = null) {
     if (!profile?.confirmed) return null;
@@ -610,7 +639,22 @@
     if (!label || !rule && !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
-    const key2 = Object.keys(patterns).find((k) => patterns[k].test(label));
+    const fieldAliases = {
+      "location city": "city",
+      "city of residence": "city",
+      "town or city": "city",
+      "discipline": "major",
+      "academic discipline": "major",
+      "primary field of study": "major",
+      "school affiliation": "school",
+      "university affiliation": "school",
+      "college or university name": "school",
+      "other website": "portfolio",
+      "personal portfolio url": "portfolio"
+    };
+    const directLabel = label.replace(/^(?:please (?:enter|provide|indicate) (?:your )?|what is your |what s your )/, "");
+    if (label === "country" && /phone|dial|calling/i.test(field.id + " " + field.name)) return null;
+    const key2 = fieldAliases[directLabel] || Object.keys(patterns).find((k) => patterns[k].test(directLabel));
     const custom = (profile.answers || []).filter((a) => normalize(a.question) === label || common && commonQuestion(a.question)?.question === common.question);
     const remembered = !key2 ? memoryMatch(field.label, memory, origin, context) : null;
     const value = rule?.value || (key2 === "fullName" ? [profile.values.firstName, profile.values.lastName].filter(Boolean).join(" ") : key2 ? profile.values[key2] || background?.value : common?.question === "How did you hear about this position?" && remembered ? remembered.value : custom.length && new Set(custom.map((a) => a.answer.trim())).size === 1 ? custom[0].answer : background?.value || remembered?.value);
@@ -915,7 +959,7 @@
   var scanForm = () => formBridge2({ action: "scan" });
   var fillForm = (options) => formBridge2({ ...options, action: "fill" });
 
-  // tools/application-helper/answer-memory.mjs
+  // site/tools/application-helper/answer-memory.mjs
   var normalizeQuestion2 = (value) => String(value || "").toLowerCase().replace(/[’']/g, "").replace(/\+/g, " plus ").replace(/#/g, " sharp ").replace(/%/g, " percent ").replace(/-(?=\d)/g, " minus ").replace(/(\d)\.(?=\d)/g, "$1 decimal ").replace(/[^a-z0-9]+/g, " ").replace(/\b(required|optional)\b/g, "").replace(/\s+/g, " ").trim();
   var reviewedIdentityQuestion2 = (q) => ["Sex", "Preferred pronouns", "Race / ethnic background", "Country of citizenship"].includes(commonQuestion(q)?.question);
   var privateQuestion2 = (q) => !reviewedIdentityQuestion2(q) && /password|passcode|otp|verification code|social security|\bssn\b|passport|bank|credit card|birth|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|consent|agree|certify|signature|salary|compensation|\bgpa\b|reference|emergency|guardian|parent|\breferr|manager|supervisor/.test(normalizeQuestion2(q));
@@ -957,7 +1001,7 @@
   }
   var scanAnsweredFields = () => formBridge({ action: "remember" });
 
-  // tools/application-helper/resume-attachment.mjs
+  // site/tools/application-helper/resume-attachment.mjs
   async function attachResume({ url, resume }) {
     if (location.href !== url) return { attached: false, message: "The page changed. Scan again before attaching." };
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
@@ -1006,7 +1050,7 @@
     }
   }
 
-  // tools/application-helper/answer-pagination.mjs
+  // site/tools/application-helper/answer-pagination.mjs
   function paginateAnswers(rows, nav, state) {
     const pages = Math.max(1, Math.ceil(rows.length / 10));
     state.page = Math.min(pages, Math.max(1, state.page || 1));
@@ -1035,7 +1079,7 @@
     nav.append(button("Previous answers", state.page === 1, -1), status, button("Next answers", state.page === pages, 1));
   }
 
-  // tools/application-helper/memory-panel.mjs
+  // site/tools/application-helper/memory-panel.mjs
   var normalizedAnswer = (value) => String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
   function answerDifference(item, { origin, context, memory = [], profile }) {
     const current = suggestField({ label: item.question, type: "text" }, profile, memory, origin, context) || memoryMatch2(item.question, memory, origin, context);
@@ -1131,7 +1175,7 @@
     render();
   }
 
-  // tools/application-helper/assistant.mjs
+  // site/tools/application-helper/assistant.mjs
   if (!globalThis.__ducApplicationHelper) {
     let mount = function(next) {
       stop();

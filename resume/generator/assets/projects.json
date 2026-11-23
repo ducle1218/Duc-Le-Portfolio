@@ -17,7 +17,7 @@
         "Shortened upper leg links from 143 to 135 mm so the legs fit without further lengthening the body.",
         "The prototype has four legs attached and one actuated; walking control remains in development."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-12.pdf",
       "sources": [
         {
@@ -57,7 +57,7 @@
         "Split the center shaft into printable sections for the Prusa Mini build envelope.",
         "Ran a preliminary arm analysis: about 23 psi at a modeled 0.28 lbf load; load capacity remains unverified."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-7.pdf",
       "sources": [
         {
@@ -102,7 +102,7 @@
         "Examined stress concentrations around holes, cutout corners, and spacer interfaces.",
         "Next steps: resolve model warnings, check mesh sensitivity, and document critical fits in drawings."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-11.pdf",
       "sources": [
         {
@@ -139,7 +139,7 @@
         "Practiced parametric CAD with the official SolidWorks CSWA problem set and reference drawings.",
         "Further work will extend selected parts into GD&T drawings and manufacturing and assembly reviews."
       ],
-      "height": 43,
+      "height": 40.75,
       "file": "project-box-3.pdf",
       "sources": [
         {
@@ -172,7 +172,7 @@
         "Redesigned sensor mounts to package tracking hardware within the robot envelope.",
         "The robot scored 60 points in its final skills trial (45 driver, 15 autonomous), above the 50-point target."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-6.pdf",
       "sources": [
         {
@@ -218,7 +218,7 @@
         "Used MATLAB to develop staging parameters for a target satellite payload of 4,500 lb.",
         "Built a bulkhead-sizing spreadsheet to compare calculated stress with material allowable stress."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-4.pdf",
       "sources": [
         {
@@ -256,7 +256,7 @@
         "The revised mechanism combines ground pickup with a conveyor bracket to stabilize mobile-goal capture.",
         "The robot’s best recorded score was 12 points in Trial 6 of seven match trials."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-1.pdf",
       "sources": [
         {
@@ -296,7 +296,7 @@
         "Used a resistor ladder to distinguish eight key inputs through a single analog pin, A0.",
         "Mapped analog voltage ranges to musical tones in the keyboard’s Arduino program."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-5.pdf",
       "sources": [
         {
@@ -335,7 +335,7 @@
         "The tower held 45 lb before failure; bending at 67 N left the 100 N no-bend criterion unmet.",
         "The next design iteration calls for diagonal bracing between layers to address twisting."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-8.pdf",
       "sources": [
         {
@@ -374,7 +374,7 @@
         "The robot avoided obstacles and finished the warehouse course in four of five recorded runs.",
         "After motor-power tuning, the robot completed a clean parallel park on the seventh trial."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-9.pdf",
       "sources": [
         {
@@ -413,7 +413,7 @@
         "Used a removable wooden spacer to hold exhaust spacing and angle while the adhesive set.",
         "Five 33-inch gutter trials averaged about 13.7 s, versus a recorded 33.07 s baseline."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-10.pdf",
       "sources": [
         {
@@ -452,7 +452,7 @@
         "The March 16 prototype used three cardboard blades, each 14 inches long and 3 inches wide.",
         "A 20-second wind-tunnel trial tested that prototype facing backward."
       ],
-      "height": 57,
+      "height": 54.5,
       "file": "project-box-2.pdf",
       "sources": [
         {

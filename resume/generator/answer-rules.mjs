@@ -1,4 +1,4 @@
-import {questionKey,commonQuestion} from './common-questions.mjs?v=20261115.13';
+import {questionKey,commonQuestion} from './common-questions.mjs?v=20261123.1';
 
 // Editable memories, seeded once by the helper. Dates are for summer 2027 only.
 // Rutgers New Brunswick: final exams end May 12; fall begins September 1.
@@ -32,6 +32,22 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const unique=q=>{const values=entries.filter(a=>questionKey(a.question)===questionKey(q)).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
  const result=(value,reason,aliases)=>({value,display:value,reason,sourceQuestion:'Saved preferences',requiresReview:false,...(aliases?{aliases}:{} )});
  const q=questionKey(field.label),fact=name=>{const values=entries.filter(a=>commonQuestion(a.question)?.question===name).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
+ const privateRules=[
+  ['Preferred first name',/^(preferred first name|what is your preferred first name)$/],
+  ['Military service',/^have you (ever )?served in (the )?(u s |united states )?(military|armed forces)$/],
+  ['Government employment',/^have you (ever )?(held a (u s |united states )?government position|been (a |an )?(u s |united states )?government employee)$/],
+  ['Belgian work visa',/^do you have a visa to work in belgium$/],
+  ['Belgian residence',/^do you (currently )?(live|reside) in belgium$/],
+  ['Active security clearance',/^(security clearance active|do you (currently )?(have|hold) an active security clearance)$/],
+  ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
+ ];
+ for(const [name,pattern] of privateRules){
+  const wording=q.replace(/^including your current position /,'');
+  if(pattern.test(wording)&&unique(name))return {...result(unique(name),'Your confirmed private answer'),requiresReview:true};
+ }
+ if(q==='country of citizenship'||commonQuestion(field.label)?.question==='Country of citizenship'){
+  if(unique('Citizenships')&&unique('Citizenships').includes(';'))return {blocked:true};
+ }
  // Full addresses may have been saved in a question rather than a profile field.
  // Split only a confirmed city/state/ZIP suffix; never guess a missing street.
  const address=fact('Street address'),city=profile.values?.city||'',state=profile.values?.state||'';

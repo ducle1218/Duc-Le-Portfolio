@@ -34,10 +34,11 @@ TOPICS={
 'box-9':['sensors','sonar','navigation','robotics','testing'],
 'box-10':['prototyping','fabrication','fixture','jig','testing'],
 'box-2':['wind','turbine','energy','aerodynamics','AutoCAD']}
-base=pdf.open(source);page=base[0]
+layout=ROOT/'scripts/fixtures/resume-layout.pdf'
+base=pdf.open(layout);page=base[0]
 # Preserve the original lower sections as a movable strip. Their typography and
 # rules are unchanged; only their vertical position follows the project content.
-footer=pdf.open(source)
+footer=pdf.open(layout)
 footer[0].add_redact_annot(pdf.Rect(0,0,612,573),fill=(1,1,1))
 footer[0].add_redact_annot(pdf.Rect(0,738,612,792),fill=(1,1,1))
 footer[0].apply_redactions()
@@ -61,17 +62,17 @@ for p in feed['projects']:
  page.insert_font(fontname='body',fontfile='C:/Windows/Fonts/calibrii.ttf')
  page.insert_font(fontname='heading',fontfile='C:/Windows/Fonts/calibriz.ttf')
  title={'box-3':'SolidWorks CAD Practice','box-10':'Putt-Putt Boat Redesign','box-1':'High Stakes Robot'}.get(p['id'],p['title'])
- page.insert_text((50.4,234),title,fontname='heading',fontsize=10.5)
+ page.insert_text((50.4,233.5),title,fontname='heading',fontsize=10.5)
  date=p['dateLabel'] if p['dateLabel']!='Date under review' else p['stage']
- page.insert_text((562-font.text_length(date,fontsize=9),234),date,fontname='body',fontsize=9)
- y=248
+ page.insert_text((561.6-font.text_length(date,fontsize=9.495),233.5),date,fontname='body',fontsize=9.495)
+ y=246.3
  for bullet in COPY[p['id']]:
-  lines=wrap(bullet);page.insert_text((55,y),'•',fontname='body',fontsize=10)
-  for line in lines:page.insert_text((66,y),line,fontname='body',fontsize=10);y+=12
-  y+=2
+  lines=wrap(bullet);page.insert_text((54.9,y),'•',fontname='body',fontsize=10)
+  for line in lines:page.insert_text((66.1,y),line,fontname='body',fontsize=10);y+=12.2
+  y+=1.55
  # y is the next baseline plus the inter-bullet gap. End just below the final
  # descender, rather than exporting 70 points of padding for every project.
- height=y-223-10
+ height=round(y-13.75+3.7-223,2)
  assert 30<=height<=70,(p['id'],height)
  doc.subset_fonts();name='project-'+p['id'];doc.save(OUT/(name+'.pdf'),garbage=4,deflate=True)
  page.get_pixmap(matrix=pdf.Matrix(2,2),clip=pdf.Rect(48,223,564,223+height)).save(OUT/(name+'.png'))

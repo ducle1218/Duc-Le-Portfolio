@@ -11,11 +11,11 @@ export function projectSlots(projects){
   const height=Number(p.height),matched=p.matched||[];
   if(!Number.isFinite(height)||height<30||height>70)throw new Error('Project layout needs rebuilding.');
   const slot={id:p.id,isProject:true,before:'Project selection: '+p.title,rect:[48,top,564,top+height],sourceRect:[48,223,564,223+height],file:p.file,choice:{text:p.bullets.join('\n'),sources:p.sources},reason:matched.length?'Matches: '+matched.join(', '):'Supporting project; no specific keyword match',title:p.title,url:p.url};
-  top+=height+12;return slot;
+  top+=height;return slot;
  });
 }
 export function projectFooterRect(slots){
- const top=Math.max(...slots.map(slot=>slot.rect[3]))+12;
+ const top=Math.max(...slots.map(slot=>slot.rect[3]))+4.5;
  if(top>573)throw new Error('Selected projects exceed the one-page template.');
  return [48,top,564,top+165];
 }

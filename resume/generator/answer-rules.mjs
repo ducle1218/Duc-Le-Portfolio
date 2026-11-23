@@ -65,6 +65,13 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
  ];
  const confirmed=(value,sourceQuestion,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion,requiresReview:true});
+ if(/^(?:(?:please )?(?:confirm|verify|repeat|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)){
+  const email=profile.values?.email;
+  if(!email||field.primaryEmail&&field.primaryEmail.trim().toLowerCase()!==email.trim().toLowerCase())return {blocked:true};
+  return confirmed(email,'Profile email');
+ }
+ if(commonQuestion(q)?.question==='Preferred contact method'&&fact('Preferred contact method')==='Email')
+  return confirmed('Email','Preferred contact method',['email','e mail','email address','by email']);
  const employment=q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /,'have you worked $1 ').replace(/ this does not include contractor consultant or vendor roles$/,'');
  if(/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment)&&
     !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment)&&questionKey(fact('Employment experience'))==='none')
@@ -170,10 +177,17 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   return {blocked:true};
  }
  if(q==='to actual or expected'&&college&&/^\d{4}$/.test(profile.values.graduationYear))return result(profile.values.graduationYear,'Expected graduation year at this school');
+ const pendingDegree=field.degreePair&&pursued&&(!school||college)&&!field.highestEducation;
+ if(q==='not completed'&&field.type==='checkbox-group'){
+  const degree=questionKey(field.rowDegree);
+  const current=degree===questionKey(pursued)||/^bachelor/.test(questionKey(pursued))&&['bachelor','bachelors','bachelor s','bachelor s degree','bachelor degree','bachelor of science','bs','b s'].includes(degree);
+  if(pendingDegree&&degree&&current&&field.options?.length===1)return {...confirmed('Not Completed','Degree being pursued'),markIncomplete:true};
+  return {blocked:true};
+ }
  if(q==='degree'||q==='degree type'||commonQuestion(field.label)?.question==='Degree being pursued'){
   if(field.highestEducation&&fact('Highest completed degree'))return confirmed(fact('Highest completed degree'),'Highest completed degree',questionKey(fact('Highest completed degree'))==='high school diploma'?['high school or equivalent','high school diploma ged','high school diploma','secondary education diploma']:undefined);
   if(highSchool)return result(fact('Highest completed degree'),'Completed high-school education',['high school diploma ged','high school diploma','full high school education']);
-  if(pursued&&(college||commonQuestion(field.label)?.question==='Degree being pursued'))return result(pursued,'Degree in progress, not a completed degree',['bachelors','bachelor','bachelor s','bachelor degree','bachelor s degree','bachelor of science','b s','bs']);
+  if(pursued&&(pendingDegree||college||commonQuestion(field.label)?.question==='Degree being pursued'))return result(pursued,'Degree in progress, not a completed degree',[questionKey(pursued),...(/^bachelor/.test(questionKey(pursued))?['bachelors','bachelor','bachelor s','bachelor degree','bachelor s degree','bachelor of science','b s','bs']:[])]);
   return {blocked:true};
  }
  if(/gpa|grade point average|overall result/.test(q)){

@@ -16,7 +16,10 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   const answer=suggestField({...field,label:contact.get(request)||prompt,type:'text'},profile,memory,origin,context,portfolio);
   return answer?{...answer,reason:'Draft reply for your review',sourceQuestion:answer.sourceQuestion||contact.get(request)||prompt}:null;
  }
- const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
+ const wording=String(field.label||'').replace(/^\s*(?:question\s+)?\d{1,3}\s*[*.)\-:]+\s*[.*:]?\s*/i,'');
+ field={...field,label:wording};
+ const label=normalize(wording).replace(/\b(required|optional)\b/g,'').trim();
+ if(field.employmentEntry&&profile.answers?.some(a=>commonQuestion(a.question)?.question==='Employment experience'&&normalize(a.answer)==='none'))return null;
  const common=commonQuestion(label),background=backgroundAnswer(label,profile,memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context));
  const rule=answerRule(field,profile,memory,origin,context);if(rule?.blocked)return null;
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
@@ -55,6 +58,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  }
  if(field.maxLength>0&&value.length>field.maxLength)return null;
  if(field.type==='checkbox-group'){
+  if(rule?.markIncomplete)return {value:'Not Completed',display:'Not Completed',selectedLabels:[field.options[0].label],reason:rule.reason,sourceQuestion:rule.sourceQuestion};
   // Only explicit region preferences are supported: never consent/attestation boxes.
   if(common?.question!=='Preferred work regions')return null;
   const desired=value.split(';').map(normalize),matches=(field.options||[]).filter(o=>!o.disabled&&desired.includes(normalize(o.label)));
@@ -64,7 +68,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  const confirmedMale=common?.question==='Sex'&&normalize(value)==='male'&&custom.length>0&&new Set(custom.map(a=>normalize(a.answer))).size===1;
  const review=rule?{reason:rule.reason,sourceQuestion:rule.sourceQuestion,requiresReview:rule.requiresReview}:{reason:confirmedMale?'Your confirmed profile answer':background?'Based on your confirmed background':common?.review?'Confirm this answer for this application':remembered?.reason,sourceQuestion:background?background.sourceQuestion:common?.review?common.question:remembered?.question,requiresReview:!confirmedMale&&(!!common?.review||!!background||!!remembered?.requiresReview)};
  if(field.type==='select-one'||field.type==='combobox'||field.type==='radio-group'){
-  const aliases=rule?.aliases||(key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:(key==='country'||background?.value==='United States')&&['us','usa','united states'].includes(normalize(value))?['united states','united states of america','us','usa']:common?.question==='Highest completed degree'&&normalize(value)==='high school diploma'?['high school diploma','high school diploma or equivalent','high school diploma ged','high school or equivalent']:[normalize(value)]);
+  const aliases=rule?.aliases||(key==='state'&&normalize(value)==='new jersey'?['new jersey','nj']:(key==='country'||background?.value==='United States')&&['us','usa','united states','united states of america'].includes(normalize(value))?['united states','united states of america','us','usa']:common?.question==='Highest completed degree'&&normalize(value)==='high school diploma'?['high school diploma','high school diploma or equivalent','high school diploma ged','high school or equivalent']:[normalize(value)]);
   if(rule?.confirmUSPersons&&field.type==='select-one'){
    const choices=field.options.filter(o=>!o.disabled&&o.value&&!/^(?:please )?(?:select|choose)\b/.test(normalize(o.label)));
    if(choices.length===1)return {value:choices[0].value,display:choices[0].label,...review};
@@ -85,7 +89,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  const text=e=>(e?.innerText||e?.textContent||'').trim();
  const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const visible=e=>!!e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden';
- const comboSelector='[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+ const comboSelector='[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
  const controls='[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,'+comboSelector+',[role="radio"]';
  const activate=(e,option=false)=>{
   if(option)e.scrollIntoView?.({block:"nearest"});
@@ -128,8 +132,19 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  };
  const type=e=>isReply(e)?'chat-reply':radio(e)?'radio-group':checkbox(e)?'checkbox-group':custom(e)?'combobox':e.type||e.tagName.toLowerCase();
  const labelled=e=>(e?.getAttribute('aria-labelledby')||'').split(/\s+/).filter(Boolean).map(id=>text(document.getElementById(id))).join(' ');
- const group=e=>{const explicit=e.closest('[role="radiogroup"],[role="group"],fieldset');if(explicit||!checkbox(e))return explicit;let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,.question-label,.form-label,.control-label'))return p;}return null;};
- const radios=e=>{const g=group(e),selector=checkbox(e)?'input[type="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
+ const radioSelector='input[type="radio"],[role="radio"]';
+ const choiceVisible=e=>visible(e)||[...(e.labels||[]),e.closest('label')].some(l=>l&&visible(l));
+ const group=e=>{const explicit=e.closest('[role="radiogroup"],[role="group"],fieldset');if(explicit)return explicit;
+  if(radio(e)){
+   if(e.name)return null;
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    const rows=[...p.querySelectorAll(radioSelector)];if(rows.length<2)continue;
+    if(rows.some(r=>r.name||r.closest('[role="radiogroup"],fieldset'))||p.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])'))return null;
+    return p;
+   }
+   return null;
+  }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,.question-label,.form-label,.control-label'))return p;}return null;};
+ const radios=e=>{if(checkbox(e)&&norm(ownLabel(e))==='not completed')return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
  const useful=s=>/^(select|please select|choose|open menu|clear|select an option|select one)[. …]*$/i.test((s||'').trim())?'':s;
@@ -141,7 +156,10 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    else if(contained.filter(c=>!radio(c)).length!==1)break;
    const candidates=[...parent.querySelectorAll('legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong')].filter(h=>!h.closest('[role="listbox"],[role="option"]')&&!h.querySelector(controls)&&!members.some(r=>r.closest('label')?.contains(h)||[...(r.labels||[])].some(l=>l.contains(h))));
    if(!choice(e))candidates.sort((a,b)=>Number(!a.matches('label,strong,.question-label,.control-label,.form-label'))-Number(!b.matches('label,strong,.question-label,.control-label,.form-label')));
-   if(choice(e)&&!candidates.length)candidates.push(...[...parent.querySelectorAll('div,span')].filter(h=>!h.children.length&&!h.closest('label,[role="radio"]')&&/\?\s*\*?$/.test(text(h))));
+   if(choice(e)){
+    const prompts=[...parent.querySelectorAll('div,span,legend,p,label,h2,h3,h4')].filter(h=>!h.querySelector(controls)&&!h.closest('[role="radio"]')&&/\?\s*\*?$/.test(text(h))&&text(h).length<=800);
+    candidates.unshift(...prompts.filter(h=>!prompts.some(other=>other!==h&&h.contains(other))));
+   }
    for(const heading of candidates){const value=labelText(heading);if(value&&!/^(yes|no|male|female)$/i.test(value)&&value.length<=800)return value;}
   }return '';
  };
@@ -151,6 +169,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   const fieldLabel=wrapper?.querySelector('[data-automation-id="formLabel"],legend')||wrapper?.querySelector('label');
   if(fieldLabel&&(!choice(e)||!fieldLabel.contains(e))){const value=labelText(fieldLabel);if(value&&!/^(yes|no)$/i.test(value))return value;}
   if(e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag'))return 'Country';
+  if(checkbox(e)&&norm(ownLabel(e))==='not completed')return ownLabel(e);
   if(choice(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||nearbyLabel(e)).trim().slice(0,800);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||'').trim().slice(0,800);};
  let shadowEditors=null;
  const elements=()=>{
@@ -202,6 +221,17 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  };
  const context=e=>{
   const wording=norm(label(e));
+  for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+   const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+   if(!headings.length)continue;
+   if(headings.some(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h))))&&headings.every(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h)))))return {employmentEntry:true};
+   break;
+  }
+  if(/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)){
+   const scope=e.form||e.closest('[role="dialog"]')||document;
+   const originals=[...scope.querySelectorAll('input')].filter(c=>c!==e&&visible(c)&&/^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
+   return {primaryEmail:originals.length===1?originals[0].value||'':originals.length>1?'ambiguous':''};
+  }
   if(wording.replace(/ required$/,'')==='country'||e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag')){
    let box=e.parentElement;for(let depth=0;box&&box!==document.body&&depth<13;depth++,box=box.parentElement){
     if(box.matches('.iti,.react-tel-input,.intl-tel-input,.phone-input__country,.phone-input')||box.querySelector('input[type="tel"],input[autocomplete="tel"],input[id="phone"]')&&[...box.querySelectorAll('input')].filter(i=>visible(i)&&i.type!=='hidden'&&i.getAttribute('aria-hidden')!=='true').length<=2)return {phoneCountry:true};
@@ -214,11 +244,21 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    if(wording==='military status'&&last&&norm(label(last))==='military branch')last=prior.at(-2);
    return {parentQuestion:last?label(last):'',parentAnswer:last&&!empty(last)?valueText(last):'',parentIncludesCitizenCategory:!!last&&/belong to one of the categories above/.test(norm(label(last)))&&citizenList(last)};
   }
-  const q=norm(label(e));if(!/degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
+  let degreePair=false,rowDegree='';
+  if(['degree','degree type','not completed'].includes(wording)){
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    const items=[...p.querySelectorAll(controls)];
+    const degrees=items.filter(c=>!choice(c)&&/^(degree|degree type)$/.test(norm(label(c))));
+    const boxes=items.filter(c=>checkbox(c)&&norm(ownLabel(c))==='not completed');
+    if(degrees.length>1||boxes.length>1)break;
+    if(degrees.length===1&&boxes.length===1){degreePair=true;rowDegree=empty(degrees[0])?'':valueText(degrees[0]);break;}
+   }
+  }
+  const q=norm(label(e));if(!/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
   const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
   if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
   if(/^(please specify|other please specify|academic standing details)$/.test(q)){const last=before.at(-1);if(last&&!empty(last)&&/current academic standing/.test(norm(label(last)))){parentAnswer=valueText(last);parentQuestion=label(last);}}
-  if(/degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)){
+  if(/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)){
    let container=e.parentElement;for(let n=0;n<7&&container&&container!==document.body;n++,container=container.parentElement){
     const schools=all.filter(c=>container.contains(c)&&/^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
     if(schools.length>1)break;if(schools.length===1){educationSchool=valueText(schools[0]);break;}
@@ -230,16 +270,16 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if([...section.querySelectorAll('p,small,div,span')].some(n=>n.childElementCount<2&&/^in the degree field provide (?:your |the )?highest level of education[.\s]*$/i.test(text(n)))){highestEducation=true;break;}
    }
   }
-  return {parentAnswer,parentQuestion,educationSchool,highestEducation};
+  return {parentAnswer,parentQuestion,educationSchool,highestEducation,degreePair,rowDegree};
  };
  const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
  if(action==='prepare-education'){
-  const buttons=[...document.querySelectorAll('button')].filter(b=>visible(b)&&!b.disabled&&!b.matches('[type="submit"]')&&(!b.form||b.type==='button')&&/^add$/i.test(text(b)));
+  const buttons=[...document.querySelectorAll('button')].filter(b=>visible(b)&&!b.disabled&&!b.matches('[type="submit"]')&&(!b.form||b.type==='button')&&/^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
   const education=buttons.filter(b=>{
    for(let section=b.parentElement;section&&section!==document.body;section=section.parentElement){
     const headings=[...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
     if(!headings.length)continue;
-    return headings.length===1&&norm(text(headings[0]))==='education'&&!section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]')&&buttons.filter(other=>section.contains(other)).length===1;
+    return headings.length===1&&/^(?:education|education history)$/.test(norm(text(headings[0])))&&!section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]')&&buttons.filter(other=>section.contains(other)).length===1;
    }
    return false;
   });
@@ -260,7 +300,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    countries.add(typeof country==='string'?country:'');
   }
   const jobLocation=countries.size===1?[...countries][0]:'';
-  const all=elements();return {url:location.href,jobLocation,fields:all.map(snapshot).filter(f=>visible(all[f.index])).slice(0,150),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,jobLocation,fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).slice(0,150),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -283,36 +323,46 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   for(const f of fields){
    const all=elements();let e=all[f.index];
    if(f.id&&e?.id!==f.id){const matches=all.filter(c=>c.id===f.id);e=matches.length===1?matches[0]:null;}
-   if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!visible(e)||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
-   const currentContext=context(e);if((f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
+   if(location.href!==url||!e||!e.isConnected||!empty(e)||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
+   const currentContext=context(e);if(('primaryEmail' in f&&currentContext.primaryEmail&&String(currentContext.primaryEmail).trim().toLowerCase()!==String(f.value).trim().toLowerCase())||(f.degreePair&&(!currentContext.degreePair||f.rowDegree&&f.rowDegree!==currentContext.rowDegree))||(f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
-    const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&visible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
+    const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
     if(!labels.length||matching.length!==labels.length||new Set(matching.map(r=>norm(optionLabel(r)))).size!==labels.length){skipped++;continue;}
     for(const r of matching)if(!r.checked)r.click();await new Promise(r=>setTimeout(r,60));
     if(matching.every(r=>r.checked))filled++;else skipped++;
    }else if(radio(e)){
-    const choices=radios(e),matching=choices.filter(r=>!disabled(r)&&visible(r)&&norm(optionLabel(r))===norm(f.display));
+    const choices=radios(e),matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&norm(optionLabel(r))===norm(f.display));
     if(matching.length!==1){skipped++;continue;}matching[0].click();await new Promise(r=>setTimeout(r,60));
     if(selectedRadio(e)===matching[0])filled++;else skipped++;
    }else if(custom(e)){
     const boxSelector='[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-    const optionSelector='[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
+    const optionSelector='[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
     const before=new Set([...document.querySelectorAll(boxSelector)].filter(visible));
     const opener=e.matches('.ui-select-container')?(e.querySelector('.ui-select-toggle,.ui-select-match')||e):e;e.focus();if(e.getAttribute('aria-expanded')!=='true')activate(opener);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
     let boxes=[];
     for(let attempt=0;attempt<15;attempt++){
      if(location.href!==url||!e.isConnected)break;
      const ids=((e.getAttribute('aria-controls')||'')+' '+(e.getAttribute('aria-owns')||'')).trim().split(/\s+/).filter(Boolean);
-     boxes=ids.map(id=>document.getElementById(id)).filter(n=>n&&visible(n));
+     boxes=ids.map(id=>e.getRootNode().getElementById?.(id)||document.getElementById(id)).filter(n=>n&&visible(n));
      if(!boxes.length){const local=e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');if(local)boxes=[...local.querySelectorAll(boxSelector)].filter(visible);}
+     if(!boxes.length&&e.parentElement?.querySelectorAll(comboSelector).length===1)boxes=[...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
      if(!boxes.length)boxes=[...document.querySelectorAll(boxSelector)].filter(n=>visible(n)&&!before.has(n));
      boxes=boxes.filter((b,i,all)=>!all.some(other=>other!==b&&other.contains(b)));
      if(boxes.length===1&&boxes[0].querySelector(optionSelector))break;
      await new Promise(r=>setTimeout(r,80));
     }
-    const aliases=[...(f.aliases||[norm(f.value)])];const readOptions=()=>boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')).filter((o,i,all)=>!all.some(other=>other!==o&&other.contains(o))):[];
+    const aliases=[...(f.aliases||[norm(f.value)])];const readOptions=()=>boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')).filter(o=>!o.matches('input,textarea')&&!o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o,i,all)=>!all.some(other=>other!==o&&o.contains(other)&&norm(text(o))===norm(text(other)))):[];
     const optionKey=o=>f.phoneCountry&&o.getAttribute('data-country-code')?.toLowerCase()==='us'&&/\+1\b/.test(text(o))?'united states 1':norm(text(o));
     let available=readOptions();
+    // Address pickers may fetch rows only after a search. A search term is never itself a selection.
+    const isAddressPicker=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province)$/.test(norm(f.label));
+    const input=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
+    const query=input&&isAddressPicker&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'';
+    const setQuery=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
+    if(query){
+     setQuery(query);
+     for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,80));if(!e.isConnected||location.href!==url)break;available=readOptions();if(available.some(o=>aliases.includes(optionKey(o))))break;}
+    }
     // Virtualized pickers mount only the visible rows. Scroll the associated list.
     if(boxes.length===1&&!available.some(o=>aliases.includes(optionKey(o)))){
      const scroll=[boxes[0],...boxes[0].querySelectorAll('ul,div')].find(n=>n.clientHeight>0&&n.scrollHeight>n.clientHeight+2);
@@ -330,8 +380,8 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if(f.phoneCountry&&options.length>1&&options.every(o=>optionKey(o)==='united states 1'))options.splice(1);
     if(options.length>1&&aliases.length>1){options.sort((a,b)=>aliases.indexOf(norm(text(a)))-aliases.indexOf(norm(text(b))));if(norm(text(options[0]))!==norm(text(options[1])))options.splice(1);}
     // An open menu's option text must not be mistaken for an existing selection.
-    if(location.href!==url||!e.isConnected||options.length!==1){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();skipped++;continue;}
-    activate(options[0],true);let accepted=false,leafChosen=false;
+    if(location.href!==url||!e.isConnected||options.length!==1){if(query&&input.isConnected&&input.value===query)setQuery('');e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();skipped++;continue;}
+    options[0].scrollIntoView?.({block:'nearest'});activate(options[0],true);let accepted=false,leafChosen=false;
     const sourceBranch=f.sourceTree&&/^(?:company|our) web\s*site$/i.test(text(options[0]));
 
     for(let attempt=0;attempt<10;attempt++){await new Promise(r=>setTimeout(r,80));if(location.href!==url||!e.isConnected)break;if(sourceBranch&&!leafChosen){
@@ -340,8 +390,9 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
       if(leaves.length===1){aliases.push(norm(text(leaves[0])));activate(leaves[0],true);leafChosen=true;continue;}
       if(lists.length)continue;
      }
-     if(aliases.includes(norm(valueText(e)))&&e.getAttribute('aria-invalid')!=='true'){accepted=true;break;}}
+     if(aliases.includes(norm(valueText(e)))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
     if(boxes.some(b=>b.isConnected&&visible(b))){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();}
+    if(!accepted&&query&&input.isConnected&&input.value===query)setQuery('');
     if(accepted)filled++;else skipped++;
    }else{
     if(e.tagName==='SELECT'&&![...e.options].some(o=>o.value===f.value&&!o.disabled&&text(o)===f.display)){skipped++;continue;}

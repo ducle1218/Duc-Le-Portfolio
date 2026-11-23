@@ -81,6 +81,9 @@
     { question: "Summer internship end date", aliases: ["summer internship end date"], defaultAnswer: "2027-08-31" },
     { question: "Full-time internship availability", aliases: ["full time internship availability"], defaultAnswer: "Summer only; not fall or winter" },
     { question: "Preferred application source", aliases: ["preferred application source"], defaultAnswer: "Company website or university" },
+    { question: "Preferred contact method", aliases: ["preferred contact method", "preferred method of contact", "preferred method of communication", "how would you prefer to be contacted", "how do you prefer to be contacted", "how should we contact you", "how would you like us to contact you"], options: ["Email", "Mobile Phone", "Home Phone"] },
+    { question: "Do you have reliable transportation?", aliases: ["do you have reliable transportation", "do you have a reliable means of transportation", "do you have reliable transportation to work", "do you have reliable transportation to and from work"], options: ["Yes", "No"] },
+    { question: "Post-offer federal background check, physical and drug screen", aliases: ["post offer federal background check physical and drug screen", "if extended a job offer are you willing to submit to a detailed federal background check pre employment physical and drug screen"], options: ["Yes", "No"] },
     { question: "Sex", options: ["Male", "Female", "I do not wish to self-identify"], aliases: ["sex", "what is your sex", "gender", "what is your gender"], review: true },
     { question: "Race / ethnic background", aliases: ["race", "ethnicity", "race ethnicity", "race ethnic background", "what is your race ethnic background", "what is your race ethnicity", "what is your race", "what is your ethnicity", "what is your racial ethnic background"], review: true },
     { question: "Country of citizenship", aliases: ["country of citizenship", "in which country region do you have citizenship", "in which country do you have citizenship", "which country are you a citizen of"], review: true },
@@ -225,6 +228,13 @@
       ["Previous security clearance", /^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
     ];
     const confirmed = (value, sourceQuestion, aliases3) => ({ ...result(value, "From your application profile", aliases3), sourceQuestion, requiresReview: true });
+    if (/^(?:(?:please )?(?:confirm|verify|repeat|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)) {
+      const email = profile.values?.email;
+      if (!email || field.primaryEmail && field.primaryEmail.trim().toLowerCase() !== email.trim().toLowerCase()) return { blocked: true };
+      return confirmed(email, "Profile email");
+    }
+    if (commonQuestion(q)?.question === "Preferred contact method" && fact("Preferred contact method") === "Email")
+      return confirmed("Email", "Preferred contact method", ["email", "e mail", "email address", "by email"]);
     const employment = q.replace(/^are you currently or have you (?:previously |ever )?worked (for|at) /, "have you worked $1 ").replace(/ this does not include contractor consultant or vendor roles$/, "");
     if (/^(?:were you (?:ever |previously )?employed (?:by|at)|have you (?:ever |previously )?(?:been employed by|worked (?:at|for))|are you (?:currently employed by|(?:an? )?current employee of)) .+/.test(employment) && !/\b(?:family|relatives?|spouse|applied|volunteer|board|shareholder|friends?|anyone|not|except|other than|or (?:are|have|will|do|did|would|can|could|is))\b/.test(employment) && questionKey(fact("Employment experience")) === "none")
       return confirmed("No", "Employment experience");
@@ -330,10 +340,17 @@
       return { blocked: true };
     }
     if (q === "to actual or expected" && college && /^\d{4}$/.test(profile.values.graduationYear)) return result(profile.values.graduationYear, "Expected graduation year at this school");
+    const pendingDegree = field.degreePair && pursued && (!school || college) && !field.highestEducation;
+    if (q === "not completed" && field.type === "checkbox-group") {
+      const degree = questionKey(field.rowDegree);
+      const current = degree === questionKey(pursued) || /^bachelor/.test(questionKey(pursued)) && ["bachelor", "bachelors", "bachelor s", "bachelor s degree", "bachelor degree", "bachelor of science", "bs", "b s"].includes(degree);
+      if (pendingDegree && degree && current && field.options?.length === 1) return { ...confirmed("Not Completed", "Degree being pursued"), markIncomplete: true };
+      return { blocked: true };
+    }
     if (q === "degree" || q === "degree type" || commonQuestion(field.label)?.question === "Degree being pursued") {
       if (field.highestEducation && fact("Highest completed degree")) return confirmed(fact("Highest completed degree"), "Highest completed degree", questionKey(fact("Highest completed degree")) === "high school diploma" ? ["high school or equivalent", "high school diploma ged", "high school diploma", "secondary education diploma"] : void 0);
       if (highSchool) return result(fact("Highest completed degree"), "Completed high-school education", ["high school diploma ged", "high school diploma", "full high school education"]);
-      if (pursued && (college || commonQuestion(field.label)?.question === "Degree being pursued")) return result(pursued, "Degree in progress, not a completed degree", ["bachelors", "bachelor", "bachelor s", "bachelor degree", "bachelor s degree", "bachelor of science", "b s", "bs"]);
+      if (pursued && (pendingDegree || college || commonQuestion(field.label)?.question === "Degree being pursued")) return result(pursued, "Degree in progress, not a completed degree", [questionKey(pursued), .../^bachelor/.test(questionKey(pursued)) ? ["bachelors", "bachelor", "bachelor s", "bachelor degree", "bachelor s degree", "bachelor of science", "b s", "bs"] : []]);
       return { blocked: true };
     }
     if (/gpa|grade point average|overall result/.test(q)) {
@@ -390,15 +407,58 @@
   Object.assign(aliases2, { robotics: ["robotics", "robotics projects"], electronics: ["electronics", "electronic circuits"], simulation: ["simulation", "engineering simulation"], prototyping: ["prototyping", "physical prototyping"] });
   var skillKey = (s) => Object.entries(aliases2).find(([, names]) => names.includes(key(s)))?.[0] || key(s);
   var uniqueSources = (items) => [...new Map(items.map((s) => [s.url + "\n" + s.quote, s])).values()].slice(0, 4);
+  var projectTopics = [
+    { topic: /\b(teamwork|team project|on a team|with a team|team contribution)\b/, evidence: /\b(team.s|team project|team competition)\b/i },
+    { topic: /\b(leadership|led a team|led a project|leadership role)\b/, evidence: /\bled (?:chassis|assembly)\b/i },
+    { topic: /\b(documentation|technical drawing|technical drawings|engineering drawings|documented your work)\b/, evidence: /\b(notebook|drawings)\b/i },
+    { topic: /\b(testing|tested a design|validated a design|measured results|evaluated a prototype)\b/, evidence: /\b(trials|baseline|measured)\b/i, state: "tested" },
+    { topic: /\b(design iteration|design constraint|design constraints|design tradeoff|design for manufacturability|adapted a design|redesigned a part)\b/, evidence: /\b(build envelope|printable sections|to integrate|within the robot envelope)\b/i }
+  ];
+  function projectExample(q, knowledge) {
+    const prompt = q.replace(/^please /, "");
+    if (!/^(?:how (?:have you|did you)|what (?:was|were|did you)|describe|tell (?:me|us) about|give (?:me |us )?an example|provide an example|can you (?:describe|give))\b/.test(prompt)) return null;
+    const topics = projectTopics.filter((t) => t.topic.test(prompt));
+    const named = knowledge.projects.filter((p) => (" " + q + " ").includes(" " + key(p.title) + " "));
+    if (topics.length > 1 || named.length > 1 || /\b(?:conflict|failed|failure|why|budget|deadline|certification|years|salary|safety|medical|aerospace|weapon|confidential|manager|customers?|employers?|coworkers?|clients?)\b/.test(prompt)) return null;
+    const topic = topics[0];
+    if (!topic && !named.length) return null;
+    const qualifier = prompt.match(/\b(?:using|with experience in) (.+)$/);
+    if (qualifier && !qualifier[1].split(/ and /).every((term) => Object.hasOwn(aliases2, skillKey(term)))) return null;
+    const mentioned = Object.entries(aliases2).filter(([, names]) => names.some((n) => (" " + q + " ").includes(" " + n + " "))).map(([k]) => k);
+    for (const project of named.length ? named : knowledge.projects) {
+      if (mentioned.some((k) => !project.tools.some((t) => t.key === k || k === "cad" && ["onshape", "solidworks", "autocad"].includes(t.key)) && k !== "documentation")) continue;
+      const matched = project.claims.filter((c) => !topic || (!topic.state || topic.state === c.state) && topic.evidence.test(c.text));
+      if (!matched.length) continue;
+      const claims = topic?.state === "tested" ? [project.claims[0], matched[0]] : matched.slice(0, 2);
+      const selected = [...new Set(claims)];
+      return { text: project.title + " \u2014 " + selected.map((c) => c.text).join(" "), sources: selected.flatMap((c) => c.sources) };
+    }
+    return null;
+  }
   function portfolioAnswer(field, knowledge) {
     if (knowledge?.format !== "duc-portfolio-knowledge-v1") return null;
-    const q = key(field.label).replace(/\b(required|optional)\b/g, "").trim();
+    const q = key(field.label).replace(/^professional summary$/, "summary").replace(/\b(required|optional)\b/g, "").trim().replace(/^(?:what (?:hands on |project )?experience do you have (?:with|using)|tell (?:me|us) about your experience using) (.+)$/, "describe your experience with $1");
     if (/\b(not|never|without|lack|professional|professionally|commercial|industry|industrial|paid|employed|employment|years|months|year|month|expert|expertise|proficient|advanced|certified|certification|license|licensed|citizen|citizenship|visa|sponsor|authorized|authorization|gpa|salary|gender|race|ethnicity|disability|veteran|birth|age|agree|certify|completed|successful|successfully|production|productionized|fluent|fully|functional|deployed|operational|independently|alone|sole)\b/.test(q) || /\d/.test(q.replace(/3d/g, ""))) return null;
     const answer = (value, sources, reason = "Draft from documented portfolio evidence") => sources.length && (!field.maxLength || field.maxLength < 0 || value.length <= field.maxLength) ? { value, display: value, requiresReview: true, reason, sourceQuestion: "Portfolio \xB7 " + knowledge.reviewedOn, sources: uniqueSources(sources), portfolioDerived: true } : null;
     const allSkills = /* @__PURE__ */ new Map();
-    if (/^(summary|professional summary|cover letter)( required)?$/.test(q)) {
+    if (/^(?:what (?:technical |engineering |relevant )?skills (?:would|can|could) you bring to (?:this|the) (?:role|position|internship|team)|summarize your hands on engineering experience)$/.test(q)) {
+      const examples = [];
+      for (const skill of ["solidworks", "arduino uno", "hand fabrication"]) {
+        const p2 = knowledge.projects.find((p3) => p3.tools.some((t) => t.key === skill) && p3.claims.some((c) => ["modeled", "built", "tested"].includes(c.state)));
+        if (!p2) continue;
+        const tool2 = p2.tools.find((t) => t.key === skill);
+        const claim = p2.claims.find((c) => c.evidenceIds.some((id) => tool2.evidenceIds.includes(id))) || p2.claims[0];
+        examples.push({ text: tool2.name + " (" + p2.title + ") \u2014 " + claim.text, sources: [...tool2.sources, ...claim.sources] });
+      }
+      return examples.length ? answer(examples.map((x) => x.text).join("\n"), [...examples.map((x) => x.sources[0]), ...examples.flatMap((x) => x.sources)]) : null;
+    }
+    if (knowledge.careerInterest && /^(?:what (?:type|kind) of (?:role|internship|opportunity|work) are you (?:looking for|seeking)|what are your career interests)$/.test(q))
+      return answer(knowledge.careerInterest.text, knowledge.careerInterest.sources);
+    const example = projectExample(q, knowledge);
+    if (example) return answer(example.text, example.sources);
+    if (/^(summary|professional summary|cover letter|tell us about yourself|tell me about yourself|briefly introduce yourself)( required)?$/.test(q)) {
       const project = knowledge.projects.find((p2) => p2.claims.length);
-      if (!project) return null;
+      if (!project || !knowledge.educationSources?.length || !/^mechanical engineering student at rutgers university/i.test(knowledge.education)) return null;
       const claim = project.claims[0];
       const intro = "I am studying mechanical engineering at Rutgers University.";
       const experience = "My project experience includes " + project.title + ". " + claim.text;
@@ -446,6 +506,12 @@
       if (/^(which university are you currently attending|what university do you (currently )?attend)$/.test(q)) return answer(edu[1], knowledge.educationSources);
       if (/^(describe|summarize|tell us about) your (education|educational background|academic background)$/.test(q)) return answer("I am a mechanical engineering student at " + edu[1] + ".", knowledge.educationSources);
     }
+    const applied = q.match(/^(?:how (?:have you|did you) (?:use|used|apply|applied)|give (?:us )?an example of (?:how you (?:used|applied)|using)) (.+?)(?: (?:in|on|for) (?:a|an|your) (?:engineering |design |academic )?project)?$/);
+    if (applied) {
+      const skills = applied[1].split(/ and /).map(skillKey);
+      if (!skills.every((s) => Object.hasOwn(aliases2, s))) return null;
+      return portfolioAnswer({ ...field, label: "Describe your experience with " + skills.join(" and ") }, knowledge);
+    }
     const narrative = /^(?:please )?(describe|summarize|tell us about|tell me about|give (?:us )?an example of|provide an example of)\b/.test(q) && /\b(project|projects|experience|work|design|designing|built|building)\b/.test(q);
     if (!narrative || /\b(why|failure|failed|conflict|difficult|challenge|challenging|proud|leadership|led|lead|managed|manage|greatest|best|favorite|budget|deadline|overcame)\b/.test(q)) return null;
     const requestedSkills = [...Object.entries(aliases2)].filter(([, names]) => names.some((n) => (" " + q + " ").includes(" " + n + " "))).map(([k]) => k);
@@ -465,12 +531,13 @@
       return { p: p2, score };
     }).filter(Boolean).sort((a, b) => b.score - a.score);
     if (!ranked.length || terms.length && ranked[0].score === 0) return null;
-    const p = ranked[0].p, tool = p.tools.find((t) => requestedSkills.includes(t.key));
+    const p = ranked[0].p, tool = p.tools.find((t) => requestedSkills.includes(t.key) || requestedSkills.includes("cad") && ["onshape", "solidworks", "autocad"].includes(t.key));
     const linked = tool ? p.claims.filter((c) => c.evidenceIds.some((id) => tool.evidenceIds.includes(id))) : [];
     const claims = (linked.length ? linked : p.claims).slice(0, 2);
     const status = p.completionState.replace(/-/g, " ");
     const text = "My work on " + p.title + " included:\n" + claims.map((c) => "\u2022 " + c.text).join("\n") + (status ? "\nProject status: " + status + "." : "");
-    return answer(text, claims.flatMap((c) => c.sources));
+    const use = tool ? "\n" + tool.name + " \u2014 " + tool.usage : "";
+    return answer(text + use, [...claims.flatMap((c) => c.sources), ...tool?.sources || []]);
   }
 
   // tools/application-helper/application-autofill.mjs?v=20261123.3
@@ -479,7 +546,7 @@
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
-    const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
     const activate = (e, option = false) => {
       if (option) e.scrollIntoView?.({ block: "nearest" });
@@ -526,9 +593,21 @@
     };
     const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
+    const radioSelector = 'input[type="radio"],[role="radio"]';
+    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l));
     const group = (e) => {
       const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
-      if (explicit || !checkbox(e)) return explicit;
+      if (explicit) return explicit;
+      if (radio(e)) {
+        if (e.name) return null;
+        for (let p2 = e.parentElement; p2 && p2 !== document.body; p2 = p2.parentElement) {
+          const rows = [...p2.querySelectorAll(radioSelector)];
+          if (rows.length < 2) continue;
+          if (rows.some((r) => r.name || r.closest('[role="radiogroup"],fieldset')) || p2.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])')) return null;
+          return p2;
+        }
+        return null;
+      }
       let p = e.parentElement;
       for (let i = 0; i < 6 && p && p !== document.body; i++, p = p.parentElement) {
         if (p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length) break;
@@ -537,6 +616,7 @@
       return null;
     };
     const radios = (e) => {
+      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
@@ -560,7 +640,10 @@
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
         if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
-        if (choice(e) && !candidates.length) candidates.push(...[...parent.querySelectorAll("div,span")].filter((h) => !h.children.length && !h.closest('label,[role="radio"]') && /\?\s*\*?$/.test(text(h))));
+        if (choice(e)) {
+          const prompts = [...parent.querySelectorAll("div,span,legend,p,label,h2,h3,h4")].filter((h) => !h.querySelector(controls) && !h.closest('[role="radio"]') && /\?\s*\*?$/.test(text(h)) && text(h).length <= 800);
+          candidates.unshift(...prompts.filter((h) => !prompts.some((other) => other !== h && h.contains(other))));
+        }
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -577,6 +660,7 @@
         if (value && !/^(yes|no)$/i.test(value)) return value;
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
+      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
       if (choice(e)) {
         const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
         return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 800);
@@ -662,6 +746,17 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+        const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+        if (!headings.length) continue;
+        if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
+        break;
+      }
+      if (/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
+        const scope = e.form || e.closest('[role="dialog"]') || document;
+        const originals = [...scope.querySelectorAll("input")].filter((c) => c !== e && visible(c) && /^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
+        return { primaryEmail: originals.length === 1 ? originals[0].value || "" : originals.length > 1 ? "ambiguous" : "" };
+      }
       if (wording.replace(/ required$/, "") === "country" || e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) {
         let box = e.parentElement;
         for (let depth = 0; box && box !== document.body && depth < 13; depth++, box = box.parentElement) {
@@ -675,8 +770,22 @@
         if (wording === "military status" && last && norm(label(last)) === "military branch") last = prior.at(-2);
         return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
+      let degreePair = false, rowDegree = "";
+      if (["degree", "degree type", "not completed"].includes(wording)) {
+        for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+          const items = [...p.querySelectorAll(controls)];
+          const degrees = items.filter((c) => !choice(c) && /^(degree|degree type)$/.test(norm(label(c))));
+          const boxes = items.filter((c) => checkbox(c) && norm(ownLabel(c)) === "not completed");
+          if (degrees.length > 1 || boxes.length > 1) break;
+          if (degrees.length === 1 && boxes.length === 1) {
+            degreePair = true;
+            rowDegree = empty(degrees[0]) ? "" : valueText(degrees[0]);
+            break;
+          }
+        }
+      }
       const q = norm(label(e));
-      if (!/degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -691,7 +800,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -712,16 +821,16 @@
           }
         }
       }
-      return { parentAnswer, parentQuestion, educationSchool, highestEducation };
+      return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "prepare-education") {
-      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^add$/i.test(text(b)));
+      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
         for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
           const headings = [...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
           if (!headings.length) continue;
-          return headings.length === 1 && norm(text(headings[0])) === "education" && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
+          return headings.length === 1 && /^(?:education|education history)$/.test(norm(text(headings[0]))) && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
         }
         return false;
       });
@@ -754,7 +863,7 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
@@ -788,17 +897,17 @@
           const matches = all.filter((c) => c.id === f.id);
           e = matches.length === 1 ? matches[0] : null;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !visible(e) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
         const currentContext = context(e);
-        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+        if ("primaryEmail" in f && currentContext.primaryEmail && String(currentContext.primaryEmail).trim().toLowerCase() !== String(f.value).trim().toLowerCase() || f.degreePair && (!currentContext.degreePair || f.rowDegree && f.rowDegree !== currentContext.rowDegree) || f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
           skipped++;
           continue;
         }
         if (checkbox(e)) {
-          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && visible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
+          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && choiceVisible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
           if (!labels.length || matching.length !== labels.length || new Set(matching.map((r) => norm(optionLabel(r)))).size !== labels.length) {
             skipped++;
             continue;
@@ -808,7 +917,7 @@
           if (matching.every((r) => r.checked)) filled++;
           else skipped++;
         } else if (radio(e)) {
-          const choices = radios(e), matching = choices.filter((r) => !disabled(r) && visible(r) && norm(optionLabel(r)) === norm(f.display));
+          const choices = radios(e), matching = choices.filter((r) => !disabled(r) && choiceVisible(r) && norm(optionLabel(r)) === norm(f.display));
           if (matching.length !== 1) {
             skipped++;
             continue;
@@ -819,7 +928,7 @@
           else skipped++;
         } else if (custom(e)) {
           const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
+          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
           e.focus();
@@ -829,20 +938,37 @@
           for (let attempt = 0; attempt < 15; attempt++) {
             if (location.href !== url || !e.isConnected) break;
             const ids = ((e.getAttribute("aria-controls") || "") + " " + (e.getAttribute("aria-owns") || "")).trim().split(/\s+/).filter(Boolean);
-            boxes = ids.map((id) => document.getElementById(id)).filter((n) => n && visible(n));
+            boxes = ids.map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
             if (!boxes.length) {
               const local = e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');
               if (local) boxes = [...local.querySelectorAll(boxSelector)].filter(visible);
             }
+            if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
-          const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
           const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
+          const isAddressPicker = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province)$/.test(norm(f.label));
+          const input = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          const query = input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "";
+          const setQuery = (value) => {
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, value);
+            input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+          };
+          if (query) {
+            setQuery(query);
+            for (let i = 0; i < 12; i++) {
+              await new Promise((r) => setTimeout(r, 80));
+              if (!e.isConnected || location.href !== url) break;
+              available = readOptions();
+              if (available.some((o) => aliases3.includes(optionKey(o)))) break;
+            }
+          }
           if (boxes.length === 1 && !available.some((o) => aliases3.includes(optionKey(o)))) {
             const scroll = [boxes[0], ...boxes[0].querySelectorAll("ul,div")].find((n) => n.clientHeight > 0 && n.scrollHeight > n.clientHeight + 2);
             if (scroll) {
@@ -876,11 +1002,13 @@
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
+            if (query && input.isConnected && input.value === query) setQuery("");
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
             skipped++;
             continue;
           }
+          options[0].scrollIntoView?.({ block: "nearest" });
           activate(options[0], true);
           let accepted = false, leafChosen = false;
           const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
@@ -898,7 +1026,7 @@
               }
               if (lists.length) continue;
             }
-            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true") {
+            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }
@@ -907,6 +1035,7 @@
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
           }
+          if (!accepted && query && input.isConnected && input.value === query) setQuery("");
           if (accepted) filled++;
           else skipped++;
         } else {
@@ -1001,7 +1130,10 @@
       const answer = suggestField({ ...field, label: contact.get(request) || prompt, type: "text" }, profile, memory, origin, context, portfolio);
       return answer ? { ...answer, reason: "Draft reply for your review", sourceQuestion: answer.sourceQuestion || contact.get(request) || prompt } : null;
     }
-    const label = normalize(field.label).replace(/\b(required|optional)\b/g, "").trim();
+    const wording = String(field.label || "").replace(/^\s*(?:question\s+)?\d{1,3}\s*[*.)\-:]+\s*[.*:]?\s*/i, "");
+    field = { ...field, label: wording };
+    const label = normalize(wording).replace(/\b(required|optional)\b/g, "").trim();
+    if (field.employmentEntry && profile.answers?.some((a) => commonQuestion(a.question)?.question === "Employment experience" && normalize(a.answer) === "none")) return null;
     const common = commonQuestion(label), background = backgroundAnswer(label, profile, memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context));
     const rule = answerRule(field, profile, memory, origin, context);
     if (rule?.blocked) return null;
@@ -1049,6 +1181,7 @@
     }
     if (field.maxLength > 0 && value.length > field.maxLength) return null;
     if (field.type === "checkbox-group") {
+      if (rule?.markIncomplete) return { value: "Not Completed", display: "Not Completed", selectedLabels: [field.options[0].label], reason: rule.reason, sourceQuestion: rule.sourceQuestion };
       if (common?.question !== "Preferred work regions") return null;
       const desired = value.split(";").map(normalize), matches = (field.options || []).filter((o) => !o.disabled && desired.includes(normalize(o.label)));
       if (matches.length !== desired.length || new Set(matches.map((o) => normalize(o.label))).size !== desired.length) return null;
@@ -1057,7 +1190,7 @@
     const confirmedMale = common?.question === "Sex" && normalize(value) === "male" && custom.length > 0 && new Set(custom.map((a) => normalize(a.answer))).size === 1;
     const review = rule ? { reason: rule.reason, sourceQuestion: rule.sourceQuestion, requiresReview: rule.requiresReview } : { reason: confirmedMale ? "Your confirmed profile answer" : background ? "Based on your confirmed background" : common?.review ? "Confirm this answer for this application" : remembered?.reason, sourceQuestion: background ? background.sourceQuestion : common?.review ? common.question : remembered?.question, requiresReview: !confirmedMale && (!!common?.review || !!background || !!remembered?.requiresReview) };
     if (field.type === "select-one" || field.type === "combobox" || field.type === "radio-group") {
-      const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
+      const aliases3 = rule?.aliases || (key2 === "state" && normalize(value) === "new jersey" ? ["new jersey", "nj"] : (key2 === "country" || background?.value === "United States") && ["us", "usa", "united states", "united states of america"].includes(normalize(value)) ? ["united states", "united states of america", "us", "usa"] : common?.question === "Highest completed degree" && normalize(value) === "high school diploma" ? ["high school diploma", "high school diploma or equivalent", "high school diploma ged", "high school or equivalent"] : [normalize(value)]);
       if (rule?.confirmUSPersons && field.type === "select-one") {
         const choices = field.options.filter((o) => !o.disabled && o.value && !/^(?:please )?(?:select|choose)\b/.test(normalize(o.label)));
         if (choices.length === 1) return { value: choices[0].value, display: choices[0].label, ...review };
@@ -1082,7 +1215,7 @@
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
-    const comboSelector = '[role="combobox"],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
     const activate = (e, option = false) => {
       if (option) e.scrollIntoView?.({ block: "nearest" });
@@ -1129,9 +1262,21 @@
     };
     const type = (e) => isReply(e) ? "chat-reply" : radio(e) ? "radio-group" : checkbox(e) ? "checkbox-group" : custom(e) ? "combobox" : e.type || e.tagName.toLowerCase();
     const labelled = (e) => (e?.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => text(document.getElementById(id))).join(" ");
+    const radioSelector = 'input[type="radio"],[role="radio"]';
+    const choiceVisible = (e) => visible(e) || [...e.labels || [], e.closest("label")].some((l) => l && visible(l));
     const group = (e) => {
       const explicit = e.closest('[role="radiogroup"],[role="group"],fieldset');
-      if (explicit || !checkbox(e)) return explicit;
+      if (explicit) return explicit;
+      if (radio(e)) {
+        if (e.name) return null;
+        for (let p2 = e.parentElement; p2 && p2 !== document.body; p2 = p2.parentElement) {
+          const rows = [...p2.querySelectorAll(radioSelector)];
+          if (rows.length < 2) continue;
+          if (rows.some((r) => r.name || r.closest('[role="radiogroup"],fieldset')) || p2.querySelector('textarea,select,input:not([type="radio"]):not([type="hidden"])')) return null;
+          return p2;
+        }
+        return null;
+      }
       let p = e.parentElement;
       for (let i = 0; i < 6 && p && p !== document.body; i++, p = p.parentElement) {
         if (p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length) break;
@@ -1140,6 +1285,7 @@
       return null;
     };
     const radios = (e) => {
+      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
@@ -1163,7 +1309,10 @@
         } else if (contained.filter((c) => !radio(c)).length !== 1) break;
         const candidates = [...parent.querySelectorAll("legend,[data-question],.question-label,.control-label,.form-label,h3,h4,p,label,strong")].filter((h) => !h.closest('[role="listbox"],[role="option"]') && !h.querySelector(controls) && !members.some((r) => r.closest("label")?.contains(h) || [...r.labels || []].some((l) => l.contains(h))));
         if (!choice(e)) candidates.sort((a, b) => Number(!a.matches("label,strong,.question-label,.control-label,.form-label")) - Number(!b.matches("label,strong,.question-label,.control-label,.form-label")));
-        if (choice(e) && !candidates.length) candidates.push(...[...parent.querySelectorAll("div,span")].filter((h) => !h.children.length && !h.closest('label,[role="radio"]') && /\?\s*\*?$/.test(text(h))));
+        if (choice(e)) {
+          const prompts = [...parent.querySelectorAll("div,span,legend,p,label,h2,h3,h4")].filter((h) => !h.querySelector(controls) && !h.closest('[role="radio"]') && /\?\s*\*?$/.test(text(h)) && text(h).length <= 800);
+          candidates.unshift(...prompts.filter((h) => !prompts.some((other) => other !== h && h.contains(other))));
+        }
         for (const heading of candidates) {
           const value = labelText(heading);
           if (value && !/^(yes|no|male|female)$/i.test(value) && value.length <= 800) return value;
@@ -1180,6 +1329,7 @@
         if (value && !/^(yes|no)$/i.test(value)) return value;
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
+      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
       if (choice(e)) {
         const g = group(e), single = g && [...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every((r) => radios(e).includes(r));
         return (single && (g.getAttribute("aria-label") || labelled(g) || text(g.querySelector("legend"))) || nearbyLabel(e)).trim().slice(0, 800);
@@ -1265,6 +1415,17 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+        const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+        if (!headings.length) continue;
+        if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
+        break;
+      }
+      if (/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
+        const scope = e.form || e.closest('[role="dialog"]') || document;
+        const originals = [...scope.querySelectorAll("input")].filter((c) => c !== e && visible(c) && /^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
+        return { primaryEmail: originals.length === 1 ? originals[0].value || "" : originals.length > 1 ? "ambiguous" : "" };
+      }
       if (wording.replace(/ required$/, "") === "country" || e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) {
         let box = e.parentElement;
         for (let depth = 0; box && box !== document.body && depth < 13; depth++, box = box.parentElement) {
@@ -1278,8 +1439,22 @@
         if (wording === "military status" && last && norm(label(last)) === "military branch") last = prior.at(-2);
         return { parentQuestion: last ? label(last) : "", parentAnswer: last && !empty(last) ? valueText(last) : "", parentIncludesCitizenCategory: !!last && /belong to one of the categories above/.test(norm(label(last))) && citizenList(last) };
       }
+      let degreePair = false, rowDegree = "";
+      if (["degree", "degree type", "not completed"].includes(wording)) {
+        for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+          const items = [...p.querySelectorAll(controls)];
+          const degrees = items.filter((c) => !choice(c) && /^(degree|degree type)$/.test(norm(label(c))));
+          const boxes = items.filter((c) => checkbox(c) && norm(ownLabel(c)) === "not completed");
+          if (degrees.length > 1 || boxes.length > 1) break;
+          if (degrees.length === 1 && boxes.length === 1) {
+            degreePair = true;
+            rowDegree = empty(degrees[0]) ? "" : valueText(degrees[0]);
+            break;
+          }
+        }
+      }
       const q = norm(label(e));
-      if (!/degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
+      if (!/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
       if (/^source details?$|^if .+ please specify$/.test(q)) {
@@ -1294,7 +1469,7 @@
           parentQuestion = label(last);
         }
       }
-      if (/degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
+      if (/not completed|degree|gpa|grade point|overall result|field of study|^to actual or expected$/.test(q)) {
         let container = e.parentElement;
         for (let n = 0; n < 7 && container && container !== document.body; n++, container = container.parentElement) {
           const schools = all.filter((c) => container.contains(c) && /^(school or university|school university|school|university|college)( name)?$/.test(norm(label(c))));
@@ -1315,16 +1490,16 @@
           }
         }
       }
-      return { parentAnswer, parentQuestion, educationSchool, highestEducation };
+      return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
     };
     const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     if (action === "prepare-education") {
-      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^add$/i.test(text(b)));
+      const buttons = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.disabled && !b.matches('[type="submit"]') && (!b.form || b.type === "button") && /^(?:\+\s*)?add(?: education history)?$/i.test(text(b)));
       const education = buttons.filter((b) => {
         for (let section = b.parentElement; section && section !== document.body; section = section.parentElement) {
           const headings = [...section.querySelectorAll('h1,h2,h3,h4,h5,legend,[role="heading"]')].filter(visible);
           if (!headings.length) continue;
-          return headings.length === 1 && norm(text(headings[0])) === "education" && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
+          return headings.length === 1 && /^(?:education|education history)$/.test(norm(text(headings[0]))) && !section.querySelector('input:not([type="hidden"]),select,textarea,[role="combobox"]') && buttons.filter((other) => section.contains(other)).length === 1;
         }
         return false;
       });
@@ -1357,7 +1532,7 @@
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
       const all = elements();
-      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).slice(0, 150), chatFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.protocol === "https:" && (/(^|\.)paradox\.ai$/.test(u.hostname) || /\b(chat|chatbot|olivia)\b/i.test([frame.title, frame.id, frame.name].join(" "))) ? [u.origin] : [];
@@ -1391,17 +1566,17 @@
           const matches = all.filter((c) => c.id === f.id);
           e = matches.length === 1 ? matches[0] : null;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !visible(e) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
         const currentContext = context(e);
-        if (f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
+        if ("primaryEmail" in f && currentContext.primaryEmail && String(currentContext.primaryEmail).trim().toLowerCase() !== String(f.value).trim().toLowerCase() || f.degreePair && (!currentContext.degreePair || f.rowDegree && f.rowDegree !== currentContext.rowDegree) || f.includesCitizenCategory && !currentContext.includesCitizenCategory || f.parentIncludesCitizenCategory && !currentContext.parentIncludesCitizenCategory || f.parentQuestion && currentContext.parentQuestion !== f.parentQuestion || f.parentAnswer && currentContext.parentAnswer !== f.parentAnswer || f.educationSchool && currentContext.educationSchool !== f.educationSchool) {
           skipped++;
           continue;
         }
         if (checkbox(e)) {
-          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && visible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
+          const choices = radios(e), labels = f.selectedLabels || [], matching = choices.filter((r) => !disabled(r) && choiceVisible(r) && labels.some((l) => norm(l) === norm(optionLabel(r))));
           if (!labels.length || matching.length !== labels.length || new Set(matching.map((r) => norm(optionLabel(r)))).size !== labels.length) {
             skipped++;
             continue;
@@ -1411,7 +1586,7 @@
           if (matching.every((r) => r.checked)) filled++;
           else skipped++;
         } else if (radio(e)) {
-          const choices = radios(e), matching = choices.filter((r) => !disabled(r) && visible(r) && norm(optionLabel(r)) === norm(f.display));
+          const choices = radios(e), matching = choices.filter((r) => !disabled(r) && choiceVisible(r) && norm(optionLabel(r)) === norm(f.display));
           if (matching.length !== 1) {
             skipped++;
             continue;
@@ -1422,7 +1597,7 @@
           else skipped++;
         } else if (custom(e)) {
           const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
-          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li > a,[data-selectable],.ui-select-choices-row';
+          const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
           e.focus();
@@ -1432,20 +1607,37 @@
           for (let attempt = 0; attempt < 15; attempt++) {
             if (location.href !== url || !e.isConnected) break;
             const ids = ((e.getAttribute("aria-controls") || "") + " " + (e.getAttribute("aria-owns") || "")).trim().split(/\s+/).filter(Boolean);
-            boxes = ids.map((id) => document.getElementById(id)).filter((n) => n && visible(n));
+            boxes = ids.map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
             if (!boxes.length) {
               const local = e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');
               if (local) boxes = [...local.querySelectorAll(boxSelector)].filter(visible);
             }
+            if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
             if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
             await new Promise((r) => setTimeout(r, 80));
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
-          const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o, i, all2) => !all2.some((other) => other !== o && other.contains(o))) : [];
+          const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
           const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
+          const isAddressPicker = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province)$/.test(norm(f.label));
+          const input = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          const query = input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "";
+          const setQuery = (value) => {
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, value);
+            input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+          };
+          if (query) {
+            setQuery(query);
+            for (let i = 0; i < 12; i++) {
+              await new Promise((r) => setTimeout(r, 80));
+              if (!e.isConnected || location.href !== url) break;
+              available = readOptions();
+              if (available.some((o) => aliases3.includes(optionKey(o)))) break;
+            }
+          }
           if (boxes.length === 1 && !available.some((o) => aliases3.includes(optionKey(o)))) {
             const scroll = [boxes[0], ...boxes[0].querySelectorAll("ul,div")].find((n) => n.clientHeight > 0 && n.scrollHeight > n.clientHeight + 2);
             if (scroll) {
@@ -1479,11 +1671,13 @@
             if (norm(text(options[0])) !== norm(text(options[1]))) options.splice(1);
           }
           if (location.href !== url || !e.isConnected || options.length !== 1) {
+            if (query && input.isConnected && input.value === query) setQuery("");
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
             skipped++;
             continue;
           }
+          options[0].scrollIntoView?.({ block: "nearest" });
           activate(options[0], true);
           let accepted = false, leafChosen = false;
           const sourceBranch = f.sourceTree && /^(?:company|our) web\s*site$/i.test(text(options[0]));
@@ -1501,7 +1695,7 @@
               }
               if (lists.length) continue;
             }
-            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true") {
+            if (aliases3.includes(norm(valueText(e))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }
@@ -1510,6 +1704,7 @@
             e.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
             e.blur();
           }
+          if (!accepted && query && input.isConnected && input.value === query) setQuery("");
           if (accepted) filled++;
           else skipped++;
         } else {

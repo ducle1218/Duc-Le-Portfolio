@@ -14,7 +14,7 @@ let portfolioState=null;
 async function readPortfolio(force=false){
  try{const response=await chrome.runtime.sendMessage({type:'portfolio-read',force});portfolioState=response?.portfolio||null;}catch{portfolioState=null;}
  const p=portfolioState;
- $('portfolio-status').textContent=p?.knowledge?(p.knowledge.projects.length+' projects · '+(p.state==='cached'?'cached copy':'checked '+new Date(p.fetchedAt).toLocaleDateString())+' · source review '+p.knowledge.reviewedOn):(p?.notice||'Portfolio unavailable; saved answers still work.');
+ $('portfolio-status').textContent=p?.knowledge?(p.knowledge.projects.length+' projects · '+(p.state==='cached'?'cached copy':p.state==='bundled'?'included in helper':'checked '+new Date(p.fetchedAt).toLocaleDateString())+' · source review '+p.knowledge.reviewedOn):(p?.notice||'Portfolio unavailable; saved answers still work.');
  return p?.knowledge||null;
 }
 $('refresh-portfolio').onclick=async()=>{$('refresh-portfolio').disabled=true;await readPortfolio(true);$('refresh-portfolio').disabled=false;reset();say('Portfolio checked. Scan again to review new suggestions.');};

@@ -3,7 +3,7 @@ import {studioURL,prepareHandoff,originPattern,employerURL} from './handoff-core
 import {cleanProfile,employerSites} from './application-core.mjs';
 import {cleanMemory,mergeMemory} from './answer-memory.mjs';
 import {PREFERENCE_ANSWERS} from './answer-rules.mjs';
-import {loadPortfolio} from './portfolio-source.mjs';
+import {loadPortfolio,includedPortfolio} from './portfolio-source.mjs';
 chrome.runtime.onInstalled.addListener(async ({reason}) => {
   if(reason==='update')await chrome.storage.local.remove('answerVault');
   await loadDeviceProfile();
@@ -25,7 +25,7 @@ async function loadDeviceProfile(){
  if(studioProfile&&Date.parse(studioProfile.confirmedAt)>Date.parse(profile.confirmedAt))return;
  await chrome.storage.local.set({profile,studioProfile:profile,employerSites:employerSites(knownSites,data.employerAccounts),deviceProfileRevision:data.exportedAt});
 }
-const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):{state:'needs-access',knowledge:null,notice:'Allow portfolio access when reloading the updated helper.'};
+const portfolio=async force=>await chrome.permissions.contains({origins:['https://ducle1218.github.io/*']})?loadPortfolio({force}):includedPortfolio();
 let memoryWrite=Promise.resolve();
 let preferenceSeed;
 const readMemory=async()=>{

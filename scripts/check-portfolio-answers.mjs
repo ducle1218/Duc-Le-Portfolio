@@ -35,6 +35,18 @@ const fetcher=async(url,options)=>{calls++;assert([PORTFOLIO_URL+'data/portfolio
 const now=Date.now();const first=await loadPortfolio({storage,fetcher,now});assert.equal(first.state,'ready');assert.equal(calls,2);
 assert.equal((await loadPortfolio({storage,fetcher,now:now+1000})).state,'ready');assert.equal(calls,2);
 const offline=async()=>{throw Error('offline');};assert.equal((await loadPortfolio({storage,fetcher:offline,force:true,now:now+2000})).state,'cached');
-assert.equal((await loadPortfolio({storage,fetcher:offline,now:now+8*86400000})).state,'unavailable');
+const bundled=await loadPortfolio({storage,fetcher:offline,now:now+8*86400000});
+assert.equal(bundled.state,'bundled');assert.deepEqual(bundled.knowledge,knowledge);
+for(const [question,expected] of [
+ ['How have you used CAD on an engineering project?',/Onshape|SolidWorks/],
+ ['Tell us about a team project.',/assembly/],
+ ['Give an example of testing.',/13.7 seconds/],
+ ['Describe a design constraint.',/printable|envelope/],
+ ['Describe your technical documentation.',/notebook/i],
+ ['What skills would you bring to this internship?',/Arduino/],
+ ['What kind of internship are you looking for?',/mechanical engineering/i]
+]){const result=suggest(question);assert.match(result?.value||'',expected,question);assert(result.sources.length>0&&result.requiresReview);}
+assert.equal(suggest('How have you used CATIA?'),null);
+assert.equal(suggest('Describe a team project using CATIA.'),null);
 const noResume=await loadPortfolio({storage,force:true,now:now+3000,fetcher:async url=>url.endsWith('portfolio.json')?Response.json(feed):Response.json({}, {status:503})});assert.equal(noResume.knowledge.skills.length,0);assert(noResume.knowledge.projects.length);
 console.log('PASS: portfolio-derived skills, cited project drafts, education, explicit-answer precedence, unknown/negated/compound questions, ownership, planned-work exclusion, source validation, bounded caching and offline fallback.');

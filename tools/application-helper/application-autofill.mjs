@@ -136,7 +136,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
    const candidates=field.options.filter(o=>!o.disabled&&o.value&&/\b(?:careers? (?:web)?site|careers? page|company website)$/.test(normalize(o.label)));
    if(candidates.length===1)return {value:candidates[0].value,display:candidates[0].label,...review};
   }
-  if(field.type==='combobox')return {value,display:sourceFallbacks?'Company career site, then LinkedIn or Indeed, then career fair':value,aliases,...(rule?.confirmUSPersons?{confirmUSPersons:true}:{}),...(rule?.careerSiteDetail?{careerSiteDetail:true}:{}),...(sourceTree?{sourceTree:true,sourceFallbacks}: {}),...review};
+  if(field.type==='combobox')return {value,display:sourceFallbacks?'Company career site, then LinkedIn or Indeed, then career fair':value,aliases,...(rule?.confirmUSPersons?{confirmUSPersons:true}:{}),...(rule?.careerSiteDetail?{careerSiteDetail:true}:{}),...(sourceTree?{sourceTree:true,sourceFallbacks,sourceEmployer:field.jobEmployer||''}: {}),...review};
   const matches=(field.options||[]).filter(o=>!o.disabled&&(aliases.includes(normalize(o.label))||field.type!=='radio-group'&&aliases.includes(normalize(o.value))));if(rule?.aliases&&matches.length>1){matches.sort((a,b)=>aliases.indexOf(normalize(a.label))-aliases.indexOf(normalize(b.label)));if(normalize(matches[0].label)!==normalize(matches[1].label))matches.splice(1);}if(matches.length!==1)return null;return {value:matches[0].value,display:matches[0].label,...review};
  }
  return {value,display:value,...review};
@@ -150,7 +150,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
  const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const visible=e=>!!e.getClientRects?.()?.length&&getComputedStyle(e).visibility!=='hidden';
  const comboSelector='[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
- const controls='[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,'+comboSelector+',[role="radio"]';
+ const controls='[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,'+comboSelector+',[role="radio"],[role="checkbox"]';
  const activate=(e,option=false)=>{
   if(option)e.scrollIntoView?.({block:"nearest"});
   const Mouse=typeof MouseEvent==='undefined'?Event:MouseEvent;
@@ -169,7 +169,8 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
  };
  const custom=e=>e.tagName!=='SELECT'&&e.matches(comboSelector);
  const radio=e=>e.type==='radio'||e.getAttribute('role')==='radio';
- const checkbox=e=>e.type==='checkbox';
+ const checkbox=e=>e.type==='checkbox'||e.getAttribute('role')==='checkbox';
+ const checked=e=>e.checked||e.getAttribute('aria-checked')==='true';
  const choice=e=>radio(e)||checkbox(e);
  const isReply=e=>e.matches('textarea,input:not([type]),input[type="text"],[contenteditable]')&&/^(?:write|type|enter|send) (?:a |your )?(?:reply|message)(?: here)?[. …]*$/i.test((e.placeholder||e.getAttribute('data-placeholder')||e.getAttribute('aria-placeholder')||e.getAttribute('aria-label')||'').trim());
  const chatQuestion=e=>{
@@ -203,8 +204,13 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
     return p;
    }
    return null;
+  }if(checkbox(e)){
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    if(p.querySelector('select,textarea,input:not([type=hidden]):not([type=checkbox])'))break;
+    if(p.querySelectorAll('input[type=checkbox],[role=checkbox]').length>1&&[...p.querySelectorAll('label,legend,h2,h3,h4,p,span,div')].some(n=>!n.childElementCount&&/^(ethnicity|race|race ethnicity)$/.test(norm(text(n)))))return p;
+   }
   }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,label:not([for]),[aria-labelledby],.question-label,.form-label,.control-label'))return p;}return null;};
- const radios=e=>{if(checkbox(e)&&norm(ownLabel(e))==='not completed')return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
+ const radios=e=>{if(checkbox(e)&&norm(ownLabel(e))==='not completed')return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"],[role="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
  const useful=s=>/^(select|please select|choose|open menu|clear|select an option|select one)[. …]*$/i.test((s||'').trim())?'':s;
@@ -264,6 +270,13 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    if(checkbox(e)&&adjacent&&adjacent.length<100)return adjacent;
    if(description&&description.length<=800&&(checkbox(e)||e.tagName==='SELECT'))return description;
   }
+  if(checkbox(e)){
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    if(p.querySelector('select,textarea,input:not([type=hidden]):not([type=checkbox])'))break;
+    const captions=[...p.querySelectorAll('label,legend,h2,h3,h4,p,span,div')].filter(n=>!n.childElementCount&&/^(ethnicity|race|race ethnicity)$/.test(norm(text(n))));
+    if(captions.length===1&&p.querySelectorAll('input[type=checkbox],[role=checkbox]').length>1)return text(captions[0]);
+   }
+  }
   if(choice(e)){const g=group(e),single=g&&[...g.querySelectorAll('input[type="radio"],[role="radio"],input[type="checkbox"]')].every(r=>radios(e).includes(r));return (single&&(g.getAttribute('aria-label')||labelled(g)||text(g.querySelector('legend')))||groupPrompt(g)||nearbyLabel(e)).trim().slice(0,800);}return (ownLabel(e)||(custom(e)&&e.querySelector('input')?ownLabel(e.querySelector('input')):'')||(original(e)?ownLabel(original(e)):'')||nearbyLabel(e)||e.placeholder||((e.type==='email'||e.autocomplete==='email')?'Email':'')).trim().slice(0,800);};
  let shadowEditors=null;
  const elements=()=>{
@@ -274,6 +287,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   if(!shadowEditors){shadowEditors=[];shadowReplies(document);}list.push(...shadowEditors);
   return list.filter(e=>!e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);};
  const selectedValue=e=>{
+  if(e.matches('input[role=combobox],input[aria-autocomplete=list]')&&e.getAttribute('aria-invalid')==='true')return '';
   if(e.matches('[data-automation-id="searchBox"]')){
    const holder=e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]')||e.parentElement;
    return text(holder?.querySelector('[data-automation-id="selectedItem"],[data-automation-id="selectedItemLabel"]'));
@@ -344,7 +358,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    if(phoneError(e))return {digitsPhone:true,invalidPhone:true,phoneBefore:e.value};
    if(/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help)||e.validity?.patternMismatch)return {digitsPhone:true,phoneBefore:e.value};
   }
-  if(/^(reading|speaking|writing|understanding|listening)$/.test(wording)){
+  if(/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(wording)){
    for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
     const langs=[...p.querySelectorAll(controls)].filter(c=>/^(language|language name)$/.test(norm(label(c)))&&visible(c));
     if(langs.length)return {languageRow:langs.length===1?norm(valueText(langs[0])):'',currentLevel:norm(valueText(e))};
@@ -461,12 +475,16 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   const copy=n.cloneNode(true);for(const child of copy.querySelectorAll('button,svg,[aria-hidden=true]'))child.remove();
   const value=(text(copy)||n.getAttribute('data-value')||'').replace(/^[×✕]\s*/,'').trim();return value?[value]:[];
  });
- const skillInput=p=>[...p.querySelectorAll('input:not([type=hidden]):not([type=checkbox])')].find(e=>visible(e)&&!disabled(e)&&(/skills/i.test(label(e)+' '+e.id)||e.getAttribute('data-automation-id')==='searchBox'));
+ const skillInput=p=>{
+  const inputs=[...p.querySelectorAll('input:not([type=hidden]):not([type=checkbox])')].filter(e=>visible(e)&&!disabled(e));
+  return inputs.find(e=>/skills/i.test(label(e)+' '+e.id)||e.getAttribute('data-automation-id')==='searchBox')||(inputs.length===1&&/search/i.test(inputs[0].placeholder||'')?inputs[0]:null);
+ };
+ const skillOpener=p=>[...p.querySelectorAll('[aria-haspopup=listbox],[role=combobox],[data-automation-id=multiSelectContainer]')].find(e=>visible(e)&&!disabled(e));
  const languageInputs=p=>elements().filter(e=>p.contains(e)&&visible(e)&&!disabled(e)&&!choice(e)&&/^(language|select language)$/.test(norm(label(e))));
  const languageAdd=p=>[...p.querySelectorAll('button')].find(b=>visible(b)&&!disabled(b)&&(!b.form||b.type==='button')&&/^(add|add another|add language)$/i.test(text(b)));
  const listFields=()=>{
   const fields=[],skills=sectionFor('skills'),languages=sectionFor('languages');
-  if(skills&&skillInput(skills))fields.push({type:'skill-list',label:'Skills',existing:chipValues(skills)});
+  if(skills&&(skillInput(skills)||skillOpener(skills)))fields.push({type:'skill-list',label:'Skills',existing:chipValues(skills)});
   if(languages&&(languageAdd(languages)||languageInputs(languages).length))fields.push({type:'language-list',label:'Languages',existing:languageInputs(languages).filter(e=>!empty(e)).map(valueText)});
   return fields;
  };
@@ -492,7 +510,11 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
  async function fillSkills(values,skillAliases={}){
   let complete=true;
   for(const value of values){
-   const section=sectionFor('skills'),e=section&&skillInput(section);if(!e||location.href!==url)return false;
+   const section=sectionFor('skills');if(!section||location.href!==url)return false;
+   let e=skillInput(section);
+   const opener=skillOpener(section);
+   if(opener&&opener.getAttribute('aria-expanded')!=='true'){activate(opener);await pause(100);e=skillInput(section)||e;}
+   if(!e)return false;
    const skillKey=s=>s.toLowerCase().replace(/c\+\+/g,'cplusplus').replace(/c#/g,'csharp').replace(/[^a-z0-9]+/g,' ').trim();
    const aliases=new Set(skillAliases[value]||[skillKey(value)]);
    const committed=()=>{const p=sectionFor('skills');return !!p&&chipValues(p).some(s=>aliases.has(skillKey(s)));};
@@ -501,10 +523,10 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    const write=v=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,v);e.dispatchEvent(new Event('input',{bubbles:true}));};
    const menus='[role="listbox"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"]';
    const before=new Set([...document.querySelectorAll(menus)].filter(visible));
-   e.focus();write(value);
+   e.focus();if(!opener||opener!==e)e.click();write(value);
    let clicked=false;
    for(let i=0;i<20&&!committed();i++){
-    await pause(75);if(!e.isConnected||location.href!==url)return false;
+    await pause(75);if(committed())break;if(!e.isConnected||location.href!==url)return false;
     const id=e.getAttribute('aria-controls')||e.getAttribute('aria-owns');
     const panels=[...document.querySelectorAll(menus)].filter(p=>visible(p)&&(p.id===id||section.contains(p)||!before.has(p)));
     const inner=panels.filter(p=>!panels.some(n=>n!==p&&p.contains(n)));
@@ -585,7 +607,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   const jobLocation=countries.size===1?[...countries][0]:'';
   const posting=postings.length===1?postings[0]:null;
   const jobEmployer=posting?.hiringOrganization?.name||'',jobIndustry=typeof posting?.industry==='string'?posting.industry:'';
-  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),hasUpload:!!document.querySelector('input[type=file],[ondrop],[data-dropzone]'),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),hasCodePrompt:/enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)),hasUpload:!!document.querySelector('input[type=file],[ondrop],[data-dropzone]'),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasEmailSignIn:[...document.querySelectorAll('h1,h2,h3,[role=heading]')].some(h=>visible(h)&&/^(?:sign in|log in)$/i.test(text(h))),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -596,7 +618,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    if(!['text','email','tel','url','textarea','select-one','number','combobox','radio-group','checkbox-group','date','month'].includes(type(e))||disabled(e)||!visible(e)||empty(e))continue;
    if(checkbox(e)&&norm(label(e))!=='in which of the following u s geographic locations are you willing to work')continue;
    const question=label(e),identity=/^(sex|what is your sex|gender|what is your gender|preferred pronouns?|pronouns|what are your pronouns|race|ethnicity|race ethnicity|race ethnic background|what is your race ethnic background|what is your race ethnicity|what is your race|what is your ethnicity|what is your racial ethnic background|country of citizenship|in which country region do you have citizenship|in which country do you have citizenship|which country are you a citizen of)$/.test(norm(question));if(!question||/^(in )?(what|which) country( region)?$/.test(norm(question))||(!identity&&blocked.test(question+' '+(e.name||'')+' '+e.id))||/one-time-code|cc-|current-password|new-password/.test(e.autocomplete||''))continue;
-   const answer=checkbox(e)?radios(e).filter(r=>r.checked).map(optionLabel).join('; '):radio(e)?optionLabel(selectedRadio(e)):custom(e)?selectedValue(e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):e.value;
+   const answer=checkbox(e)?radios(e).filter(checked).map(optionLabel).join('; '):radio(e)?optionLabel(selectedRadio(e)):custom(e)?selectedValue(e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):e.value;
    if(!answer||answer.length>1500||placeholder(answer))continue;
    candidates.push({question,answer});if(candidates.length>=100)break;
   }
@@ -621,8 +643,8 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    if(checkbox(e)){
     const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
     if(!labels.length||matching.length!==labels.length||new Set(matching.map(r=>norm(optionLabel(r)))).size!==labels.length){skipped++;continue;}
-    for(const r of matching)if(!r.checked)r.click();await new Promise(r=>setTimeout(r,60));
-    if(matching.every(r=>r.checked))filled++;else skipped++;
+    for(const r of matching)if(!checked(r))r.click();await new Promise(r=>setTimeout(r,60));
+    if(matching.every(checked))filled++;else skipped++;
    }else if(radio(e)){
     const choices=radios(e),matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&norm(optionLabel(r))===norm(f.display));
     if(matching.length!==1){skipped++;continue;}matching[0].click();await new Promise(r=>setTimeout(r,60));
@@ -688,7 +710,8 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
      const careerSites=available.map(o=>norm(text(o))).filter(v=>/\b(?:careers? (?:web)?site|careers? page|company website)$/.test(v));
      if(careerSites.length===1)aliases.push(careerSites[0]);
     }
-    const brand=/\.myworkdayjobs\.com$/.test(location.hostname)?norm(location.hostname.split('.')[0]):'';
+    const tenant=/\.myworkdayjobs\.com$/.test(location.hostname)?norm(location.hostname.split('.')[0]):'';
+    const brand=[norm(f.sourceEmployer).replace(/ (inc|company|corporation)$/,''),tenant].find(name=>name&&available.some(o=>optionKey(o)===name))||tenant;
     if(f.sourceTree){
      const direct=available.filter(o=>/\bcareers? (?:web ?site|page|site)$/.test(optionKey(o)));
      if(direct.length===1)aliases.unshift(optionKey(direct[0]));

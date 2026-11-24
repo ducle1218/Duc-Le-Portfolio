@@ -282,6 +282,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  const restricted='Only recruiters managing jobs I apply to';
  if((/^(?:make my profile visible to|profile visibility|who can (?:see|view) (?:my|your) profile)$/.test(q)||(field.options||[]).some(o=>questionKey(o.label)===questionKey(restricted)))&&unique('Recruiter profile visibility')===restricted)return confirmed(restricted,'Recruiter profile visibility');
+ if(q==='protected veteran'&&unique('Military service')==='No')return confirmed('I am not a veteran','Military service',['i am not a veteran','not a veteran','i am not a protected veteran','no']);
  if(/^are you (?:a |an? )?protected veteran$/.test(q)&&unique('Protected veteran status')==='I am not a protected veteran')return confirmed('No','Protected veteran status',['no','no i am not a protected veteran','i am not a protected veteran','not a protected veteran']);
  if((/^(?:protected )?veteran (?:self identification )?status$/.test(q)||/^please select your protected veteran status\b/.test(q))&&unique('Protected veteran status')==='I am not a protected veteran')
   return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran','i am not a veteran','not a veteran','i am not a protected veteran or veteran']);
@@ -300,9 +301,13 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const proof='Can provide a valid US passport, US birth certificate or certificate of naturalization on request';
  if(/^(?:if hired )?can you (?:submit|provide) (?:verification|proof|documentation) of your (?:legal )?right to work in (?:the )?(?:us|u s|united states)$/.test(q)&&citizen&&unique(proof)==='Yes')return confirmed('Yes',proof);
  if(/\bexport control(?:led)?\b/.test(q)&&/\b(?:select|choose) (?:among |one of )?(?:the following|an option|which statement)/.test(q)){
-  if(!citizen||unique(proof)!=='Yes')return {blocked:true};
+  if(!citizen)return {blocked:true};
+  const citizenship=['a citizen of the u s','a citizen of the united states','us citizen','u s citizen'];
+  const exact=(field.options||[]).find(o=>!o.disabled&&citizenship.includes(questionKey(o.label)));
+  if(exact)return confirmed(exact.label,'Citizenships',citizenship);
+  if(unique(proof)!=='Yes')return field.type==='combobox'?confirmed('A citizen of the U.S.','Citizenships',citizenship):{blocked:true};
   const option='I am a US Person and can provide a valid, unexpired US Passport or US birth certificate or certificate of naturalization upon request.';
-  return confirmed(option,proof,[questionKey(option),questionKey(option).replaceAll('us ','u s ')]);
+  return confirmed(option,proof,[questionKey(option),questionKey(option).replaceAll('us ','u s '),...citizenship]);
  }
  if(/^are you (?:legally )?(?:authorized|eligible) to work (?:for (?:any|an?) (?:us|u s|united states) employer|in (?:the )?(?:us|u s|united states))$/.test(q)&&(fact(auth)||citizen))
   return confirmed(fact(auth)||'Yes',fact(auth)?auth:'Citizenships');
@@ -319,7 +324,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   return {blocked:true};
  }
  if(/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q))return region==='us'&&citizen&&unique(proof)==='Yes'?confirmed('Yes',proof):{blocked:true};
- if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening)$/.test(q)&&unique('English proficiency')==='Fluent')return confirmed('Fluent','English proficiency',['fluent']);
+ if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(q)&&unique('English proficiency')==='Fluent')return confirmed('Fluent','English proficiency',['advanced','fluent']);
  if(/^(?:current (?:or |and )?last|current or most recent|last held) (?:position|job) title$/.test(q)&&fact('Employment experience')==='None')return confirmed('Not Applicable','Employment experience');
  if(/^(?:primary )?country(?: region)? of citizenship$/.test(q)&&['combobox','select-one'].includes(field.type)){
   const chosen=unique('Single-country citizenship preference');

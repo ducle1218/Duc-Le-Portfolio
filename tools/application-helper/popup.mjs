@@ -60,16 +60,40 @@ async function scanDocument(tab){
  return chats.length===1?{...chats[0],chatOnly:true}:main;
 }
 let continuing=false,remainingSteps=0;
-async function verifyEmployerEmail(tab,email){
+function emailChallenge(expected,code,url){
+ if(location.href!==url)return false;
+ const shown=e=>e.getClientRects().length&&!e.disabled;
+ const scopes=[...document.querySelectorAll('[role=dialog],dialog,form')].filter(shown);
+ if(!scopes.length)scopes.push(document.body);
+ const candidates=scopes.filter(s=>{
+  const text=s.innerText.toLowerCase();
+  return text.includes(expected.toLowerCase())&&/check your email|sent (?:an? )?(?:email|code)|emailed/.test(text)&&/enter (?:the |your )?(?:verification |security )?code/.test(text);
+ });
+ const scope=candidates.find(s=>!candidates.some(n=>n!==s&&s.contains(n)));
+ if(!scope)return false;
+ const inputs=[...scope.querySelectorAll('input')].filter(e=>shown(e)&&/^(text|tel|number|password)$/.test(e.type));
+ const split=inputs.length===6&&inputs.every(e=>e.maxLength===1);
+ if(!split&&!(inputs.length===1&&(inputs[0].autocomplete==='one-time-code'||inputs[0].maxLength===6)))return false;
+ if(!code)return true;
+ if(!/^\d{6}$/.test(code)||inputs.some(e=>e.value))return false;
+ const buttons=[...scope.querySelectorAll('button,input[type=submit]')].filter(b=>b.getClientRects().length&&/^(submit|verify(?: code)?|confirm)$/i.test((b.innerText||b.value).trim()));
+ if(buttons.length!==1)return false;
+ inputs.forEach((e,i)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,split?code[i]:code);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));});
+ if(inputs.map(e=>e.value).join('')!==code)return false;
+ if(scope.isConnected&&shown(buttons[0]))buttons[0].click();
+ return true;
+}
+async function verifyEmployerEmail(tab,email,codeMode=false){
  const origin=new URL(tab.url).origin, host=new URL(tab.url).hostname;
  if(!/^[\w.+-]+@[\w.-]+$/.test(email))return false;
- const query='to:'+email+' after:'+Math.floor(Date.now()/1000-1800)+' {subject:verify subject:verification subject:activate} "'+host+'"';
+ const domain=host.split('.').length===3&&/\.(?:com|org|net|edu)$/.test(host)?host.replace(/^(?:jobs|careers|apply)\./,''):host;
+ const query=codeMode?'to:'+email+' after:'+Math.floor(Date.now()/1000-600)+' from:(@'+domain+') {subject:code subject:verification}':'to:'+email+' after:'+Math.floor(Date.now()/1000-1800)+' {subject:verify subject:verification subject:activate} "'+host+'"';
  const mailbox=await chrome.tabs.create({active:false,url:'https://mail.google.com/mail/u/4/#search/'+encodeURIComponent(query)});
  let opened=false;
  try{
   for(let i=0;i<35;i++){
    await new Promise(r=>setTimeout(r,900));
-   const [probe]=await chrome.scripting.executeScript({target:{tabId:mailbox.id},func:(expected,opened)=>{
+   const [probe]=await chrome.scripting.executeScript({target:{tabId:mailbox.id},func:(expected,opened,codeMode,domain)=>{
     if(location.origin!=='https://mail.google.com'||!location.pathname.startsWith('/mail/u/4/'))return null;
     if(!opened){
      const rows=[...document.querySelectorAll('tr.zA')].filter(n=>n.getClientRects().length);
@@ -78,10 +102,19 @@ async function verifyEmployerEmail(tab,email){
     }
     const bodies=[...document.querySelectorAll('.a3s')].filter(n=>n.getClientRects().length);
     if(bodies.length!==1)return null;
+    if(codeMode){
+     const sender=bodies[0].closest('.adn')?.querySelector('.gD[email]')?.getAttribute('email')?.toLowerCase().split('@').pop();
+     if(!sender||(sender!==domain&&!sender.endsWith('.'+domain)))return null;
+     const message=bodies[0].innerText;
+     const codes=[...new Set(message.match(/\b\d{6}\b/g)||[])];
+     if(codes.length===1&&/\b(?:verification|one.time|sign.in|security|login|authentication) code\b/i.test(message)&&!/password reset|reset your password/i.test(message))return {code:codes[0]};
+     return null;
+    }
     const links=[...bodies[0].querySelectorAll('a[href]')].map(a=>a.href).filter(h=>{try{const u=new URL(h);return u.origin===expected&&!u.username&&!u.password&&/(?:verify|verification|activate)/i.test(u.pathname+u.search)&&!/reset|recover|change.?email|redirect|returnurl/i.test(h);}catch{return false;}});
     const unique=[...new Set(links)];return unique.length===1?{link:unique[0]}:null;
-   },args:[origin,opened]}).catch(()=>[]);
+   },args:[origin,opened,codeMode,domain]}).catch(()=>[]);
    if(probe?.result?.opened)opened=true;
+   if(probe?.result?.code)return (await chrome.scripting.executeScript({target:{tabId:tab.id},func:emailChallenge,args:[email,probe.result.code,tab.url]}))[0]?.result===true;
    if(probe?.result?.link){
     const confirmation=await chrome.tabs.create({url:probe.result.link,active:false});
     for(let n=0;n<20;n++){await new Promise(r=>setTimeout(r,500));const t=await chrome.tabs.get(confirmation.id);if(t.status==='complete')break;}
@@ -107,12 +140,12 @@ async function resumeAfterChange(tab,signature){
  }
 }
 const stepSignature=form=>JSON.stringify([form.url,form.stepLabel,form.needsEmailVerification,form.fields.map(f=>[f.id,f.label,f.type])]);
-$('scan').onclick=async()=>{if(!continuing)remainingSteps=10;reset();$('scan').disabled=true;try{if(!profile)throw new Error('Import a confirmed profile first.');const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id||!/^https?:\/\//.test(tab.url||''))throw new Error('Open an employer’s application form in a normal browser tab first.');if(profile.values.school)await chrome.scripting.executeScript({target:{tabId:tab.id},func:formBridge,args:[{action:'prepare-education'}]});const {result,documentId,chatOnly,applicationFrame}=await scanDocument(tab);if(result.needsEmailVerification&&!verificationAttempts.has(tab.id)){
+$('scan').onclick=async()=>{if(!continuing)remainingSteps=10;reset();$('scan').disabled=true;try{if(!profile)throw new Error('Import a confirmed profile first.');const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id||!/^https?:\/\//.test(tab.url||''))throw new Error('Open an employer’s application form in a normal browser tab first.');if(profile.values.school)await chrome.scripting.executeScript({target:{tabId:tab.id},func:formBridge,args:[{action:'prepare-education'}]});const {result,documentId,chatOnly,applicationFrame}=await scanDocument(tab);const codeMode=result.hasCodePrompt&&!applicationFrame&&!chatOnly&&(await chrome.scripting.executeScript({target:{tabId:tab.id},func:emailChallenge,args:[profile.values.email,'',tab.url]}))[0]?.result===true;if((result.needsEmailVerification||codeMode)&&!verificationAttempts.has(tab.id)){
   const access={origins:['https://mail.google.com/*']};
   const verify=async()=>{
    verificationAttempts.add(tab.id);say('Looking for the recent employer verification email…');
-   if(await verifyEmployerEmail(tab,profile.values.email)){say('Verification link opened. Checking sign-in…');await $('scan').onclick();}
-   else{verificationAttempts.delete(tab.id);say('Could not identify one recent verification link for this employer. Open the verification email to continue.');}
+   if(await verifyEmployerEmail(tab,profile.values.email,codeMode)){say('Checking the next application step…');if(codeMode)await resumeAfterChange(tab,stepSignature(result));else await $('scan').onclick();}
+   else{verificationAttempts.delete(tab.id);say('Could not identify one matching verification email for this employer. Open the verification email to continue.');}
   };
   if(await chrome.permissions.contains(access))await verify();
   else{const button=$('allow-chat');button.hidden=false;button.textContent='Allow Gmail verification';button.onclick=async()=>{if(await chrome.permissions.request(access)){button.hidden=true;try{await verify();}catch(e){say(e.message);}}};say('Allow Gmail access to verify this employer account.');}
@@ -124,7 +157,7 @@ $('scan').onclick=async()=>{if(!continuing)remainingSteps=10;reset();$('scan').d
  if(result.hasPasswordField&&!result.fields.some(f=>!f.navigation&&f.label&&!f.filled&&!f.disabled&&['email','text','tel','select-one','textarea'].includes(f.type)&&!/robots only/i.test(f.label))){
   say('A password form is visible, but the helper could not identify one registration or sign-in action. Check the account fields and buttons on this page.');return;
  }
- }const handoff=await chrome.runtime.sendMessage({type:'get-handoff',tabId:tab.id});const resume=!chatOnly&&handoff?.entry?.origin===new URL(result.url).origin?handoff.entry.resume:null;const memory=await savedAnswers();const knowledge=await readPortfolio();let automaticUpload=null;if(resume&&handoff.entry.autoResume&&!handoff.entry.resumeUploaded){const response=await chrome.scripting.executeScript({target:{tabId:tab.id,...(documentId?{documentIds:[documentId]}:{})},func:attachResume,args:[{url:result.url,resume}]});automaticUpload=response[0].result;if(automaticUpload.attached)handoff.entry.resumeUploaded=true;if(automaticUpload.attached)await chrome.runtime.sendMessage({type:'resume-attached',tabId:tab.id,sha256:resume.sha256});$('resume-status').textContent=automaticUpload.message;}else if(!resume)$('resume-status').textContent='No tailored PDF is connected to this tab. Use Connect a tailored resume to choose the matching job in Studio.';const fields=result.fields.map(field=>({field,answer:suggestField({...field,jobEmployer:handoff?.entry?.job?.company||result.jobEmployer,jobIndustry:result.jobIndustry,relocationLocation:handoff?.entry?.job?.location||result.jobLocation,jobLocation:$('job-country').value||handoff?.entry?.job?.location||result.jobLocation,applicationSeason:$('application-season').value||applicationSeason(handoff?.entry?.job?.title)},profile,memory,new URL(result.url).origin,employerContext||'page:'+new URL(result.url).origin+new URL(result.url).pathname,knowledge)})).filter(item=>item.answer);if(mixedAccount?.available)fields.push({field:{type:'account-pair',label:'Employer account email and password'},answer:{display:'Use your saved employer login',reason:'Fill both password fields',sourceQuestion:'Employer account'}});review={signature:stepSignature(result),documentId,outerUrl:tab.url,suggest:(f,form)=>chatOnly&&f.type!=='chat-reply'?null:suggestField({...f,jobEmployer:handoff?.entry?.job?.company||form.jobEmployer,jobIndustry:form.jobIndustry,relocationLocation:handoff?.entry?.job?.location||form.jobLocation,jobLocation:$('job-country').value||handoff?.entry?.job?.location||form.jobLocation,applicationSeason:$('application-season').value||applicationSeason(handoff?.entry?.job?.title)},profile,memory,new URL(result.url).origin,employerContext||'page:'+new URL(result.url).origin+new URL(result.url).pathname,knowledge),tabId:tab.id,url:result.url,createdAt:Date.now(),resume,fields:fields.map(item=>({...item.field,...item.answer}))};for(const [i,f] of review.fields.entries()){const label=document.createElement('label');label.className='answer';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=String(i);const text=document.createElement('span');text.textContent=f.label;const value=document.createElement('small');value.textContent=f.display;text.append(value);if(f.reason){const reason=document.createElement('small');reason.textContent=f.reason+' · '+f.sourceQuestion;text.append(reason);}label.append(checkbox,text);$('suggestions').append(label);addPortfolioEvidence($('suggestions'),f);}if(resume&&!handoff.entry.resumeUploaded){const label=document.createElement('label');label.className='answer';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.value='resume';const text=document.createElement('span');text.textContent='Attach tailored resume: '+resume.name;label.append(check,text);$('suggestions').append(label);}$('fill').hidden=!fields.length&&(!resume||handoff.entry.resumeUploaded);say(fields.length?fields.length+' suggested answers. Check the values and unselect anything you do not want to share.':'No supported empty fields found. Open the application form (not just the job description), or use the copy buttons in Application Studio.');if(automaticUpload?.attached)say(automaticUpload.message+' Nothing was submitted.');const pending=result.fields.filter(f=>f.required&&!f.disabled&&!f.filled&&!fields.some(({field})=>field.index===f.index)&&['select-one','checkbox-group','radio-group','text','email','combobox'].includes(f.type));
+ }const handoff=await chrome.runtime.sendMessage({type:'get-handoff',tabId:tab.id});const resume=!chatOnly&&handoff?.entry?.origin===new URL(result.url).origin?handoff.entry.resume:null;const memory=await savedAnswers();const knowledge=await readPortfolio();let automaticUpload=null;if(resume&&handoff.entry.autoResume&&!handoff.entry.resumeUploaded){const response=await chrome.scripting.executeScript({target:{tabId:tab.id,...(documentId?{documentIds:[documentId]}:{})},func:attachResume,args:[{url:result.url,resume}]});automaticUpload=response[0].result;if(automaticUpload.attached)handoff.entry.resumeUploaded=true;if(automaticUpload.attached)await chrome.runtime.sendMessage({type:'resume-attached',tabId:tab.id,sha256:resume.sha256});$('resume-status').textContent=automaticUpload.message;}else if(!resume&&!chatOnly){const prep=await chrome.runtime.sendMessage({type:'auto-prepare-resume',tabId:tab.id}).catch(()=>null);$('resume-status').textContent=prep?.pending?'Studio is preparing the tailored PDF for this posting.':'A full posting description is needed. Scan the job posting or use Connect a tailored resume.';}const fields=result.fields.map(field=>({field,answer:suggestField({...field,jobEmployer:handoff?.entry?.job?.company||result.jobEmployer,jobIndustry:result.jobIndustry,relocationLocation:handoff?.entry?.job?.location||result.jobLocation,jobLocation:$('job-country').value||handoff?.entry?.job?.location||result.jobLocation,applicationSeason:$('application-season').value||applicationSeason(handoff?.entry?.job?.title)},profile,memory,new URL(result.url).origin,employerContext||'page:'+new URL(result.url).origin+new URL(result.url).pathname,knowledge)})).filter(item=>item.answer);if(mixedAccount?.available)fields.push({field:{type:'account-pair',label:'Employer account email and password'},answer:{display:'Use your saved employer login',reason:'Fill both password fields',sourceQuestion:'Employer account'}});review={signature:stepSignature(result),documentId,outerUrl:tab.url,suggest:(f,form)=>chatOnly&&f.type!=='chat-reply'?null:suggestField({...f,jobEmployer:handoff?.entry?.job?.company||form.jobEmployer,jobIndustry:form.jobIndustry,relocationLocation:handoff?.entry?.job?.location||form.jobLocation,jobLocation:$('job-country').value||handoff?.entry?.job?.location||form.jobLocation,applicationSeason:$('application-season').value||applicationSeason(handoff?.entry?.job?.title)},profile,memory,new URL(result.url).origin,employerContext||'page:'+new URL(result.url).origin+new URL(result.url).pathname,knowledge),tabId:tab.id,url:result.url,createdAt:Date.now(),resume,fields:fields.map(item=>({...item.field,...item.answer}))};for(const [i,f] of review.fields.entries()){const label=document.createElement('label');label.className='answer';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.value=String(i);const text=document.createElement('span');text.textContent=f.label;const value=document.createElement('small');value.textContent=f.display;text.append(value);if(f.reason){const reason=document.createElement('small');reason.textContent=f.reason+' · '+f.sourceQuestion;text.append(reason);}label.append(checkbox,text);$('suggestions').append(label);addPortfolioEvidence($('suggestions'),f);}if(resume&&!handoff.entry.resumeUploaded){const label=document.createElement('label');label.className='answer';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.value='resume';const text=document.createElement('span');text.textContent='Attach tailored resume: '+resume.name;label.append(check,text);$('suggestions').append(label);}$('fill').hidden=!fields.length&&(!resume||handoff.entry.resumeUploaded);say(fields.length?fields.length+' suggested answers. Check the values and unselect anything you do not want to share.':'No supported empty fields found. Open the application form (not just the job description), or use the copy buttons in Application Studio.');if(automaticUpload?.attached)say(automaticUpload.message+' Nothing was submitted.');const pending=result.fields.filter(f=>f.required&&!f.disabled&&!f.filled&&!fields.some(({field})=>field.index===f.index)&&['select-one','checkbox-group','radio-group','text','email','combobox'].includes(f.type));
  const editable=result.fields.filter(f=>!f.disabled&&!f.navigation&&!['submit','button','hidden','reset','search'].includes(f.type));
  if(!continuing&&!chatOnly&&!pending.length&&fields.length===1&&editable.length===1&&editable[0].type==='email'&&fields[0].answer.value===profile.values.email){
   await $('fill').onclick();return;

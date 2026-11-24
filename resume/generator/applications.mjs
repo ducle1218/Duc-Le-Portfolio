@@ -11,6 +11,23 @@ const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.c
 let accountDirectory=[],hasAccountExport=false;
 let profile=null,applications=[],dialog=null,pdfURL=null;
 const targetParams=typeof location!=='undefined'?new URL(location.href).searchParams:new URLSearchParams(),targetToken=/^[a-f0-9-]{36}$/.test(targetParams.get('applicationTarget')||'')?targetParams.get('applicationTarget'):null,targetHost=targetParams.get('applicationHost')||'the open employer application';
+async function prepareDirectPosting(token){
+ const status=$('application-status');
+ try{
+  let request;
+  for(let attempt=0;attempt<4&&!request;attempt++){
+   try{request=await helperRequest('auto-posting',{token},1500);}catch(error){if(attempt===3)throw error;}
+  }
+  const {job:source,profile}=request;
+  const job=source.description?source:await (await import('./job-api.mjs')).importJob(source.url,[]);
+  if(!profile||!job.description||job.description.trim().length<100)throw Error('A confirmed profile and full posting description are required.');
+  const result=await buildResume(job.description);
+  const resume=await makeResumeAttachment(result.output,source.url,filename(job));
+  await helperRequest('start',{job:{...job,url:source.url},profile,resume,autoResume:true,targetToken:token,confirmTarget:true},30000);
+ }catch(error){if(status)status.textContent='Automatic résumé preparation: '+error.message;await helperRequest('auto-posting-failed',{token}).catch(()=>{});}
+}
+const directToken=targetParams.get('autoPosting');
+if(/^[a-f0-9-]{36}$/.test(directToken||''))prepareDirectPosting(directToken);
 let helperReady=false,helperResumeReady=false,helperControlReady=false,helperUploadReady=false;
 let profileEdited=false,baseline=null,helperSnapshotRevision=null;
 let fileHandle=null,fileContents=null,workingLocally=false,savingFile=false,fileSelection=0,verifiedHere=false;

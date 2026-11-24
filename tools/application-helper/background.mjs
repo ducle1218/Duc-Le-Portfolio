@@ -60,6 +60,37 @@ async function reconnectResume(id){
  return entry;
 }
 async function clearExpired(){const all=await chrome.storage.session.get(null);await chrome.storage.session.remove(Object.entries(all).filter(([k,v])=>k.startsWith('handoff:')&&v.expiresAt<Date.now()).map(([k])=>k));}
+// Read only public posting metadata. Application answers and sign-in URLs never enter Studio.
+async function readPosting(){
+ const clean=value=>{const u=new URL(value,location.href);if(u.origin!==location.origin||u.protocol!=='https:')return '';const safe=new URL(u.pathname,u.origin);for(const k of ['pid','jobId','jobSeqNo','gh_jid'])if(/^[\w-]+$/.test(u.searchParams.get(k)||''))safe.searchParams.set(k,u.searchParams.get(k));return safe.href;};
+ const extract=(doc,url)=>{
+  const postings=[];
+  for(const script of doc.querySelectorAll('script[type="application/ld+json"]')){
+   try{const visit=x=>{if(Array.isArray(x))x.forEach(visit);else if(x&&typeof x==='object'){if([x['@type']].flat().includes('JobPosting'))postings.push(x);if(x['@graph'])visit(x['@graph']);}};visit(JSON.parse(script.textContent));}catch{}
+  }
+  const job=postings.length===1?postings[0]:null;
+  if(postings.length>1)return null;
+  const desc=job?.description?new DOMParser().parseFromString(job.description,'text/html').body.textContent:doc.querySelector('[itemprop=description],[data-automation-id=jobPostingDescription]')?.textContent;
+  const title=job?.title||doc.querySelector('[itemprop=title],[data-automation-id=jobPostingHeader],h1')?.textContent;
+  if(!title||!desc||desc.trim().length<100)return null;
+  return {url,title:title.trim().slice(0,220),company:String(job?.hiringOrganization?.name||location.hostname).slice(0,160),description:desc.trim().slice(0,50000)};
+ };
+ const current=clean(location.href),job=extract(document,current);if(job)return job;
+ const links=[...new Set([...document.querySelectorAll('a[href]')].filter(a=>/^(?:view |see |back to )?(?:the )?(?:job (?:posting|description|details)|position details)$/i.test(a.textContent.trim())).map(a=>clean(a.href)).filter(Boolean))];
+ const currentURL=new URL(current),pid=currentURL.searchParams.get('pid');
+ if(!links.length&&pid&&/^\d+$/.test(pid)){
+  const sameJob=[...document.querySelectorAll('a[href]')].map(a=>clean(a.href)).filter(h=>h&&new URL(h).pathname.split('/').includes(pid)&&/\/jobs?\//i.test(new URL(h).pathname));
+  links.push(...new Set(sameJob));
+ }
+ if(!links.length&&/\/jobs?\//i.test(currentURL.pathname)&&/\/apply(?:\/.*)?$/i.test(currentURL.pathname))links.push(current.replace(/\/apply(?:\/[^?]*)?(?=\?|$)/i,''));
+ if(links.length===1&&links[0]!==current){
+  const response=await fetch(links[0],{credentials:'omit',redirect:'error',signal:AbortSignal.timeout(7000)});
+  if(response.ok){const posting=extract(new DOMParser().parseFromString(await response.text(),'text/html'),links[0]);if(posting)return posting;}
+  return {url:links[0]};
+ }
+ if(/\/(?:job|jobs)\/[^/]+/i.test(new URL(current).pathname)||['pid','jobSeqNo','jobId','gh_jid'].some(key=>new URL(current).searchParams.has(key)))return {url:current};
+ return null;
+}
 async function launch(entry){
  // Confirmed Studio profiles remain available after the temporary tab session ends.
  await chrome.storage.local.set({profile:entry.profile});
@@ -75,6 +106,16 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(message?.type==='portfolio-read'&&extensionPage(sender))return {ok:true,portfolio:await portfolio(message.force===true)};
   if(message?.type?.startsWith('studio-')){
    if(sender.id!==chrome.runtime.id||sender.frameId!==0||!studioURL(sender.url))throw new Error('Only Application Studio can start a handoff.');
+   if(message.type==='studio-auto-posting-failed'){
+    const key='resume-target:'+message.payload?.token,target=(await chrome.storage.session.get(key))[key];
+    if(target?.autoJob&&target.workerId===sender.tab.id){await chrome.storage.session.set({[key]:{...target,failed:true}});await chrome.tabs.remove(target.workerId);}
+    return {ok:true};
+   }
+   if(message.type==='studio-auto-posting'){
+    const token=message.payload?.token,key='resume-target:'+token,target=(await chrome.storage.session.get(key))[key];
+    if(!target?.autoJob||target.expiresAt<Date.now()||target.workerId!==sender.tab?.id)throw Error('Posting preparation expired.');
+    const {profile}=await chrome.storage.local.get('profile');return {ok:true,job:target.autoJob,profile};
+   }
    if(message.type==='studio-hello')return {ok:true,version:chrome.runtime.getManifest().version};
    if(message.type==='studio-employer-sites')return {ok:true,sites:await savedEmployerSites(chrome.storage.local)};
    if(message.type==='studio-read-profile'){
@@ -94,14 +135,27 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     const targetKey='resume-target:'+token,target=(await chrome.storage.session.get(targetKey))[targetKey];
     if(!target||target.expiresAt<Date.now())throw new Error('The application connection expired. Start from the helper again.');
     const tab=await chrome.tabs.get(target.tabId);
-    if(!employerURL(tab?.url)||new URL(tab.url).origin!==target.origin||!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))throw new Error('The application changed or access is missing. Reconnect from its helper.');
-    entry.origin=target.origin;await chrome.storage.local.set({profile:entry.profile});await chrome.storage.session.set({[key(tab.id)]:entry});await chrome.storage.session.remove(targetKey);await attach(tab.id,tab);return {ok:true,started:true,connected:true};
+    if(!employerURL(tab?.url)||new URL(tab.url).origin!==target.origin||(!target.autoJob&&!await chrome.permissions.contains({origins:[originPattern(tab.url)]})))throw new Error('The application changed or access is missing. Reconnect from its helper.');
+    if(target.autoJob&&(target.workerId!==sender.tab?.id||entry.job.url!==target.autoJob.url||tab.url!==target.original&&!samePosting(tab.url,target.original)))throw Error('The open posting changed.');
+    entry.origin=target.origin;await chrome.storage.local.set({profile:entry.profile});await chrome.storage.session.set({[key(tab.id)]:entry});await chrome.storage.session.remove(targetKey);await attach(tab.id,tab,target.autoJob!=null);if(target.autoJob)await chrome.tabs.remove(target.workerId).catch(()=>{});return {ok:true,started:true,connected:true};
    }
   }
   if(message?.type==='resume-attached'){
    const trusted=extensionPage(sender),id=trusted?Number(message.tabId):sender.tab?.id,entry=await record(id);
    if(!entry?.resume||message.sha256!==entry.resume.sha256||(!trusted&&(sender.id!==chrome.runtime.id||sender.frameId!==0||!employerURL(sender.url)||new URL(sender.url).origin!==entry.origin)))throw new Error('Resume confirmation does not match this application.');
    await chrome.storage.session.set({[key(id)]:{...entry,resumeUploaded:true}});return {ok:true};
+  }
+  if(message?.type==='auto-prepare-resume'&&extensionPage(sender)){
+   const tab=await chrome.tabs.get(Number(message.tabId));if(!employerURL(tab.url)||(await record(tab.id))?.resume)return {ok:true};
+   const jobs=await chrome.storage.session.get(null);
+   const recent=Object.entries(jobs).find(([k,t])=>k.startsWith('resume-target:')&&t.autoJob&&t.original===tab.url&&t.tabId===tab.id&&t.expiresAt>Date.now());
+   if(recent)return {ok:true,pending:!recent[1].failed};
+   const job=(await chrome.scripting.executeScript({target:{tabId:tab.id},func:readPosting}))[0]?.result;
+   if(!job)return {ok:true,pending:false};
+   const token=crypto.randomUUID(),worker=await chrome.tabs.create({url:'about:blank',active:false});
+   await chrome.storage.session.set({['resume-target:'+token]:{origin:new URL(tab.url).origin,original:tab.url,tabId:tab.id,workerId:worker.id,autoJob:job,expiresAt:Date.now()+120000}});
+   await chrome.tabs.update(worker.id,{url:'https://ducle1218.github.io/Duc-Le-Portfolio/applications/?autoPosting='+token});
+   return {ok:true,pending:true};
   }
   if(message?.type==='link-current-application'&&extensionPage(sender)){
    const tab=await chrome.tabs.get(Number(message.tabId));if(!employerURL(tab?.url)||!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))throw new Error('Allow access to this employer before connecting its resume.');
@@ -130,10 +184,10 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  })().then(respond,error=>respond({ok:false,error:error.message}));return true;
 });
 const injecting=new Set();
-async function attach(id,tab){
+async function attach(id,tab,activeScan=false){
  if(injecting.has(id))return;const entry=await record(id);if(!entry)return;
  if(!employerURL(tab.url)||new URL(tab.url).origin!==entry.origin){await chrome.action.setBadgeText({tabId:id,text:'↗'});return;}
- if(!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))return;
+ if(!activeScan&&!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))return;
  injecting.add(id);try{const memory=(await readMemory()).filter(a=>a.scope==='*'||a.scope===entry.origin);const evidence=await portfolio(false);await chrome.scripting.executeScript({target:{tabId:id},files:['assistant.bundle.js']});await chrome.tabs.sendMessage(id,{type:'application-handoff',entry:{...entry,memory,portfolio:evidence}});await chrome.action.setBadgeText({tabId:id,text:'ON'});}catch{await chrome.action.setBadgeText({tabId:id,text:'!'}).catch(()=>{});}finally{injecting.delete(id);}
 }
 chrome.tabs.onUpdated.addListener((id,change,tab)=>{if(change.status==='complete')attach(id,tab).catch(()=>{});});

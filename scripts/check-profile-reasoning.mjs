@@ -10,6 +10,10 @@ const check=(label,want,type='combobox',choices=[])=>{
  const options=choices.map(label=>({label,value:label}));
  assert.equal(suggestField({label,type,options},profile)?.display,want,label);
 };
+check('Protected Veteran','I Am Not A Veteran','select-one',['I Identify As A Veteran, Just Not A Protected Veteran','I Am Not A Veteran']);
+const exportQuestion='For purposes of complying with Federal Export Control laws, please select one of the following:';
+const citizenOnly={...profile,answers:[{question:'Citizenships',answer:'United States; Vietnam'}]};
+assert.equal(suggestField({type:'select-one',label:exportQuestion,options:['A citizen of the U.S.','A U.S. refugee'].map(label=>({label,value:label}))},citizenOnly)?.display,'A citizen of the U.S.');
 profile.answers.push({question:'Sex',answer:'Male'});
 check('Please select the gender which most accurately describes how you identify yourself.','Male','select-one',['Female','Male','Other']);
 check('Please select the ethnicity which most accurately describes how you identify yourself.','5 - Asian (Not Hispanic or Latino) (United States of America)','select-one',['2 - White (Not Hispanic or Latino) (United States of America)','5 - Asian (Not Hispanic or Latino) (United States of America)']);

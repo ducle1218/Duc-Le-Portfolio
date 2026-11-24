@@ -518,11 +518,13 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   if(postings.length===1)for(const place of [postings[0].jobLocation].flat()){
    let country=place?.address?.addressCountry;country=country?.name||country;
    if(typeof country==='string'&&/^[a-z]{2}$/i.test(country))country=new Intl.DisplayNames(['en'],{type:'region'}).of(country.toUpperCase());
-   countries.add(typeof country==='string'?country:'');
+   countries.add([place?.address?.addressRegion,typeof country==='string'?country:''].filter(v=>typeof v==='string'&&v).join(', '));
   }
   if(!countries.size)for(const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')){const loc=node.getAttribute('data-job-location')||text(node);if(loc&&loc.length<120)countries.add(loc);}
   const jobLocation=countries.size===1?[...countries][0]:'';
-  const all=elements();return {url:location.href,jobLocation,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const posting=postings.length===1?postings[0]:null;
+  const jobEmployer=posting?.hiringOrganization?.name||'',jobIndustry=typeof posting?.industry==='string'?posting.industry:'';
+  const all=elements();return {url:location.href,jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasEmailSignIn:[...document.querySelectorAll('h1,h2,h3,[role=heading]')].some(h=>visible(h)&&/^(?:sign in|log in)$/i.test(text(h))),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }

@@ -344,6 +344,59 @@
       const values = entries.filter((a) => commonQuestion(a.question)?.question === name).map((a) => a.answer.trim());
       return new Set(values).size === 1 ? values[0] : null;
     };
+    const stem = questionKey(String(field.label || "").split("?")[0]).replace(/^\d+ /, "");
+    const saved = (value, name, aliases3) => ({ ...result(value, "From your application profile", aliases3), sourceQuestion: name });
+    const channels = { sms: /\b(?:sms|text(?:ing|s| messages?)?)\b/.test(stem), email: /\be ?mail\b/.test(stem) };
+    const contact = /\b(?:consent|may we|can we|opt in|permission|agree|approve|would you like|allow|authorize|may i contact)\b/.test(stem);
+    const policy = "SMS employer policy";
+    if (contact && (channels.email || channels.sms) && (unique(policy) || unique("Email recruiting contact"))) {
+      if (/\b(?:opt out|withdraw|decline|not|unsubscribe|marketing|promotional)\b/.test(stem)) return { blocked: true };
+      let sms2;
+      if (channels.sms && unique(policy) === "Defense or big tech only") {
+        let hostname = "";
+        try {
+          hostname = new URL(origin).hostname;
+        } catch {
+        }
+        const tenant = hostname.match(/^([a-z0-9-]+)\.wd\d+\.myworkdayjobs\.com$/i)?.[1];
+        const employerDomain = hostname.match(/(?:^|\.)(amazon|google|microsoft|leidos|lockheedmartin|northropgrumman|boeing|raytheon|nvidia|apple)\.(?:com|jobs)$/i)?.[1];
+        const company = questionKey(field.jobEmployer || !context.startsWith("page:") && context || tenant || employerDomain).replace(/ (?:corporation|corp|inc|llc|company)$/, "");
+        const recognized = /^(?:lockheed(?: ?martin)?|leidos|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company);
+        sms2 = recognized || /\b(?:defen[sc]e|military contracting|big tech)\b/i.test(field.jobIndustry || "") ? "Yes" : "No";
+      }
+      const email = unique("Email recruiting contact");
+      if (channels.email && channels.sms && sms2 !== email) return { blocked: true };
+      const answer = channels.sms ? sms2 : email;
+      if (answer === "Yes" || answer === "No") return saved(answer, channels.sms ? policy : "Email recruiting contact", [questionKey(answer), answer === "Yes" ? "yes i consent" : "no i do not consent"]);
+      return { blocked: true };
+    }
+    if (/^are you (?:willing|open|prepared) to relocate(?: if(?: necessary)?(?: (?:by|for) (?:the|this) (?:role|position|job))?)?$/.test(stem) && unique("Relocation states")) {
+      const location2 = field.relocationLocation || field.jobLocation || "";
+      if (/[;/]|\sor\s/i.test(location2)) return { blocked: true };
+      const regions = location2.replace(/,\s*(?:USA|US|United States(?: of America)?)$/i, "").split(/,\s*/);
+      const state2 = regions.at(-1).trim().replace(/\s+\d{5}(?:-\d{4})?$/, "");
+      const names = [...stateNames2], codes = [...stateCodes2];
+      const code = stateCodes2.has(state2) ? state2 : codes[names.indexOf(questionKey(state2))];
+      if (!code) return { blocked: true };
+      return saved(unique("Relocation states").split(/,\s*/).includes(code) ? "Yes" : "No", "Relocation states");
+    }
+    const relationships = /\b(?:spouse|family|relative|relationship|married)\b/.test(stem);
+    if (/\b(?:non us|non u s|foreign) government official\b/.test(stem)) {
+      const source = relationships ? "Family or close relationship with a non-US government official" : "Current or previous non-US government official";
+      if (unique(source) === "No" && /^(?:are|have|do) you\b/.test(stem)) return saved("No", source);
+    }
+    if (/\b(?:military spouse|spouse of (?:a |an )?(?:current or former )?(?:service member|military member))\b/.test(stem) && unique("Current or former military spouse") === "No") return saved("No", "Current or former military spouse");
+    if (/\b(?:family members?|immediate family|relatives?)\b/.test(stem) && /\b(?:serve|served|serving|in)\b.*\b(?:military|armed forces)\b/.test(stem) && unique("Family military service") === "No") return saved("No", "Family military service");
+    if (/\bhighest (?:level of education|degree|diploma|qualification)\b/.test(stem) && /\b(?:received|completed|awarded|earned|attained)\b/.test(stem) && unique("Highest completed degree")) return saved(unique("Highest completed degree"), "Highest completed degree");
+    if (/^(?:are you|are you currently) (?:working (?:toward|towards|on)|pursuing|studying for) (?:a |an? )?bachelor(?: s|s)?(?: degree)?(?: or (?:a )?master(?: s|s)?(?: degree)?)?$/.test(stem) && /^bachelor\b/i.test(unique("Degree being pursued") || "") && unique("Full-time student enrollment") === "Yes") return saved("Yes", "Degree being pursued");
+    const usEligible = /^are you (?:legally )?eligible for employment in (?:the )?(?:united states|u s|us)$/.test(stem);
+    const usProof = /^(?:if hired )?(?:can|could|will|are) you (?:be able to |able to )?(?:provide|submit|furnish|present) (?:proof|verification|documentation|evidence) (?:of|that) .*\b(?:employment eligibility|eligible (?:for employment|to work)|right to work|authorized to work)\b/.test(stem);
+    const usCitizen = (unique("Citizenships") || "").split(/[,;]/).some((v) => ["united states", "usa", "us", "united states of america"].includes(questionKey(v)));
+    const proofOnly = /^(?:if hired )?(?:can|could|will) you (?:provide|submit|furnish|present) (?:proof|verification|documentation|evidence) of (?:your )?(?:employment eligibility|eligibility (?:for employment|to work))(?: in (?:the )?(?:united states|us|u s))?$/.test(stem);
+    const proofFact = "Can provide a valid US passport, US birth certificate or certificate of naturalization on request";
+    if (proofOnly && usCitizen && unique(proofFact) === "Yes" && (/\b(?:united states|u s|us)$/.test(stem) || jobJurisdiction(field.jobLocation) === "us")) return saved("Yes", proofFact);
+    if (usEligible && usCitizen) return saved("Yes", "Citizenships");
+    if (usProof && usCitizen && unique(proofFact) === "Yes" && /\bin (?:the )?(?:united states|u s|us)$/.test(stem)) return saved("Yes", proofFact);
     const inference = reasonFromHistory(field, entries);
     if (inference) return inference;
     const prescreen = "Willing to complete a U.S. Government Security Prescreen Questionnaire";
@@ -1290,15 +1343,17 @@
         let country = place?.address?.addressCountry;
         country = country?.name || country;
         if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
-        countries.add(typeof country === "string" ? country : "");
+        countries.add([place?.address?.addressRegion, typeof country === "string" ? country : ""].filter((v) => typeof v === "string" && v).join(", "));
       }
       if (!countries.size) for (const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')) {
         const loc = node.getAttribute("data-job-location") || text(node);
         if (loc && loc.length < 120) countries.add(loc);
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
+      const posting = postings.length === 1 ? postings[0] : null;
+      const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, jobLocation, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -2306,15 +2361,17 @@
         let country = place?.address?.addressCountry;
         country = country?.name || country;
         if (typeof country === "string" && /^[a-z]{2}$/i.test(country)) country = new Intl.DisplayNames(["en"], { type: "region" }).of(country.toUpperCase());
-        countries.add(typeof country === "string" ? country : "");
+        countries.add([place?.address?.addressRegion, typeof country === "string" ? country : ""].filter((v) => typeof v === "string" && v).join(", "));
       }
       if (!countries.size) for (const node of document.querySelectorAll('[itemprop=jobLocation],[data-automation-id=locations],[data-bind="html: primaryLocation"],[data-job-location]')) {
         const loc = node.getAttribute("data-job-location") || text(node);
         if (loc && loc.length < 120) countries.add(loc);
       }
       const jobLocation = countries.size === 1 ? [...countries][0] : "";
+      const posting = postings.length === 1 ? postings[0] : null;
+      const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, jobLocation, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];

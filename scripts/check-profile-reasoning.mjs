@@ -87,3 +87,27 @@ assert.equal(infer({'Recruiter profile visibility':visibility},'Make My Profile 
 assert.equal(suggestField({label:'Retype Email Address',type:'text'},{confirmed:true,values:{email:'sample@example.com'},answers:[]})?.value,'sample@example.com');
 assert.equal(suggestField({label:'Primary Phone',type:'tel',filled:true,digitsPhone:true,phoneBefore:'(202) 555-0101'},{confirmed:true,values:{phone:'2025550101'},answers:[]})?.value,'2025550101');
 console.log('Disclosure choices, private visibility, email confirmation and telephone formatting passed.');
+const facts={
+ 'Citizenships':'United States; Vietnam','Highest completed degree':'High school diploma',
+ 'Full-time student enrollment':'Yes','Degree being pursued':'Bachelor of Science in Mechanical Engineering',
+ 'Can provide a valid US passport, US birth certificate or certificate of naturalization on request':'Yes',
+ 'SMS employer policy':'Defense or big tech only','SMS contact about my job application':'Yes','Email recruiting contact':'Yes',
+ 'Current or previous non-US government official':'No','Family or close relationship with a non-US government official':'No',
+ 'Family military service':'No','Current or former military spouse':'No','Relocation states':'NY, PA, NJ, CT, MA, VT, DE, MD, WV, OH'
+};
+const answer=(q,extra={})=>infer(facts,q,extra)?.value;
+assert.equal(answer('3. Are you legally eligible for employment in the United States? (Proof of identity and employment eligibility will be required within 3 days of hire.)'),'Yes');
+assert.equal(answer('Can you provide proof of employment eligibility?',{jobLocation:'Albany, NY'}),'Yes');
+assert.equal(answer("If hired by Example, we will verify your most recent graduation date and the highest degree or diploma received. What is the highest level of education you’ve received?"),'High school diploma');
+assert.equal(answer('Are you currently working towards a Bachelors or Master’s Degree?'),'Yes');
+assert.equal(answer('Are you currently or have you previously been a “non-US government official”? See disclosure for definitions.'),'No');
+assert.equal(answer('Are you an immediate family member of, or do you hold a close personal relationship with, a non-US government official?'),'No');
+assert.equal(answer('Are you a current or former military spouse? (See definition.)'),'No');
+const relocate='Are you willing to relocate if required by the position?';
+for(const [location,value] of [['Albany, NY','Yes'],['Ohio, United States','Yes'],['Austin, TX','No'],['United States',undefined]])assert.equal(answer(relocate,{jobLocation:location}),value);
+const consent=email=>'Do you consent to being contacted by '+email+' about this or other opportunities? Click here for more information.';
+const options=['Yes I consent','No I do not consent'].map(label=>({label,value:label}));
+for(const [channel,employer,industry,expected] of [['email','Example','','Yes I consent'],['text/SMS','Example','','No I do not consent'],['text/SMS','Leidos','','Yes I consent'],['SMS','Example','Defense contracting','Yes I consent'],['SMS','Google','','Yes I consent'],['SMS','Googleton','','No I do not consent']]){
+ assert.equal(answer(consent(channel),{type:'select-one',jobEmployer:employer,jobIndustry:industry,options}),expected);
+}
+console.log('Employment eligibility, earned and pursued degrees, disclosure subjects, relocation and contextual contact consent passed.');

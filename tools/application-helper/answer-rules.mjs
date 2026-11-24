@@ -52,6 +52,56 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const unique=q=>{const values=entries.filter(a=>questionKey(a.question)===questionKey(q)).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
  const result=(value,reason,aliases)=>({value,display:value,reason,sourceQuestion:'Saved preferences',requiresReview:false,...(aliases?{aliases}:{} )});
  const q=questionKey(field.label),fact=name=>{const values=entries.filter(a=>commonQuestion(a.question)?.question===name).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
+ // Resolve the actual question before interpreting supporting instructions or definitions.
+ const stem=questionKey(String(field.label||'').split('?')[0]).replace(/^\d+ /,'');
+ const saved=(value,name,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion:name});
+ const channels={sms:/\b(?:sms|text(?:ing|s| messages?)?)\b/.test(stem),email:/\be ?mail\b/.test(stem)};
+ const contact=/\b(?:consent|may we|can we|opt in|permission|agree|approve|would you like|allow|authorize|may i contact)\b/.test(stem);
+ const policy='SMS employer policy';
+ if(contact&&(channels.email||channels.sms)&&(unique(policy)||unique('Email recruiting contact'))){
+  if(/\b(?:opt out|withdraw|decline|not|unsubscribe|marketing|promotional)\b/.test(stem))return {blocked:true};
+  let sms;
+  if(channels.sms&&unique(policy)==='Defense or big tech only'){
+   let hostname='';try{hostname=new URL(origin).hostname;}catch{}
+   const tenant=hostname.match(/^([a-z0-9-]+)\.wd\d+\.myworkdayjobs\.com$/i)?.[1];
+   const employerDomain=hostname.match(/(?:^|\.)(amazon|google|microsoft|leidos|lockheedmartin|northropgrumman|boeing|raytheon|nvidia|apple)\.(?:com|jobs)$/i)?.[1];
+   const company=questionKey(field.jobEmployer||(!context.startsWith('page:')&&context)||tenant||employerDomain).replace(/ (?:corporation|corp|inc|llc|company)$/,'');
+   const recognized=/^(?:lockheed(?: ?martin)?|leidos|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company);
+   sms=recognized||/\b(?:defen[sc]e|military contracting|big tech)\b/i.test(field.jobIndustry||'')?'Yes':'No';
+  }
+  const email=unique('Email recruiting contact');
+  if(channels.email&&channels.sms&&sms!==email)return {blocked:true};
+  const answer=channels.sms?sms:email;
+  if(answer==='Yes'||answer==='No')return saved(answer,channels.sms?policy:'Email recruiting contact',[questionKey(answer),answer==='Yes'?'yes i consent':'no i do not consent']);
+  return {blocked:true};
+ }
+ if(/^are you (?:willing|open|prepared) to relocate(?: if(?: necessary)?(?: (?:by|for) (?:the|this) (?:role|position|job))?)?$/.test(stem)&&unique('Relocation states')){
+  const location=field.relocationLocation||field.jobLocation||'';
+  if(/[;/]|\sor\s/i.test(location))return {blocked:true};
+  const regions=location.replace(/,\s*(?:USA|US|United States(?: of America)?)$/i,'').split(/,\s*/);
+  const state=regions.at(-1).trim().replace(/\s+\d{5}(?:-\d{4})?$/,'');
+  const names=[...stateNames],codes=[...stateCodes];
+  const code=stateCodes.has(state)?state:codes[names.indexOf(questionKey(state))];
+  if(!code)return {blocked:true};
+  return saved(unique('Relocation states').split(/,\s*/).includes(code)?'Yes':'No','Relocation states');
+ }
+ const relationships=/\b(?:spouse|family|relative|relationship|married)\b/.test(stem);
+ if(/\b(?:non us|non u s|foreign) government official\b/.test(stem)){
+  const source=relationships?'Family or close relationship with a non-US government official':'Current or previous non-US government official';
+  if(unique(source)==='No'&&/^(?:are|have|do) you\b/.test(stem))return saved('No',source);
+ }
+ if(/\b(?:military spouse|spouse of (?:a |an )?(?:current or former )?(?:service member|military member))\b/.test(stem)&&unique('Current or former military spouse')==='No')return saved('No','Current or former military spouse');
+ if(/\b(?:family members?|immediate family|relatives?)\b/.test(stem)&&/\b(?:serve|served|serving|in)\b.*\b(?:military|armed forces)\b/.test(stem)&&unique('Family military service')==='No')return saved('No','Family military service');
+ if(/\bhighest (?:level of education|degree|diploma|qualification)\b/.test(stem)&&/\b(?:received|completed|awarded|earned|attained)\b/.test(stem)&&unique('Highest completed degree'))return saved(unique('Highest completed degree'),'Highest completed degree');
+ if(/^(?:are you|are you currently) (?:working (?:toward|towards|on)|pursuing|studying for) (?:a |an? )?bachelor(?: s|s)?(?: degree)?(?: or (?:a )?master(?: s|s)?(?: degree)?)?$/.test(stem)&&/^bachelor\b/i.test(unique('Degree being pursued')||'')&&unique('Full-time student enrollment')==='Yes')return saved('Yes','Degree being pursued');
+ const usEligible=/^are you (?:legally )?eligible for employment in (?:the )?(?:united states|u s|us)$/.test(stem);
+ const usProof=/^(?:if hired )?(?:can|could|will|are) you (?:be able to |able to )?(?:provide|submit|furnish|present) (?:proof|verification|documentation|evidence) (?:of|that) .*\b(?:employment eligibility|eligible (?:for employment|to work)|right to work|authorized to work)\b/.test(stem);
+ const usCitizen=(unique('Citizenships')||'').split(/[,;]/).some(v=>['united states','usa','us','united states of america'].includes(questionKey(v)));
+ const proofOnly=/^(?:if hired )?(?:can|could|will) you (?:provide|submit|furnish|present) (?:proof|verification|documentation|evidence) of (?:your )?(?:employment eligibility|eligibility (?:for employment|to work))(?: in (?:the )?(?:united states|us|u s))?$/.test(stem);
+ const proofFact='Can provide a valid US passport, US birth certificate or certificate of naturalization on request';
+ if(proofOnly&&usCitizen&&unique(proofFact)==='Yes'&&(/\b(?:united states|u s|us)$/.test(stem)||jobJurisdiction(field.jobLocation)==='us'))return saved('Yes',proofFact);
+ if(usEligible&&usCitizen)return saved('Yes','Citizenships');
+ if(usProof&&usCitizen&&unique(proofFact)==='Yes'&&/\bin (?:the )?(?:united states|u s|us)$/.test(stem))return saved('Yes',proofFact);
  const inference=reasonFromHistory(field,entries);
  if(inference)return inference;
  const prescreen='Willing to complete a U.S. Government Security Prescreen Questionnaire';

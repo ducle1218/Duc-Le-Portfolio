@@ -89,6 +89,16 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  // Resolve the actual question before interpreting supporting instructions or definitions.
  const stem=questionKey(String(field.label||'').split('?')[0]).replace(/^\d+ /,'');
  const saved=(value,name,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion:name});
+ const disclosure=stem.match(/^(?:please )?(?:select|choose|indicate) (?:the |your )?(gender|ethnicity|race|veteran status) (?:which|that) (?:most|mostly|best)(?: accurately)? describes how you identify yourself\b/);
+ if(disclosure){
+  const subject=disclosure[1];
+  const source=subject==='gender'?'Sex':subject==='veteran status'?'Military service':'Race / ethnic background';
+  const answer=fact(source)||unique(source);
+  const wanted=subject==='gender'&&answer?[questionKey(answer)]:source==='Military service'&&answer==='No'?['i am not a veteran','not a veteran','non veteran']:source==='Race / ethnic background'&&questionKey(answer)==='asian not hispanic or latino'?['asian not hispanic or latino','asian']:[];
+  const matches=(field.options||[]).filter(o=>!o.disabled&&wanted.includes(questionKey(o.label).replace(/^\d+ /,'').replace(/ united states(?: of america)?$/,'')));
+  if(matches.length===1)return {...saved(matches[0].label,source),requiresReview:true};
+  return {blocked:true};
+ }
  const channels={sms:/\b(?:sms|text(?:ing|s| messages?)?)\b/.test(stem),email:/\be ?mail\b/.test(stem)};
  const contact=/\b(?:consent|may we|can we|opt in|permission|agree|approve|would you like|allow|authorize|may i contact)\b/.test(stem);
  const policy='SMS employer policy';
@@ -347,9 +357,12 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
  const visaAssistance=q==='will you now or in the future require sponsorship for an immigration related employment benefit'||/^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
- if(visaAssistance||countryDependent||commonQuestion(q)?.question===sponsor){
+ const temporaryVisa=/\b(?:require|need) sponsorship (?:of|for) (?:a |an )?temporary work visa\b/.test(stem);
+ if(temporaryVisa||visaAssistance||countryDependent||commonQuestion(q)?.question===sponsor){
   const source=visaAssistance||q.includes('sponsorship')?sponsor:auth,region=jobJurisdiction(field.jobLocation||field.workQuestionCountry||'');
-  if(region==='us'&&fact(source))return result(fact(source),'Your U.S. work profile and this job’s location');
+  const usVisaExamples=!field.jobLocation&&!field.workQuestionCountry&&temporaryVisa&&/\bcpt or opt\b/.test(stem)&&/\bh 1b\b/.test(stem);
+  if((region==='us'||usVisaExamples)&&source===sponsor&&usCitizen&&!fact(source))return saved('No','Citizenships');
+  if((region==='us'||usVisaExamples)&&fact(source))return result(fact(source),'Your U.S. work profile and this job’s location');
   const foreign='Do you require employment visa sponsorship for jobs outside the United States?';
   if(region==='foreign'&&source===sponsor&&unique(foreign))return result(unique(foreign),'Your international sponsorship preference');
   return {blocked:true};

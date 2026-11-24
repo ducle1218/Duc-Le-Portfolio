@@ -11,13 +11,13 @@ export async function fillWithFollowups({url,reviewed,selected,scan,fill,suggest
   const batch=await fill({url,fields:pending});
   total.filled+=batch.filled;total.skipped+=batch.skipped;
   if(batch.changed){total.changed=true;break;}
-  if(!batch.filled)break;
+  if(!batch.filled&&!pending.some(field=>field.type==='select-one'&&(attempts.get(identity(field))||0)<2))break;
   pending=[];
   // Cascading dropdowns may render after the framework's change event or a network response.
   for(const delay of [80,200,400,700]){
    await new Promise(resolve=>setTimeout(resolve,delay));if(!active())return total;
    const form=await scan();if(form.url!==url){total.changed=true;return total;}
-   pending=form.fields.filter(field=>field.type!=='chat-reply'&&(!field.filled||field.languageRow==='english'&&field.currentLevel==='basic')&&!excluded.has(questionId(field))&&(attempts.get(identity(field))||0)<(field.type==='combobox'?2:1))
+   pending=form.fields.filter(field=>field.type!=='chat-reply'&&(!field.filled||field.languageRow==='english'&&field.currentLevel==='basic')&&!excluded.has(questionId(field))&&(attempts.get(identity(field))||0)<(['combobox','select-one'].includes(field.type)?2:1))
     .flatMap(field=>{const answer=suggest(field,form);return answer?[{...field,...answer}]:[];});
    if(pending.length)break;
   }

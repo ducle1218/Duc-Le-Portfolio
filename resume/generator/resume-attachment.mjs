@@ -39,7 +39,8 @@ export async function attachResume({url,resume}){
  const resumeSection=e=>{for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role=heading]')];if(headings.length)return headings.length===1&&/^(?:resume|résumé|cv)(?:\s*\/\s*cv)?$/i.test(text(headings[0]))?p:null;}return null;};
  const isResumeZone=e=>/\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e))||(/\bdrop (?:a |your )?files?\b/i.test(text(e))&&!!(resumeSection(e)||sharedResumeSection(e)));
  const eligibleZone=e=>isResumeZone(e)&&!/cover letter|transcript|passport|photo|certificate/i.test(text(e))&&e.getClientRects().length;
- const zones=candidates.length?[]:[...document.querySelectorAll(dropSelector)].filter(eligibleZone);
+ const dropLabels=[...document.querySelectorAll('span,p,div,button,label')].filter(e=>e.childElementCount===0&&/^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(text(e)));
+ const zones=candidates.length?[]:[...new Set([...document.querySelectorAll(dropSelector),...dropLabels])].filter(eligibleZone);
  const containers=zones.filter(z=>!zones.some(other=>other!==z&&z.contains(other)));
  const zone=containers.length===1?containers[0]:null;
  if(candidates.length!==1&&!zone)return {attached:false,message:'No single supported resume upload found. Use the PDF download to attach it manually.'};
@@ -60,5 +61,5 @@ export async function attachResume({url,resume}){
    for(let i=0;i<18;i++){if(text(holder).includes(resume.name)&&!/upload failed|upload error/i.test(text(holder)))return {attached:true,message:resume.name+' received by the résumé uploader.'};await new Promise(resolve=>setTimeout(resolve,100));}
    return {attached:false,message:'PDF dropped. Check the résumé uploader for confirmation.'};
   }
-  input.files=transfer.files;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));if(!input.files?.length)return {attached:false,message:'The employer cleared the file. Check upload errors or attach the PDF manually.'};return {attached:true,message:resume.name+' attached. Check the employer’s upload status before continuing.'};}catch{return {attached:false,message:'This uploader needs a manual file selection. Download the tailored PDF from Studio.'};}
+  input.files=transfer.files;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));await new Promise(resolve=>setTimeout(resolve,350));if((!input.isConnected||!input.files?.length)&&!text(input.parentElement).includes(resume.name))return {attached:false,message:'The employer cleared the file. Check upload errors or attach the PDF manually.'};return {attached:true,message:resume.name+' attached. Check the employer’s upload status before continuing.'};}catch{return {attached:false,message:'This uploader needs a manual file selection. Download the tailored PDF from Studio.'};}
 }

@@ -37,6 +37,28 @@ const writeMemory=fn=>{const task=memoryWrite.then(async()=>{const items=await f
 const key=id=>'handoff:'+id;
 const extensionPage=sender=>sender.id===chrome.runtime.id&&sender.url?.startsWith(chrome.runtime.getURL(''));
 async function record(id){const entry=(await chrome.storage.session.get(key(id)))[key(id)];if(!entry||entry.expiresAt<Date.now()){await chrome.storage.session.remove(key(id));return null;}return entry;}
+// Match only explicit posting IDs on the same employer origin. Locale and campaign parameters can change between steps.
+function samePosting(a,b){
+ try{
+  const left=new URL(a),right=new URL(b);
+  if(left.protocol!=='https:'||left.origin!==right.origin)return false;
+  for(const key of ['jobSeqNo','jobId','pid','gh_jid']){
+   const id=left.searchParams.get(key);
+   if(id&&right.searchParams.get(key)===id)return true;
+  }
+  return left.pathname===right.pathname&&/\/(?:job|jobs)\/(?:\d{3,}|[^/]*[_-]R?\d{4,})(?:\/|$)/i.test(left.pathname)&&left.search===right.search&&left.hash===right.hash;
+ }catch{return false;}
+}
+async function reconnectResume(id){
+ const tab=await chrome.tabs.get(id);
+ if(!employerURL(tab?.url))return null;
+ const records=await chrome.storage.session.get(null);
+ const matches=Object.entries(records).filter(([k,e])=>k.startsWith('handoff:')&&e.expiresAt>Date.now()&&e.autoResume&&e.resume&&e.origin===new URL(tab.url).origin&&samePosting(e.job.url,tab.url)).map(([,e])=>e);
+ if(!matches.length||new Set(matches.map(e=>e.resume.sha256)).size!==1)return null;
+ const entry={...matches[0],resumeUploaded:false};
+ await chrome.storage.session.set({[key(id)]:entry});
+ return entry;
+}
 async function clearExpired(){const all=await chrome.storage.session.get(null);await chrome.storage.session.remove(Object.entries(all).filter(([k,v])=>k.startsWith('handoff:')&&v.expiresAt<Date.now()).map(([k])=>k));}
 async function launch(entry){
  // Confirmed Studio profiles remain available after the temporary tab session ends.
@@ -86,7 +108,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
    const token=crypto.randomUUID();await chrome.storage.session.set({['resume-target:'+token]:{tabId:tab.id,origin:new URL(tab.url).origin,expiresAt:Date.now()+30*60*1000}});
    return {ok:true,url:'https://ducle1218.github.io/Duc-Le-Portfolio/applications/?applicationTarget='+token+'&applicationHost='+encodeURIComponent(new URL(tab.url).hostname)};
   }
-  if(message?.type==='get-handoff'&&extensionPage(sender)){const id=Number(message.tabId??sender.tab?.id);const entry=await record(id);return {ok:true,entry};}
+  if(message?.type==='get-handoff'&&extensionPage(sender)){const id=Number(message.tabId??sender.tab?.id);const entry=await record(id)||await reconnectResume(id);return {ok:true,entry};}
   if(['memory-list','memory-save','memory-delete'].includes(message?.type)){
    const trusted=extensionPage(sender);let origin='',context='';
    if(!trusted){const entry=await record(sender.tab?.id);if(sender.id!==chrome.runtime.id||sender.frameId!==0||!entry||!employerURL(sender.url)||new URL(sender.url).origin!==entry.origin)throw new Error('Start this application from Studio before saving answers.');origin=entry.origin;context=entry.job.company.trim().toLowerCase();}

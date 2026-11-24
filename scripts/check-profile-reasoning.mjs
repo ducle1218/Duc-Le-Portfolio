@@ -10,6 +10,15 @@ const check=(label,want,type='combobox',choices=[])=>{
  const options=choices.map(label=>({label,value:label}));
  assert.equal(suggestField({label,type,options},profile)?.display,want,label);
 };
+profile.answers.push({question:'Sex',answer:'Male'});
+check('Please select the gender which most accurately describes how you identify yourself.','Male','select-one',['Female','Male','Other']);
+check('Please select the ethnicity which most accurately describes how you identify yourself.','5 - Asian (Not Hispanic or Latino) (United States of America)','select-one',['2 - White (Not Hispanic or Latino) (United States of America)','5 - Asian (Not Hispanic or Latino) (United States of America)']);
+check('Please select the veteran status which mostly accurately describes how you identify yourself.','I AM NOT A VETERAN','select-one',['I IDENTIFY AS A VETERAN, JUST NOT A PROTECTED VETERAN','I AM NOT A VETERAN']);
+const visaLabel='Will you now or in the future require sponsorship of a temporary work visa (e.g., F-1 (CPT or OPT), H-1B, O-1, TN, etc.)?';
+const citizenProfile={...profile,answers:[{question:'Citizenships',answer:'United States; Vietnam'}]};
+for(const [jobLocation,expected] of [['United States','No'],['France',undefined],['','No']]){
+ assert.equal(suggestField({label:visaLabel,jobLocation,type:'select-one',options:['No','Yes'].map(label=>({label,value:label}))},citizenProfile)?.display,expected);
+}
 check('Are you also a citizen of another country?','Yes');
 check('Have you ever held a security clearance?','No');
 check('Which type(s) of polygraph have you had?','None');

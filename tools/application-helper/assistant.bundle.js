@@ -19,7 +19,7 @@
         total.changed = true;
         break;
       }
-      if (!batch.filled) break;
+      if (!batch.filled && !pending.some((field) => field.type === "select-one" && (attempts.get(identity(field)) || 0) < 2)) break;
       pending = [];
       for (const delay of [80, 200, 400, 700]) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -29,7 +29,7 @@
           total.changed = true;
           return total;
         }
-        pending = form.fields.filter((field) => field.type !== "chat-reply" && (!field.filled || field.languageRow === "english" && field.currentLevel === "basic") && !excluded.has(questionId(field)) && (attempts.get(identity(field)) || 0) < (field.type === "combobox" ? 2 : 1)).flatMap((field) => {
+        pending = form.fields.filter((field) => field.type !== "chat-reply" && (!field.filled || field.languageRow === "english" && field.currentLevel === "basic") && !excluded.has(questionId(field)) && (attempts.get(identity(field)) || 0) < (["combobox", "select-one"].includes(field.type) ? 2 : 1)).flatMap((field) => {
           const answer = suggest(field, form);
           return answer ? [{ ...field, ...answer }] : [];
         });
@@ -435,6 +435,16 @@
     };
     const stem = questionKey(String(field.label || "").split("?")[0]).replace(/^\d+ /, "");
     const saved = (value, name, aliases3) => ({ ...result(value, "From your application profile", aliases3), sourceQuestion: name });
+    const disclosure = stem.match(/^(?:please )?(?:select|choose|indicate) (?:the |your )?(gender|ethnicity|race|veteran status) (?:which|that) (?:most|mostly|best)(?: accurately)? describes how you identify yourself\b/);
+    if (disclosure) {
+      const subject = disclosure[1];
+      const source = subject === "gender" ? "Sex" : subject === "veteran status" ? "Military service" : "Race / ethnic background";
+      const answer = fact(source) || unique(source);
+      const wanted = subject === "gender" && answer ? [questionKey(answer)] : source === "Military service" && answer === "No" ? ["i am not a veteran", "not a veteran", "non veteran"] : source === "Race / ethnic background" && questionKey(answer) === "asian not hispanic or latino" ? ["asian not hispanic or latino", "asian"] : [];
+      const matches = (field.options || []).filter((o) => !o.disabled && wanted.includes(questionKey(o.label).replace(/^\d+ /, "").replace(/ united states(?: of america)?$/, "")));
+      if (matches.length === 1) return { ...saved(matches[0].label, source), requiresReview: true };
+      return { blocked: true };
+    }
     const channels = { sms: /\b(?:sms|text(?:ing|s| messages?)?)\b/.test(stem), email: /\be ?mail\b/.test(stem) };
     const contact = /\b(?:consent|may we|can we|opt in|permission|agree|approve|would you like|allow|authorize|may i contact)\b/.test(stem);
     const policy = "SMS employer policy";
@@ -691,9 +701,12 @@
     }
     const countryDependent = /^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q) || /^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
     const visaAssistance = q === "will you now or in the future require sponsorship for an immigration related employment benefit" || /^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
-    if (visaAssistance || countryDependent || commonQuestion(q)?.question === sponsor) {
+    const temporaryVisa = /\b(?:require|need) sponsorship (?:of|for) (?:a |an )?temporary work visa\b/.test(stem);
+    if (temporaryVisa || visaAssistance || countryDependent || commonQuestion(q)?.question === sponsor) {
       const source = visaAssistance || q.includes("sponsorship") ? sponsor : auth, region2 = jobJurisdiction(field.jobLocation || field.workQuestionCountry || "");
-      if (region2 === "us" && fact(source)) return result(fact(source), "Your U.S. work profile and this job\u2019s location");
+      const usVisaExamples = !field.jobLocation && !field.workQuestionCountry && temporaryVisa && /\bcpt or opt\b/.test(stem) && /\bh 1b\b/.test(stem);
+      if ((region2 === "us" || usVisaExamples) && source === sponsor && usCitizen && !fact(source)) return saved("No", "Citizenships");
+      if ((region2 === "us" || usVisaExamples) && fact(source)) return result(fact(source), "Your U.S. work profile and this job\u2019s location");
       const foreign = "Do you require employment visa sponsorship for jobs outside the United States?";
       if (region2 === "foreign" && source === sponsor && unique(foreign)) return result(unique(foreign), "Your international sponsorship preference");
       return { blocked: true };
@@ -1110,6 +1123,10 @@
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
+      if (!ownLabel(e) && e.tagName === "SELECT") {
+        const cell = e.closest("td"), caption = cell?.previousElementSibling;
+        if (caption && cell.parentElement?.querySelectorAll(controls).length === 1 && /^(TD|TH)$/.test(caption.tagName) && text(caption) && text(caption).length <= 800) return text(caption);
+      }
       if (!ownLabel(e) && e.getAttribute("aria-describedby")) {
         const description = e.getAttribute("aria-describedby").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ").trim();
         const adjacent = e.nextSibling?.nodeType === 3 ? e.nextSibling.textContent.trim() : "";
@@ -1187,7 +1204,7 @@
       }
       return raw;
     };
-    const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
+    const placeholder = (value) => !value || /^(no selection|select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => /^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id) && /^(?:0+|yyyy)$/i.test(e.value) ? true : isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please|^\s*\[.+\]\s*$/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
@@ -1545,7 +1562,7 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]"), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -1839,7 +1856,15 @@
             else skipped++;
             continue;
           }
-          const proto = e.tagName === "SELECT" ? HTMLSelectElement.prototype : e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+          if (e.tagName === "SELECT") {
+            Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(e, fillValue);
+            for (const name of ["input", "change"]) e.dispatchEvent(new Event(name, { bubbles: true, composed: true }));
+            await pause(260);
+            if (e.isConnected && e.value === fillValue && (!e.validity || e.validity.valid)) filled++;
+            else skipped++;
+            continue;
+          }
+          const proto = e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);
           e.dispatchEvent(new Event("input", { bubbles: true }));
           e.dispatchEvent(new Event("change", { bubbles: true }));
@@ -2214,6 +2239,10 @@
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
       if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
+      if (!ownLabel(e) && e.tagName === "SELECT") {
+        const cell = e.closest("td"), caption = cell?.previousElementSibling;
+        if (caption && cell.parentElement?.querySelectorAll(controls).length === 1 && /^(TD|TH)$/.test(caption.tagName) && text(caption) && text(caption).length <= 800) return text(caption);
+      }
       if (!ownLabel(e) && e.getAttribute("aria-describedby")) {
         const description = e.getAttribute("aria-describedby").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ").trim();
         const adjacent = e.nextSibling?.nodeType === 3 ? e.nextSibling.textContent.trim() : "";
@@ -2291,7 +2320,7 @@
       }
       return raw;
     };
-    const placeholder = (value) => !value || /^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
+    const placeholder = (value) => !value || /^(no selection|select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
     const empty = (e) => /^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id) && /^(?:0+|yyyy)$/i.test(e.value) ? true : isReply(e) ? !(e.value || e.textContent || "").trim() : choice(e) ? !selectedRadio(e) : custom(e) ? placeholder(selectedValue(e)) : !e.value || e.tagName === "SELECT" && e.selectedIndex === 0 && /select|choose|please|^\s*\[.+\]\s*$/i.test(text(e.options[0]));
     const disabled = (e) => e.disabled || e.readOnly && !custom(e) || e.getAttribute("aria-disabled") === "true";
     const valueText = (e) => choice(e) ? optionLabel(selectedRadio(e) || e) : e.tagName === "SELECT" ? text(e.options[e.selectedIndex]) : custom(e) ? selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g, "").trim() : e.value || "";
@@ -2649,7 +2678,7 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]"), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -2943,7 +2972,15 @@
             else skipped++;
             continue;
           }
-          const proto = e.tagName === "SELECT" ? HTMLSelectElement.prototype : e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+          if (e.tagName === "SELECT") {
+            Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(e, fillValue);
+            for (const name of ["input", "change"]) e.dispatchEvent(new Event(name, { bubbles: true, composed: true }));
+            await pause(260);
+            if (e.isConnected && e.value === fillValue && (!e.validity || e.validity.valid)) filled++;
+            else skipped++;
+            continue;
+          }
+          const proto = e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);
           e.dispatchEvent(new Event("input", { bubbles: true }));
           e.dispatchEvent(new Event("change", { bubbles: true }));
@@ -3049,7 +3086,8 @@
     };
     const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!(resumeSection(e) || sharedResumeSection(e));
     const eligibleZone = (e) => isResumeZone(e) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
-    const zones = candidates.length ? [] : [...document.querySelectorAll(dropSelector)].filter(eligibleZone);
+    const dropLabels = [...document.querySelectorAll("span,p,div,button,label")].filter((e) => e.childElementCount === 0 && /^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(text(e)));
+    const zones = candidates.length ? [] : [.../* @__PURE__ */ new Set([...document.querySelectorAll(dropSelector), ...dropLabels])].filter(eligibleZone);
     const containers = zones.filter((z) => !zones.some((other) => other !== z && z.contains(other)));
     const zone = containers.length === 1 ? containers[0] : null;
     if (candidates.length !== 1 && !zone) return { attached: false, message: "No single supported resume upload found. Use the PDF download to attach it manually." };
@@ -3081,7 +3119,8 @@
       input.files = transfer.files;
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
-      if (!input.files?.length) return { attached: false, message: "The employer cleared the file. Check upload errors or attach the PDF manually." };
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      if ((!input.isConnected || !input.files?.length) && !text(input.parentElement).includes(resume.name)) return { attached: false, message: "The employer cleared the file. Check upload errors or attach the PDF manually." };
       return { attached: true, message: resume.name + " attached. Check the employer\u2019s upload status before continuing." };
     } catch {
       return { attached: false, message: "This uploader needs a manual file selection. Download the tailored PDF from Studio." };
@@ -3297,6 +3336,7 @@
         if (!entry?.autoResume || !entry.resume || entry.resumeUploaded || autoResumeBusy) return;
         const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.files?.length);
         inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]')].filter((e) => /drop (?:your |a )?(?:resume|résumé|cv|files?)\b/i.test(e.textContent)));
+        if (!inputs.length) inputs.push(...[...document.querySelectorAll("span,p,div,button,label")].filter((e) => e.childElementCount === 0 && /^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(e.textContent.trim())));
         if (!inputs.length || inputs.every((input) => autoTried.has(input))) return;
         for (const input of inputs) autoTried.add(input);
         autoResumeBusy = true;

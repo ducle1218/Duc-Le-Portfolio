@@ -254,6 +254,10 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   if(fieldLabel&&(!choice(e)||!fieldLabel.contains(e))){const value=labelText(fieldLabel);if(value&&!/^(yes|no)$/i.test(value))return value;}
   if(e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag'))return 'Country';
   if(checkbox(e)&&norm(ownLabel(e))==='not completed')return ownLabel(e);
+  if(!ownLabel(e)&&e.tagName==='SELECT'){
+   const cell=e.closest('td'),caption=cell?.previousElementSibling;
+   if(caption&&cell.parentElement?.querySelectorAll(controls).length===1&&/^(TD|TH)$/.test(caption.tagName)&&text(caption)&&text(caption).length<=800)return text(caption);
+  }
   if(!ownLabel(e)&&e.getAttribute('aria-describedby')){
    const description=e.getAttribute('aria-describedby').split(/\s+/).map(id=>text(document.getElementById(id))).join(' ').trim();
    const adjacent=e.nextSibling?.nodeType===3?e.nextSibling.textContent.trim():'';
@@ -293,7 +297,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   }
   return raw;
  };
- const placeholder=value=>!value||/^(select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
+ const placeholder=value=>!value||/^(no selection|select|choose|please select|select an? option|select one|select an? answer|please choose)([ .…]*)$/i.test(value.trim());
  const empty=e=>/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)&&/^(?:0+|yyyy)$/i.test(e.value)?true:isReply(e)?!(e.value||e.textContent||'').trim():choice(e)?!selectedRadio(e):custom(e)?placeholder(selectedValue(e)):!e.value||(e.tagName==='SELECT'&&e.selectedIndex===0&&/select|choose|please|^\s*\[.+\]\s*$/i.test(text(e.options[0])));
  const disabled=e=>e.disabled||e.readOnly&&!custom(e)||e.getAttribute('aria-disabled')==='true';
  const valueText=e=>choice(e)?optionLabel(selectedRadio(e)||e):e.tagName==='SELECT'?text(e.options[e.selectedIndex]):custom(e)?selectedValue(e).replace(/^[×✕✖]\s*|\s*[×✕✖]$/g,'').trim():e.value||'';
@@ -581,7 +585,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   const jobLocation=countries.size===1?[...countries][0]:'';
   const posting=postings.length===1?postings[0]:null;
   const jobEmployer=posting?.hiringOrganization?.name||'',jobIndustry=typeof posting?.industry==='string'?posting.industry:'';
-  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),hasUpload:!!document.querySelector('input[type=file],[ondrop],[data-dropzone]'),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasEmailSignIn:[...document.querySelectorAll('h1,h2,h3,[role=heading]')].some(h=>visible(h)&&/^(?:sign in|log in)$/i.test(text(h))),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -751,7 +755,14 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
      if(accepted)filled++;else skipped++;
      continue;
     }
-    const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
+    if(e.tagName==='SELECT'){
+     Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(e,fillValue);
+     for(const name of ['input','change'])e.dispatchEvent(new Event(name,{bubbles:true,composed:true}));
+     await pause(260);
+     if(e.isConnected&&e.value===fillValue&&(!e.validity||e.validity.valid))filled++;else skipped++;
+     continue;
+    }
+    const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
     Object.getOwnPropertyDescriptor(proto,'value').set.call(e,fillValue);e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));
     if(e.value===fillValue&&/^e ?mail(?: address)?$/.test(norm(f.label))){await pause(80);emailSave(e)?.click();}
     if(!isReply(e))e.dispatchEvent(new Event('blur',{bubbles:true}));await new Promise(r=>setTimeout(r,120));if(e.isConnected&&e.value===fillValue&&(!e.validity||e.validity.valid))filled++;else skipped++;

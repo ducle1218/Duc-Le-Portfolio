@@ -55,6 +55,11 @@ export async function attachResume({url,resume}){
  const limits=[...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map(m=>Number(m[1]||m[3])*((m[2]||m[4]).toUpperCase()==='MB'?1_000_000:1000));
  if(limits.length&&bytes.length>Math.min(...limits))return {attached:false,message:'The tailored PDF exceeds this uploader’s file-size limit. Use a smaller PDF.'};
  if(location.href!==url||!target.isConnected||input?.files?.length||input?.disabled)return {attached:false,message:'The upload changed; no file was replaced.'};
+ if(text(document.body).includes(resume.name))return {attached:true,message:resume.name+' already appears on this application.'};
+ if(globalThis.chrome?.runtime?.id){
+  const claim=await chrome.runtime.sendMessage({type:'claim-resume',sha256:resume.sha256}).catch(()=>null);
+  if(!claim?.ok)return {attached:false,message:'An attachment was already attempted for this job. Check the employer’s file list.'};
+ }
  try{const transfer=new DataTransfer();transfer.items.add(new File([bytes],resume.name,{type:'application/pdf'}));if(zone){
    const holder=zone.parentElement||zone;
    for(const event of ['dragenter','dragover','drop'])zone.dispatchEvent(new DragEvent(event,{bubbles:true,cancelable:true,composed:true,dataTransfer:transfer}));

@@ -324,7 +324,11 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   return {blocked:true};
  }
  if(/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q))return region==='us'&&citizen&&unique(proof)==='Yes'?confirmed('Yes',proof):{blocked:true};
- if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(q)&&unique('English proficiency')==='Fluent')return confirmed('Fluent','English proficiency',['advanced','fluent']);
+ if(field.languageRow==='english'&&q==='i am fluent in this language'&&unique('English proficiency')==='Fluent')return {...confirmed('Fluent','English proficiency'),fluentCheck:true};
+ if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(q)&&unique('English proficiency')==='Fluent'){
+  const levels=(field.options||[]).map(o=>questionKey(o.label)).filter(v=>/^(?:level )?\d+ advanced$|^advanced \d+$/.test(v));
+  return confirmed('Fluent','English proficiency',['advanced',...levels,'fluent']);
+ }
  if(/^(?:current (?:or |and )?last|current or most recent|last held) (?:position|job) title$/.test(q)&&fact('Employment experience')==='None')return confirmed('Not Applicable','Employment experience');
  if(/^(?:primary )?country(?: region)? of citizenship$/.test(q)&&['combobox','select-one'].includes(field.type)){
   const chosen=unique('Single-country citizenship preference');

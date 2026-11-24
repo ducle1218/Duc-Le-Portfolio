@@ -1,6 +1,6 @@
 {
-  "version": "1.28.0",
-  "sha256": "f622bf8b06326bd2d214486f8e77d3f03ba285aa287b11759bb9ca3b8dae86bb",
+  "version": "1.29.0",
+  "sha256": "e7381b7ca7a4ff79da6002bcf7b389b257ee2fadf5c9d5cb6144a9546a238fe8",
   "files": [
     "manifest.json",
     "popup.html",
@@ -34,6 +34,8 @@
     "launch.html",
     "launch.mjs",
     "assistant.bundle.js",
-    "portfolio-snapshot.mjs"
+    "portfolio-snapshot.mjs",
+    "preview.html",
+    "preview.mjs"
   ]
 }

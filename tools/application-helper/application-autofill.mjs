@@ -11,7 +11,7 @@ const skillEquivalents={
  solidworks:['solidworks cad','solidworks 3d cad']
 };
 export function suggestField(field,profile,memory=[],origin='',context='',portfolio=null){
- if(!profile?.confirmed)return null;
+ if(!profile?.confirmed||field.languagePicker)return null;
  if(field.type==='skill-list'||field.type==='language-list'){
   const skills=field.type==='skill-list';
   const languages=profile.answers?.find(a=>normalize(a.question)==='languages spoken')?.answer||'';
@@ -98,6 +98,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  }
  if(field.maxLength>0&&value?.length>field.maxLength)return null;
  if(field.type==='checkbox-group'){
+  if(rule?.fluentCheck&&field.options?.length===1)return {value:[field.options[0].value],display:'Fluent',selectedLabels:[field.options[0].label],sourceQuestion:rule.sourceQuestion};
   if(rule?.markIncomplete)return {value:'Not Completed',display:'Not Completed',selectedLabels:[field.options[0].label],reason:rule.reason,sourceQuestion:rule.sourceQuestion};
   // Only explicit region preferences are supported: never consent/attestation boxes.
   if(rule?.raceSelection){
@@ -210,7 +211,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
     if(p.querySelectorAll('input[type=checkbox],[role=checkbox]').length>1&&[...p.querySelectorAll('label,legend,h2,h3,h4,p,span,div')].some(n=>!n.childElementCount&&/^(ethnicity|race|race ethnicity)$/.test(norm(text(n)))))return p;
    }
   }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,label:not([for]),[aria-labelledby],.question-label,.form-label,.control-label'))return p;}return null;};
- const radios=e=>{if(checkbox(e)&&norm(ownLabel(e))==='not completed')return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"],[role="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
+ const radios=e=>{if(checkbox(e)&&/^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e))))return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"],[role="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
  const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
  const useful=s=>/^(select|please select|choose|open menu|clear|select an option|select one)[. …]*$/i.test((s||'').trim())?'':s;
@@ -259,7 +260,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   const fieldLabel=wrapper?.querySelector('[data-automation-id="formLabel"],legend')||wrapper?.querySelector('label');
   if(fieldLabel&&(!choice(e)||!fieldLabel.contains(e))){const value=labelText(fieldLabel);if(value&&!/^(yes|no)$/i.test(value))return value;}
   if(e.matches('.iti__selected-country,.iti__selected-flag,.selected-flag'))return 'Country';
-  if(checkbox(e)&&norm(ownLabel(e))==='not completed')return ownLabel(e);
+  if(checkbox(e)&&/^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e))))return ownLabel(e);
   if(!ownLabel(e)&&e.tagName==='SELECT'){
    const cell=e.closest('td'),caption=cell?.previousElementSibling;
    if(caption&&cell.parentElement?.querySelectorAll(controls).length===1&&/^(TD|TH)$/.test(caption.tagName)&&text(caption)&&text(caption).length<=800)return text(caption);
@@ -358,10 +359,11 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    if(phoneError(e))return {digitsPhone:true,invalidPhone:true,phoneBefore:e.value};
    if(/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help)||e.validity?.patternMismatch)return {digitsPhone:true,phoneBefore:e.value};
   }
-  if(/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(wording)){
+  if((wording==='language'||wording==='language name')&&sectionFor('languages')?.contains(e))return {languagePicker:true};
+  if(/^(reading|speaking|writing|understanding|listening|overall|comprehension|i am fluent in this language)$/.test(wording)){
    for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
-    const langs=[...p.querySelectorAll(controls)].filter(c=>/^(language|language name)$/.test(norm(label(c)))&&visible(c));
-    if(langs.length)return {languageRow:langs.length===1?norm(valueText(langs[0])):'',currentLevel:norm(valueText(e))};
+    const langs=languageInputs(p);
+    if(langs.length)return {languageRow:langs.length===1?norm(languageValue(langs[0])):'',currentLevel:norm(valueText(e))};
    }
   }
   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
@@ -480,30 +482,43 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   return inputs.find(e=>/skills/i.test(label(e)+' '+e.id)||e.getAttribute('data-automation-id')==='searchBox')||(inputs.length===1&&/search/i.test(inputs[0].placeholder||'')?inputs[0]:null);
  };
  const skillOpener=p=>[...p.querySelectorAll('[aria-haspopup=listbox],[role=combobox],[data-automation-id=multiSelectContainer]')].find(e=>visible(e)&&!disabled(e));
- const languageInputs=p=>elements().filter(e=>p.contains(e)&&visible(e)&&!disabled(e)&&!choice(e)&&/^(language|select language)$/.test(norm(label(e))));
+ const languageValue=e=>e.tagName==='BUTTON'?text(e):valueText(e);
+ const languageInputs=p=>[...p.querySelectorAll(controls)].filter(e=>p.contains(e)&&visible(e)&&!disabled(e)&&!choice(e)&&(/^(language|language name|select language)$/.test(norm(label(e)))||/--language$/i.test(e.id)));
  const languageAdd=p=>[...p.querySelectorAll('button')].find(b=>visible(b)&&!disabled(b)&&(!b.form||b.type==='button')&&/^(add|add another|add language)$/i.test(text(b)));
  const listFields=()=>{
   const fields=[],skills=sectionFor('skills'),languages=sectionFor('languages');
   if(skills&&(skillInput(skills)||skillOpener(skills)))fields.push({type:'skill-list',label:'Skills',existing:chipValues(skills)});
-  if(languages&&(languageAdd(languages)||languageInputs(languages).length))fields.push({type:'language-list',label:'Languages',existing:languageInputs(languages).filter(e=>!empty(e)).map(valueText)});
+  if(languages&&(languageAdd(languages)||languageInputs(languages).length))fields.push({type:'language-list',label:'Languages',existing:languageInputs(languages).map(languageValue).filter(v=>!placeholder(v))});
   return fields;
  };
  async function fillLanguages(values){
   for(const value of values){
    const section=sectionFor('languages');if(!section||location.href!==url)return false;
    let inputs=languageInputs(section);
-   if(inputs.some(e=>!empty(e)&&norm(valueText(e))===norm(value)))continue;
+   if(inputs.some(e=>norm(languageValue(e))===norm(value)))continue;
+   if(!inputs.length&&section.querySelector('select,[role=combobox],[aria-haspopup=listbox]'))return false;
+   const known=inputs.map(languageValue).filter(v=>!placeholder(v)).map(norm);
+   if(new Set(known).size!==known.length)return false;
+   let newDefault=null;
    if(!inputs.some(empty)){
+    const originalInputs=inputs.slice();
     const add=languageAdd(section);if(!add)return false;
-    add.click();
-    for(let i=0;i<20;i++){await pause(75);const next=sectionFor('languages');inputs=next?languageInputs(next):[];if(inputs.some(empty))break;}
+    const rowKey=location.href+'|'+known.join('|')+'|'+norm(value);
+    const added=globalThis.__ducAddedLanguageRows??=new Set();
+    if(added.has(rowKey))return false;
+    added.add(rowKey);add.click();
+    for(let i=0;i<20;i++){await pause(75);const next=sectionFor('languages');inputs=next?languageInputs(next):[];if(inputs.some(empty))break;
+     if(inputs.length===originalInputs.length+1&&originalInputs.every((original,i)=>original===inputs[i])&&known.includes(norm(languageValue(inputs.at(-1))))){newDefault=inputs.at(-1);break;}
+    }
    }
-   const blanks=inputs.filter(empty);if(blanks.length!==1)return false;
+   const blanks=newDefault?[newDefault]:inputs.filter(empty);if(blanks.length!==1)return false;
    const target=blanks[0],field=snapshot(target,elements().indexOf(target));
    let answer={value,display:value,aliases:[norm(value)]};
    if(target.tagName==='SELECT'){const options=field.options.filter(o=>!o.disabled&&norm(o.label)===norm(value));if(options.length!==1)return false;answer={value:options[0].value,display:options[0].label};}
+   if(newDefault)(globalThis.__ducLanguageDefaults??=new WeakMap()).set(target,languageValue(target));
    const result=await formBridge({action:'fill',url,fields:[{...field,...answer}]});
-   if(!result.filled)return false;
+   globalThis.__ducLanguageDefaults?.delete(target);
+   if(!result.filled||!languageInputs(sectionFor('languages')||section).some(e=>norm(languageValue(e))===norm(value)))return false;
   }
   return true;
  }
@@ -638,7 +653,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
     const save=emailSave(e);if(save){save.click();await pause(150);if(!e.isConnected||!emailSave(e))filled++;else skipped++;}else skipped++;
     continue;
    }
-   if(location.href!==url||!e||!e.isConnected||(!empty(e)&&!(f.currentRecruiterScope&&context(e).currentRecruiterScope===f.currentRecruiterScope&&norm(f.display)==='only recruiters managing jobs i apply to')&&!(f.digitsPhone&&context(e).digitsPhone&&e.value===f.phoneBefore&&e.value.replace(/\D/g,'')===f.value)&&!(f.languageRow==='english'&&f.currentLevel==='basic'&&context(e).languageRow==='english'&&norm(valueText(e))==='basic'&&f.display==='Fluent'))||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
+   if(location.href!==url||!e||!e.isConnected||(!empty(e)&&!(globalThis.__ducLanguageDefaults?.has(e)&&globalThis.__ducLanguageDefaults.get(e)===languageValue(e))&&!(f.currentRecruiterScope&&context(e).currentRecruiterScope===f.currentRecruiterScope&&norm(f.display)==='only recruiters managing jobs i apply to')&&!(f.digitsPhone&&context(e).digitsPhone&&e.value===f.phoneBefore&&e.value.replace(/\D/g,'')===f.value)&&!(f.languageRow==='english'&&f.currentLevel==='basic'&&context(e).languageRow==='english'&&norm(valueText(e))==='basic'&&f.display==='Fluent'))||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
    const currentContext=context(e);if(('primaryEmail' in f&&currentContext.primaryEmail&&String(currentContext.primaryEmail).trim().toLowerCase()!==String(f.value).trim().toLowerCase())||(f.degreePair&&(!currentContext.degreePair||f.rowDegree&&f.rowDegree!==currentContext.rowDegree))||(f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
     const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
@@ -685,7 +700,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
      await new Promise(r=>setTimeout(r,80));
     }
     const aliases=[...(f.aliases||[norm(f.value)])];const readOptions=()=>boxes.length===1?[...boxes[0].querySelectorAll(optionSelector)].filter(o=>visible(o)&&!disabled(o)&&!o.classList.contains('ng-option-disabled')).filter(o=>!o.matches('input,textarea')&&!o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o,i,all)=>!all.some(other=>other!==o&&o.contains(other)&&norm(text(o))===norm(text(other)))):[];
-    const optionKey=o=>f.phoneCountry&&o.getAttribute('data-country-code')?.toLowerCase()==='us'&&/\+1\b/.test(text(o))?'united states 1':norm(text(o));
+    const optionKey=o=>f.sourceQuestion==='English proficiency'&&/^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(text(o)))?'advanced':f.phoneCountry&&o.getAttribute('data-country-code')?.toLowerCase()==='us'&&/\+1\b/.test(text(o))?'united states 1':norm(text(o));
     let available=readOptions();
     // Address pickers may fetch rows only after a search. A search term is never itself a selection.
     const isAddressPicker=searchableAddress||/citizenship/.test(norm(f.label));
@@ -742,7 +757,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
       }
       if(lists.length)continue;
      }
-     if(!(sourceBranch==='company'&&brand&&rootChoice===brand&&!leafChosen)&&(aliases.includes(norm(valueText(e)))||(f.phoneCountry&&/^\+1$/.test(valueText(e))&&boxes.every(b=>!b.isConnected||!visible(b))))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
+     if(!(sourceBranch==='company'&&brand&&rootChoice===brand&&!leafChosen)&&((aliases.includes(norm(valueText(e)))||f.sourceQuestion==='English proficiency'&&/^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(valueText(e))))||(f.phoneCountry&&/^\+1$/.test(valueText(e))&&boxes.every(b=>!b.isConnected||!visible(b))))&&e.getAttribute('aria-invalid')!=='true'&&(!query||input.value!==query||e.getAttribute('aria-expanded')!=='true'&&boxes.every(b=>!b.isConnected||!visible(b)))){accepted=true;break;}}
     if(boxes.some(b=>b.isConnected&&visible(b))){e.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));e.blur();}
     if(!accepted&&query&&input.isConnected&&input.value===query&&!/^address line 1$/i.test(f.label.trim()))setQuery('');
     if(accepted)filled++;else skipped++;

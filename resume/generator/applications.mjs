@@ -257,7 +257,12 @@ async function originalDescription(job){
  throw new Error('The saved posting text is no longer available. Import its link again, or paste its description in the resume section.');
 }
 async function openApplication(job){
- if(dialog){dialog.focus();return;}const previous=applications.find(a=>a.url===canonical(job.url)),app={...job,...previous};let dirty=false,preparedResume=null;
+ if(dialog){dialog.focus();return;}const postingKey=value=>{
+  const link=canonical(value);if(!link)return '';
+  const u=new URL(link);
+  for(const key of ['jobId','jobSeqNo','pid','gh_jid'])if(u.searchParams.get(key))return u.origin+'|'+key+'|'+u.searchParams.get(key);
+  return link.replace(/(\/job\/[^?#]+?)\/apply(?:\/applyManually)?\/?$/i,'$1');
+ };const previous=applications.find(a=>postingKey(a.url)===postingKey(job.url)),app={...job,...previous};let dirty=false,preparedResume=null;
  const d=dialog=node('dialog',undefined,'application-dialog');d.setAttribute('aria-labelledby','application-dialog-title');
  const top=node('div',undefined,'application-toolbar'),close=node('button','Close ×','quiet');top.append(node('span','APPLICATION STUDIO / YOUR KIT','eyebrow'),close);
  const title=node('h2',app.title);title.id='application-dialog-title';const steps=node('div',undefined,'application-steps');for(const label of ['01 Tailor your resume','02 Copy confirmed answers','03 Apply with the employer'])steps.append(node('span',label));

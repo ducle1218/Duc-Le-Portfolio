@@ -66,6 +66,11 @@ assert.equal((await send({type:'studio-start',payload:connectionPayload})).ok,fa
 assert.equal((await send({type:'studio-start',payload:{...connectionPayload,confirmTarget:true}})).connected,true);
 assert.equal(tabs.get(50).url,target.url);assert.equal(stored.get('handoff:50').origin,'https://apply.example.com');assert.equal(stored.get('handoff:50').resume.jobUrl,payload.job.url);assert(stored.get('handoff:50').autoResume);
 assert.equal((await send({type:'studio-start',payload:{...connectionPayload,confirmTarget:true}})).ok,false,'Connection token cannot be replayed');
+const claim={type:'claim-resume',tabId:50,sha256:resume.sha256};
+const racing=await Promise.all([send(claim,extension),send(claim,extension)]);
+assert.equal(racing.filter(r=>r.ok).length,1);
+assert.equal((await send(claim,extension)).ok,false);
+assert.deepEqual((await send({type:'preview-pdf',tabId:50},extension)).resume,resume);
 assert.equal((await send({type:'resume-attached',tabId:50,sha256:'0'.repeat(64)},extension)).ok,false);
 assert.equal((await send({type:'resume-attached',tabId:50,sha256:resume.sha256},extension)).ok,true);assert(stored.get('handoff:50').resumeUploaded);
 const other=await send({type:'link-current-application',tabId:50},extension);target.url='https://elsewhere.example/application';assert.equal((await send({type:'studio-start',payload:{...connectionPayload,targetToken:new URL(other.url).searchParams.get('applicationTarget'),confirmTarget:true}})).ok,false,'Changed destination is rejected');

@@ -668,7 +668,11 @@
       return { blocked: true };
     }
     if (/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q)) return region === "us" && citizen && unique(proof) === "Yes" ? confirmed("Yes", proof) : { blocked: true };
-    if (field.languageRow === "english" && /^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(q) && unique("English proficiency") === "Fluent") return confirmed("Fluent", "English proficiency", ["advanced", "fluent"]);
+    if (field.languageRow === "english" && q === "i am fluent in this language" && unique("English proficiency") === "Fluent") return { ...confirmed("Fluent", "English proficiency"), fluentCheck: true };
+    if (field.languageRow === "english" && /^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(q) && unique("English proficiency") === "Fluent") {
+      const levels = (field.options || []).map((o) => questionKey(o.label)).filter((v) => /^(?:level )?\d+ advanced$|^advanced \d+$/.test(v));
+      return confirmed("Fluent", "English proficiency", ["advanced", ...levels, "fluent"]);
+    }
     if (/^(?:current (?:or |and )?last|current or most recent|last held) (?:position|job) title$/.test(q) && fact("Employment experience") === "None") return confirmed("Not Applicable", "Employment experience");
     if (/^(?:primary )?country(?: region)? of citizenship$/.test(q) && ["combobox", "select-one"].includes(field.type)) {
       const chosen = unique("Single-country citizenship preference");
@@ -1065,7 +1069,7 @@
       return null;
     };
     const radios = (e) => {
-      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
+      if (checkbox(e) && /^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e)))) return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"],[role="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
@@ -1134,7 +1138,7 @@
         if (value && !/^(yes|no)$/i.test(value)) return value;
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
-      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
+      if (checkbox(e) && /^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e)))) return ownLabel(e);
       if (!ownLabel(e) && e.tagName === "SELECT") {
         const cell = e.closest("td"), caption = cell?.previousElementSibling;
         if (caption && cell.parentElement?.querySelectorAll(controls).length === 1 && /^(TD|TH)$/.test(caption.tagName) && text(caption) && text(caption).length <= 800) return text(caption);
@@ -1267,10 +1271,11 @@
         if (phoneError(e)) return { digitsPhone: true, invalidPhone: true, phoneBefore: e.value };
         if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
       }
-      if (/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(wording)) {
+      if ((wording === "language" || wording === "language name") && sectionFor("languages")?.contains(e)) return { languagePicker: true };
+      if (/^(reading|speaking|writing|understanding|listening|overall|comprehension|i am fluent in this language)$/.test(wording)) {
         for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
-          const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
-          if (langs.length) return { languageRow: langs.length === 1 ? norm(valueText(langs[0])) : "", currentLevel: norm(valueText(e)) };
+          const langs = languageInputs(p);
+          if (langs.length) return { languageRow: langs.length === 1 ? norm(languageValue(langs[0])) : "", currentLevel: norm(valueText(e)) };
         }
       }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
@@ -1418,12 +1423,13 @@
       return inputs.find((e) => /skills/i.test(label(e) + " " + e.id) || e.getAttribute("data-automation-id") === "searchBox") || (inputs.length === 1 && /search/i.test(inputs[0].placeholder || "") ? inputs[0] : null);
     };
     const skillOpener = (p) => [...p.querySelectorAll("[aria-haspopup=listbox],[role=combobox],[data-automation-id=multiSelectContainer]")].find((e) => visible(e) && !disabled(e));
-    const languageInputs = (p) => elements().filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && /^(language|select language)$/.test(norm(label(e))));
+    const languageValue = (e) => e.tagName === "BUTTON" ? text(e) : valueText(e);
+    const languageInputs = (p) => [...p.querySelectorAll(controls)].filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && (/^(language|language name|select language)$/.test(norm(label(e))) || /--language$/i.test(e.id)));
     const languageAdd = (p) => [...p.querySelectorAll("button")].find((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && /^(add|add another|add language)$/i.test(text(b)));
     const listFields = () => {
       const fields2 = [], skills = sectionFor("skills"), languages = sectionFor("languages");
       if (skills && (skillInput(skills) || skillOpener(skills))) fields2.push({ type: "skill-list", label: "Skills", existing: chipValues(skills) });
-      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).filter((e) => !empty(e)).map(valueText) });
+      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).map(languageValue).filter((v) => !placeholder(v)) });
       return fields2;
     };
     async function fillLanguages(values) {
@@ -1431,19 +1437,32 @@
         const section = sectionFor("languages");
         if (!section || location.href !== url) return false;
         let inputs = languageInputs(section);
-        if (inputs.some((e) => !empty(e) && norm(valueText(e)) === norm(value))) continue;
+        if (inputs.some((e) => norm(languageValue(e)) === norm(value))) continue;
+        if (!inputs.length && section.querySelector("select,[role=combobox],[aria-haspopup=listbox]")) return false;
+        const known = inputs.map(languageValue).filter((v) => !placeholder(v)).map(norm);
+        if (new Set(known).size !== known.length) return false;
+        let newDefault = null;
         if (!inputs.some(empty)) {
+          const originalInputs = inputs.slice();
           const add = languageAdd(section);
           if (!add) return false;
+          const rowKey = location.href + "|" + known.join("|") + "|" + norm(value);
+          const added = globalThis.__ducAddedLanguageRows ??= /* @__PURE__ */ new Set();
+          if (added.has(rowKey)) return false;
+          added.add(rowKey);
           add.click();
           for (let i = 0; i < 20; i++) {
             await pause(75);
             const next = sectionFor("languages");
             inputs = next ? languageInputs(next) : [];
             if (inputs.some(empty)) break;
+            if (inputs.length === originalInputs.length + 1 && originalInputs.every((original2, i2) => original2 === inputs[i2]) && known.includes(norm(languageValue(inputs.at(-1))))) {
+              newDefault = inputs.at(-1);
+              break;
+            }
           }
         }
-        const blanks = inputs.filter(empty);
+        const blanks = newDefault ? [newDefault] : inputs.filter(empty);
         if (blanks.length !== 1) return false;
         const target = blanks[0], field = snapshot(target, elements().indexOf(target));
         let answer = { value, display: value, aliases: [norm(value)] };
@@ -1452,8 +1471,10 @@
           if (options.length !== 1) return false;
           answer = { value: options[0].value, display: options[0].label };
         }
+        if (newDefault) (globalThis.__ducLanguageDefaults ??= /* @__PURE__ */ new WeakMap()).set(target, languageValue(target));
         const result = await formBridge({ action: "fill", url, fields: [{ ...field, ...answer }] });
-        if (!result.filled) return false;
+        globalThis.__ducLanguageDefaults?.delete(target);
+        if (!result.filled || !languageInputs(sectionFor("languages") || section).some((e) => norm(languageValue(e)) === norm(value))) return false;
       }
       return true;
     }
@@ -1652,7 +1673,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(globalThis.__ducLanguageDefaults?.has(e) && globalThis.__ducLanguageDefaults.get(e) === languageValue(e)) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -1735,7 +1756,7 @@
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
-          const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
+          const optionKey = (o) => f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(text(o))) ? "advanced" : f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
           const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
           if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
@@ -1831,7 +1852,7 @@
               }
               if (lists.length) continue;
             }
-            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && (aliases3.includes(norm(valueText(e))) || f.phoneCountry && /^\+1$/.test(valueText(e)) && boxes.every((b) => !b.isConnected || !visible(b))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
+            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && (aliases3.includes(norm(valueText(e))) || f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(valueText(e))) || f.phoneCountry && /^\+1$/.test(valueText(e)) && boxes.every((b) => !b.isConnected || !visible(b))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }
@@ -1966,7 +1987,7 @@
     solidworks: ["solidworks cad", "solidworks 3d cad"]
   };
   function suggestField(field, profile, memory = [], origin = "", context = "", portfolio = null) {
-    if (!profile?.confirmed) return null;
+    if (!profile?.confirmed || field.languagePicker) return null;
     if (field.type === "skill-list" || field.type === "language-list") {
       const skills = field.type === "skill-list";
       const languages = profile.answers?.find((a) => normalize(a.question) === "languages spoken")?.answer || "";
@@ -2069,6 +2090,7 @@
     }
     if (field.maxLength > 0 && value?.length > field.maxLength) return null;
     if (field.type === "checkbox-group") {
+      if (rule?.fluentCheck && field.options?.length === 1) return { value: [field.options[0].value], display: "Fluent", selectedLabels: [field.options[0].label], sourceQuestion: rule.sourceQuestion };
       if (rule?.markIncomplete) return { value: "Not Completed", display: "Not Completed", selectedLabels: [field.options[0].label], reason: rule.reason, sourceQuestion: rule.sourceQuestion };
       if (rule?.raceSelection) {
         const asian = field.options.filter((o) => !o.disabled && /^asian(?: united states(?: of america)?)?$/.test(normalize(o.label)));
@@ -2211,7 +2233,7 @@
       return null;
     };
     const radios = (e) => {
-      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return [e];
+      if (checkbox(e) && /^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e)))) return [e];
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"],[role="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
@@ -2280,7 +2302,7 @@
         if (value && !/^(yes|no)$/i.test(value)) return value;
       }
       if (e.matches(".iti__selected-country,.iti__selected-flag,.selected-flag")) return "Country";
-      if (checkbox(e) && norm(ownLabel(e)) === "not completed") return ownLabel(e);
+      if (checkbox(e) && /^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e)))) return ownLabel(e);
       if (!ownLabel(e) && e.tagName === "SELECT") {
         const cell = e.closest("td"), caption = cell?.previousElementSibling;
         if (caption && cell.parentElement?.querySelectorAll(controls).length === 1 && /^(TD|TH)$/.test(caption.tagName) && text(caption) && text(caption).length <= 800) return text(caption);
@@ -2413,10 +2435,11 @@
         if (phoneError(e)) return { digitsPhone: true, invalidPhone: true, phoneBefore: e.value };
         if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
       }
-      if (/^(reading|speaking|writing|understanding|listening|overall|comprehension)$/.test(wording)) {
+      if ((wording === "language" || wording === "language name") && sectionFor("languages")?.contains(e)) return { languagePicker: true };
+      if (/^(reading|speaking|writing|understanding|listening|overall|comprehension|i am fluent in this language)$/.test(wording)) {
         for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
-          const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
-          if (langs.length) return { languageRow: langs.length === 1 ? norm(valueText(langs[0])) : "", currentLevel: norm(valueText(e)) };
+          const langs = languageInputs(p);
+          if (langs.length) return { languageRow: langs.length === 1 ? norm(languageValue(langs[0])) : "", currentLevel: norm(valueText(e)) };
         }
       }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
@@ -2564,12 +2587,13 @@
       return inputs.find((e) => /skills/i.test(label(e) + " " + e.id) || e.getAttribute("data-automation-id") === "searchBox") || (inputs.length === 1 && /search/i.test(inputs[0].placeholder || "") ? inputs[0] : null);
     };
     const skillOpener = (p) => [...p.querySelectorAll("[aria-haspopup=listbox],[role=combobox],[data-automation-id=multiSelectContainer]")].find((e) => visible(e) && !disabled(e));
-    const languageInputs = (p) => elements().filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && /^(language|select language)$/.test(norm(label(e))));
+    const languageValue = (e) => e.tagName === "BUTTON" ? text(e) : valueText(e);
+    const languageInputs = (p) => [...p.querySelectorAll(controls)].filter((e) => p.contains(e) && visible(e) && !disabled(e) && !choice(e) && (/^(language|language name|select language)$/.test(norm(label(e))) || /--language$/i.test(e.id)));
     const languageAdd = (p) => [...p.querySelectorAll("button")].find((b) => visible(b) && !disabled(b) && (!b.form || b.type === "button") && /^(add|add another|add language)$/i.test(text(b)));
     const listFields = () => {
       const fields2 = [], skills = sectionFor("skills"), languages = sectionFor("languages");
       if (skills && (skillInput(skills) || skillOpener(skills))) fields2.push({ type: "skill-list", label: "Skills", existing: chipValues(skills) });
-      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).filter((e) => !empty(e)).map(valueText) });
+      if (languages && (languageAdd(languages) || languageInputs(languages).length)) fields2.push({ type: "language-list", label: "Languages", existing: languageInputs(languages).map(languageValue).filter((v) => !placeholder(v)) });
       return fields2;
     };
     async function fillLanguages(values) {
@@ -2577,19 +2601,32 @@
         const section = sectionFor("languages");
         if (!section || location.href !== url) return false;
         let inputs = languageInputs(section);
-        if (inputs.some((e) => !empty(e) && norm(valueText(e)) === norm(value))) continue;
+        if (inputs.some((e) => norm(languageValue(e)) === norm(value))) continue;
+        if (!inputs.length && section.querySelector("select,[role=combobox],[aria-haspopup=listbox]")) return false;
+        const known = inputs.map(languageValue).filter((v) => !placeholder(v)).map(norm);
+        if (new Set(known).size !== known.length) return false;
+        let newDefault = null;
         if (!inputs.some(empty)) {
+          const originalInputs = inputs.slice();
           const add = languageAdd(section);
           if (!add) return false;
+          const rowKey = location.href + "|" + known.join("|") + "|" + norm(value);
+          const added = globalThis.__ducAddedLanguageRows ??= /* @__PURE__ */ new Set();
+          if (added.has(rowKey)) return false;
+          added.add(rowKey);
           add.click();
           for (let i = 0; i < 20; i++) {
             await pause(75);
             const next = sectionFor("languages");
             inputs = next ? languageInputs(next) : [];
             if (inputs.some(empty)) break;
+            if (inputs.length === originalInputs.length + 1 && originalInputs.every((original2, i2) => original2 === inputs[i2]) && known.includes(norm(languageValue(inputs.at(-1))))) {
+              newDefault = inputs.at(-1);
+              break;
+            }
           }
         }
-        const blanks = inputs.filter(empty);
+        const blanks = newDefault ? [newDefault] : inputs.filter(empty);
         if (blanks.length !== 1) return false;
         const target = blanks[0], field = snapshot(target, elements().indexOf(target));
         let answer = { value, display: value, aliases: [norm(value)] };
@@ -2598,8 +2635,10 @@
           if (options.length !== 1) return false;
           answer = { value: options[0].value, display: options[0].label };
         }
+        if (newDefault) (globalThis.__ducLanguageDefaults ??= /* @__PURE__ */ new WeakMap()).set(target, languageValue(target));
         const result = await formBridge2({ action: "fill", url, fields: [{ ...field, ...answer }] });
-        if (!result.filled) return false;
+        globalThis.__ducLanguageDefaults?.delete(target);
+        if (!result.filled || !languageInputs(sectionFor("languages") || section).some((e) => norm(languageValue(e)) === norm(value))) return false;
       }
       return true;
     }
@@ -2798,7 +2837,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(globalThis.__ducLanguageDefaults?.has(e) && globalThis.__ducLanguageDefaults.get(e) === languageValue(e)) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -2881,7 +2920,7 @@
           }
           const aliases3 = [...f.aliases || [norm(f.value)]];
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
-          const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
+          const optionKey = (o) => f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(text(o))) ? "advanced" : f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
           const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
           if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
@@ -2977,7 +3016,7 @@
               }
               if (lists.length) continue;
             }
-            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && (aliases3.includes(norm(valueText(e))) || f.phoneCountry && /^\+1$/.test(valueText(e)) && boxes.every((b) => !b.isConnected || !visible(b))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
+            if (!(sourceBranch === "company" && brand && rootChoice === brand && !leafChosen) && (aliases3.includes(norm(valueText(e))) || f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(valueText(e))) || f.phoneCountry && /^\+1$/.test(valueText(e)) && boxes.every((b) => !b.isConnected || !visible(b))) && e.getAttribute("aria-invalid") !== "true" && (!query || input.value !== query || e.getAttribute("aria-expanded") !== "true" && boxes.every((b) => !b.isConnected || !visible(b)))) {
               accepted = true;
               break;
             }
@@ -3169,6 +3208,11 @@
     const limits = [...sizeText.matchAll(/(\d+(?:\.\d+)?)\s*(MB|KB)\s*(?:max|maximum)|(?:max(?:imum)?(?: file)? size(?: of)?|smaller than|up to)\s*:?\s*(\d+(?:\.\d+)?)\s*(MB|KB)/gi)].map((m) => Number(m[1] || m[3]) * ((m[2] || m[4]).toUpperCase() === "MB" ? 1e6 : 1e3));
     if (limits.length && bytes.length > Math.min(...limits)) return { attached: false, message: "The tailored PDF exceeds this uploader\u2019s file-size limit. Use a smaller PDF." };
     if (location.href !== url || !target.isConnected || input?.files?.length || input?.disabled) return { attached: false, message: "The upload changed; no file was replaced." };
+    if (text(document.body).includes(resume.name)) return { attached: true, message: resume.name + " already appears on this application." };
+    if (globalThis.chrome?.runtime?.id) {
+      const claim = await chrome.runtime.sendMessage({ type: "claim-resume", sha256: resume.sha256 }).catch(() => null);
+      if (!claim?.ok) return { attached: false, message: "An attachment was already attempted for this job. Check the employer\u2019s file list." };
+    }
     try {
       const transfer = new DataTransfer();
       transfer.items.add(new File([bytes], resume.name, { type: "application/pdf" }));
@@ -3339,7 +3383,7 @@
       minimize.setAttribute("aria-label", "Collapse application helper");
       close.setAttribute("aria-label", "End application helper");
       header.append(title, minimize, close);
-      const content = el("div"), job = el("h3", entry.job.title), company = el("small", entry.job.company), status = el("p");
+      const content = el("div"), job = el("h3", entry.job.title.replace(/&amp;/gi, "&")), company = el("small", entry.job.company), status = el("p");
       status.setAttribute("role", "status");
       const list = el("div");
       list.className = "answers";
@@ -3353,7 +3397,17 @@
       const memoryNote = el("small", "Saved answers stay in this extension, even after clearing browser cache.");
       style.textContent += " .memory-row[hidden],.answer-pagination[hidden]{display:none!important}.answer-pagination{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.memory-difference{display:block;color:#9dd4c7;margin-bottom:6px}.memory-difference.changed{color:#e2bf73} .portfolio-evidence{font-size:12px;border:1px solid #384a48;border-radius:8px;padding:8px;margin:4px 0 12px}.portfolio-evidence a{color:#9dd4c7}.portfolio-evidence small{margin:5px 0 10px} .memory-row{padding:12px 0;border-bottom:1px solid #444}.memory-row label{display:block}textarea,select{font:inherit;width:100%;margin:6px 0;background:#202528;color:#f1f0ed;border:1px solid #62686c;border-radius:4px;padding:7px}";
       const portfolioNote = el("small", entry.portfolio?.knowledge ? "Portfolio: " + entry.portfolio.knowledge.projects.length + " projects \xB7 " + (entry.portfolio.state === "cached" ? "cached evidence" : "source-backed suggestions") : "Portfolio evidence unavailable; saved answers still work.");
-      content.append(job, company, portfolioNote, footer, status, list, remember, memoryArea, memoryNote, el("small", "Review answers and PDF. You submit on the employer\u2019s form."));
+      const tools = el("div");
+      tools.className = "tools";
+      const full = el("button", "Full helper \u2197"), preview = el("button", "Preview r\xE9sum\xE9 \u2197");
+      full.onclick = () => chrome.runtime.sendMessage({ type: "full-helper" }).then((r) => {
+        if (!r?.ok) status.textContent = "Open Application Helper from the Chrome toolbar.";
+      });
+      preview.onclick = () => chrome.runtime.sendMessage({ type: "open-resume-preview" });
+      preview.hidden = !entry.resume;
+      tools.append(remember, preview, full);
+      style.textContent += " .panel{padding:16px 18px;max-height:85vh;overflow:auto;background:#121717;border-color:#3b4746}header{border-bottom:1px solid #384442;padding-bottom:10px}header button{padding:3px 8px}h3{margin:12px 0 2px;font-size:16px}footer{margin:14px 0 8px}footer button{flex:1}.answers{margin:6px 0}.tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid #384442;padding-top:8px}.tools button{border:0;padding:4px 0;color:#b9daca;background:transparent;font-size:12px}.tools button:hover{text-decoration:underline}.answer{align-items:flex-start}.answer input{margin-top:4px}";
+      content.append(job, company, footer, status, list, tools, memoryArea);
       panel.append(header, content);
       root.append(style, panel);
       document.documentElement.append(host);
@@ -3423,7 +3477,7 @@
         }
       }
       const excluded = /* @__PURE__ */ new Set();
-      const suggest = (f, form) => suggestField({ ...f, jobLocation: entry.job.location || form.jobLocation, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
+      const suggest = (f, form) => suggestField({ ...f, jobEmployer: entry.job.company || form.jobEmployer, jobIndustry: form.jobIndustry, relocationLocation: entry.job.location || form.jobLocation, jobLocation: entry.job.location || form.jobLocation, applicationSeason: applicationSeason(entry.job.title) }, entry.profile, entry.memory || [], location.origin, entry.job.company.trim().toLowerCase(), entry.portfolio?.knowledge);
       function scanNow(automatic = false) {
         if (!entry || Date.now() >= entry.expiresAt) {
           stop();
@@ -3452,7 +3506,6 @@
           check.value = String(i);
           const text = el("span", f.label);
           text.append(el("small", f.display));
-          if (f.reason) text.append(el("small", f.reason + " \xB7 " + f.sourceQuestion));
           label.append(check, text);
           list.append(label);
           addPortfolioEvidence(list, f);
@@ -3470,10 +3523,15 @@
           list.append(label);
         }
         fill.hidden = !review.fields.length && (!entry.resume || entry.resumeUploaded);
-        status.textContent = review.fields.length ? `${review.fields.length} suggested answers. Review and uncheck any you don\u2019t want to fill.` : "Open the employer\u2019s application form or sign in. Supported empty fields will appear here.";
+        status.textContent = review.fields.length ? `${review.fields.length} suggested answers` : "Open the employer\u2019s application form or sign in. Supported empty fields will appear here.";
         if (found.embeddedForms) status.textContent += " Embedded forms may need opening directly and scanning with the extension button.";
       }
       scan.onclick = async () => {
+        const form = scanForm();
+        if (form.hasPasswordField || form.hasEmailSignIn || form.hasCodePrompt || form.needsEmailVerification || form.applicationFrames?.length || form.canAdvance) {
+          await chrome.runtime.sendMessage({ type: "full-helper", scan: true });
+          return;
+        }
         if (entry?.profile.values.school) await formBridge2({ action: "prepare-education" });
         scanNow();
       };

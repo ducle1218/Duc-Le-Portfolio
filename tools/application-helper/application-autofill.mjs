@@ -411,7 +411,16 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   }
   return null;
  };
- const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,yearOnly:/dateSectionYear-input$/i.test(e.id),filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),...(e.value&&emailSave(e)?{emailSave:true,emailValue:e.value}:{}),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
+ const attachedOptions=e=>{
+  if(!custom(e))return undefined;
+  const ids=(e.getAttribute('aria-controls')||e.getAttribute('aria-owns')||'').trim().split(/\s+/);
+  const boxes=ids.map(id=>document.getElementById(id)).filter(box=>box?.matches('[role=listbox]'));
+  if(boxes.length!==1)return undefined;
+  const options=[...boxes[0].querySelectorAll('[role=option]')];
+  if(!options.length||options.length>100||options.some(o=>o.hasAttribute('aria-setsize')&&Number(o.getAttribute('aria-setsize'))!==options.length))return undefined;
+  return options.map(o=>({value:text(o),label:text(o),disabled:o.getAttribute('aria-disabled')==='true'}));
+ };
+ const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,yearOnly:/dateSectionYear-input$/i.test(e.id),filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),...(e.value&&emailSave(e)?{emailSave:true,emailValue:e.value}:{}),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):attachedOptions(e)});
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const sectionFor=name=>{
   const headings=[...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter(h=>visible(h)&&norm(text(h))===name);

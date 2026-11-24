@@ -118,4 +118,26 @@ assert.equal(infer(educationFacts,'Are you a US citizen or national, lawful perm
 assert.equal(infer(educationFacts,'Are you a US citizen and lawful permanent resident?',yesNo)?.value,undefined);
 assert.equal(infer(educationFacts,'Do you have relatives who work for our company?',yesNo)?.value,'No');
 assert.equal(infer({...educationFacts,'Example relatives':'Yes'},'Do you have relatives who work for Example?',{...yesNo,jobEmployer:'Example'})?.value,'Yes');
+const pickOption=(facts,prompt,labels,type='select-one')=>infer(facts,prompt,{type,options:labels.map((label,i)=>({label,value:'option'+i}))});
+const choices=['I am currently employed','I have been employed before but I am currently unemployed','I have never held a job'];
+for(const type of ['select-one','radio-group','combobox']){
+ for(const order of [choices,[...choices].reverse()]){
+  const choice=pickOption(noWork,'Which of these statements best describes you?',order,type);
+  assert.equal(choice?.display,'I have never held a job');
+  assert.equal(choice?.sourceQuestion,'Employment experience');
+ }
+}
+assert.equal(pickOption(noWork,'Which statement best describes your employment history?',[...choices,'I am currently unemployed']),null);
+assert.equal(pickOption(noWork,'Which statement best describes your spouse?',choices),null);
+assert.equal(pickOption({},'Select one statement',choices),null);
+assert.equal(pickOption(noWork,'Select one statement',[...choices,'I am currently a licensed contractor']),null);
+assert.equal(pickOption({'Employment experience':'Yes'},'Select one statement',choices),null);
+assert.equal(pickOption({'Expected graduation date':'2030-05'},'In which year do you expect to graduate?',['Before 2029','2029–2031','2032 or later'])?.display,'2029–2031');
+assert.equal(pickOption({'Expected graduation date':'2030-05'},'Projected graduation year',['Before 2030','2030+','2030–2032']),null);
+assert.equal(pickOption(noWork,'How many years of paid work experience do you have?',['5+ years','1–4 years','Less than 1 year'])?.display,'Less than 1 year');
+assert.equal(pickOption(noWork,'How many years of CAD experience do you have?',['0','1–4','5+']),null);
+assert.equal(pickOption({'Preferred interview language':'English'},'Which interview language do you prefer?',['Vietnamese','English'])?.display,'English');
+assert.equal(pickOption({'Preferred interview language':'English'},'Which programming language do you prefer?',['English','Python']),null);
+assert.equal(pickOption({'Preferred interview language':'English','What interview language do you prefer?':'Vietnamese'},'Which interview language do you prefer?',['English','Vietnamese']),null);
+console.log('Option evidence, conjunctions, subject boundaries, ambiguous alternatives and numeric ranges passed.');
 console.log('Employment eligibility, earned and pursued degrees, disclosure subjects, relocation and contextual contact consent passed.');

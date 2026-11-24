@@ -219,6 +219,67 @@
     ["clearance", /^(?:(?:what is|indicate|select) (?:your |the )?)?(?:highest |current )?(?:security clearance level|level of security clearance)(?: (?:held|you (?:have )?held))?$/],
     ["polygraph", /^(?:which|what) (?:type|types|type s|kind) of polygraph (?:have you (?:had|taken)|did you (?:take|undergo))$/]
   ];
+  var statementForms = [
+    ["employment", "employment", false, /^(?:i have never (?:held a job|been employed|worked for pay)|no (?:prior |previous )?(?:paid employment|employment history))$/],
+    ["employment", "employment", true, /^(?:i have (?:held a job|been employed|worked for pay)(?: before)?|previously employed)$/],
+    ["employment", "currentJob", true, /^(?:i am (?:currently )?employed|currently employed)$/],
+    ["employment", "currentJob", false, /^(?:i am (?:currently )?(?:unemployed|not employed)|currently unemployed)$/],
+    ["clearance", "clearance", false, /^(?:i have never (?:held|had) (?:a )?(?:security )?clearance|never (?:held|granted) a security clearance)$/],
+    ["clearance", "clearance", true, /^i have (?:held|previously held) a security clearance$/],
+    ["clearance", "activeClearance", true, /^(?:i (?:have|hold) (?:an? )?(?:active|current) security clearance|active security clearance)$/],
+    ["clearance", "activeClearance", false, /^(?:i do not (?:have|hold) an active security clearance|no active security clearance)$/],
+    ["service", "service", false, /^(?:i have never served in (?:the )?(?:military|armed forces)|no (?:prior )?military service)$/],
+    ["service", "service", true, /^(?:i have served in (?:the )?(?:military|armed forces)|prior military service)$/],
+    ["service", "currentService", true, /^i (?:currently serve|am currently serving) in (?:the )?(?:military|armed forces)$/],
+    ["government", "governmentJob", false, /^(?:i have never worked for (?:the )?government|no (?:prior )?government employment)$/],
+    ["government", "governmentJob", true, /^(?:i have worked for (?:the )?government|prior government employment)$/]
+  ];
+  var choiceTopics = [
+    ["employment", /^(?:paid )?employment (?:status|background|history|experience)$/],
+    ["clearance", /^(?:security )?clearance (?:status|background|history)$/],
+    ["government", /^government employment (?:status|background|history)$/],
+    ["service", /^military (?:status|background|service|history)$/]
+  ];
+  var neutralChoice = /^(?:(?:please )?(?:choose|select|pick|indicate) (?:the |one |a )?(?:applicable |most accurate |appropriate |following )?(?:option|statement|answer)(?: that (?:best )?(?:applies to|describes) you)?|which (?:of (?:the following|these) )?(?:(?:options?|statements?|answers?) )?(?:best |most accurately )?(?:applies to|describes) you)$/;
+  function reasonFromChoices(field, entries, question) {
+    if (!["select-one", "combobox", "radio-group"].includes(field.type) || !field.options?.length) return null;
+    const prompt = question.replace(/^(?:which (?:statement|option) (?:best|most accurately) describes|(?:please )?(?:select|indicate|describe|specify)|what is) (?:your )?/, "").replace(/^your /, "");
+    const topic = choiceTopics.find(([, pattern]) => pattern.test(prompt))?.[0];
+    if (!topic && !neutralChoice.test(question)) return null;
+    const options = field.options.filter((o) => !o.disabled && !/^(?:|select|select one|select an option|choose one|prefer not to (?:say|answer)|i (?:prefer|do) not (?:wish )?to answer)$/.test(questionKey(o.label)));
+    if (options.length < 2) return null;
+    const claims = options.map((option2) => {
+      const clauses = questionKey(option2.label).split(/ (?:and|but) /);
+      const parts = clauses.map((clause) => statementForms.find((form) => form[3].test(clause)));
+      return parts.every(Boolean) ? parts : null;
+    });
+    if (!claims.some(Boolean)) return null;
+    if (claims.some((c) => !c) || new Set(claims.flat().map((c) => c[0])).size !== 1 || topic && claims[0][0][0] !== topic) return { blocked: true };
+    const evidence = evidenceFor(entries, field);
+    const matches = [];
+    for (let i = 0; i < claims.length; i++) {
+      const proofs2 = claims[i].map(([, concept, expected]) => {
+        const witnesses = evidence.get(concept);
+        if (witnesses?.size !== 1) return null;
+        const witness = witnesses.values().next().value;
+        return { witness, satisfied: witness.value === expected };
+      });
+      if (proofs2.some((p) => p && !p.satisfied)) continue;
+      if (proofs2.some((p) => !p)) return { blocked: true };
+      matches.push({ option: options[i], proofs: proofs2 });
+    }
+    if (matches.length !== 1) return { blocked: true };
+    const { option, proofs } = matches[0];
+    const sources = [...new Set(proofs.map((p) => p.witness.source))];
+    return {
+      value: option.label,
+      display: option.label,
+      sourceQuestion: sources.join(" + "),
+      requiresReview: true,
+      reason: "Supported by " + sources.join(" and "),
+      aliases: [questionKey(option.label)]
+    };
+  }
   function reasonFromHistory(field, entries) {
     const question = questionKey(field.label).replace(/^\d+ /, "");
     const isDefenseHistory = /\bdo you now or did you at any time in the past \d+ months serve as an official or employee of (?:the )?(?:dod|department of defense)(?: for more information see [\w ]+)?$/.test(question);
@@ -234,7 +295,7 @@
     if (/^are you currently employed or have you been employed in the past \w+ years? by /.test(question)) return null;
     const parts = question.split(/\b(and|or)\b/).map((s) => s.trim());
     const concepts = detail ? [detail[0]] : parts.filter((_, i) => i % 2 === 0).map(predicate);
-    if (!concepts.some(Boolean)) return null;
+    if (!concepts.some(Boolean)) return reasonFromChoices(field, entries, question);
     const operators = parts.filter((_, i) => i % 2 === 1);
     if (!detail && (new Set(operators).size > 1 || concepts.some((c) => !c))) return { blocked: true };
     const facts2 = evidenceFor(entries, field);
@@ -334,6 +395,33 @@
     if (countryNames2.has(name) || ["uk", "united kingdom", "south korea"].includes(name)) return "foreign";
     return "";
   }
+  function analogousQuestion(label) {
+    const q = questionKey(label).replace(/^\d+ /, "");
+    const templates = [
+      ["preference", /^(?:what is your preferred|please select your preferred|preferred) (.+)$/],
+      ["preference", /^(?:which|what) (.+) (?:do|would) you prefer$/],
+      ["pursuing", /^(?:which|what) (.+) are you (?:currently )?(?:pursuing|working toward|studying for)$/],
+      ["pursuing", /^(.+) (?:currently )?being pursued$/]
+    ];
+    for (const [slot, pattern] of templates) {
+      const object = q.match(pattern)?.[1];
+      if (object && !/\b(?:not|except|excluding|or|and)\b/.test(object)) return slot + " " + object;
+    }
+    return "";
+  }
+  function numericChoice(label, value) {
+    const s = String(label).toLowerCase().trim().replace(/years?\b/g, "").replace(/\s+/g, " ").trim();
+    if (/^\d+$/.test(s)) return value === Number(s);
+    let m = s.match(/^(\d+)\s*(?:[-–—]|to|through)\s*(\d+)$/);
+    if (m && +m[1] <= +m[2]) return +m[1] <= value && value <= +m[2];
+    m = s.match(/^(\d+)\s*(?:\+|or (?:more|later)|and (?:above|over))$/);
+    if (m) return value >= +m[1];
+    m = s.match(/^(?:before|less than|under|<)\s*(\d+)$/);
+    if (m) return value < +m[1];
+    m = s.match(/^(?:after|more than|over|>)\s*(\d+)$/);
+    if (m) return value > +m[1];
+    return void 0;
+  }
   function answerRule(field, profile, memory = [], origin = "", context = "", now = /* @__PURE__ */ new Date()) {
     const entries = [...profile.answers || [], ...memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context)];
     const unique = (q2) => {
@@ -416,6 +504,20 @@
       const source = company && [company + " relatives", company + " relatives or acquaintances"].find((key2) => unique(key2));
       const pref = source || "Relatives working for the prospective employer";
       return unique(pref) ? saved(unique(pref), pref) : { blocked: true };
+    }
+    if (field.options?.length && ["combobox", "select-one", "radio-group"].includes(field.type)) {
+      const year = /^(?:(?:what is your |select your |indicate your )?(?:anticipated|expected|projected) (?:graduation year|year of graduation)|(?:in )?(?:which|what) year (?:will you|do you (?:expect|plan) to) graduate)$/.test(stem);
+      const tenure = /^(?:(?:how many|number of) years of (?:paid (?:work|employment)|professional (?:employment|work)) experience(?: do you have)?|years of paid employment)$/.test(stem);
+      if (year || tenure) {
+        const source = year ? "Expected graduation date" : "Employment experience", value = unique(source);
+        const number = year && /^\d{4}-(?:0[1-9]|1[0-2])$/.test(value || "") ? Number(value.slice(0, 4)) : tenure && questionKey(value) === "none" ? 0 : null;
+        if (number === null) return { blocked: true };
+        const options2 = field.options.filter((o) => !o.disabled && o.value !== "" && !/^(?:select(?: one| an option)?|choose one|prefer not to answer)$/.test(questionKey(o.label)));
+        const verdicts = options2.map((o) => tenure && /^(?:none|no (?:paid )?experience)$/i.test(o.label.trim()) ? number === 0 : numericChoice(o.label, number));
+        const matches = options2.filter((_, i) => verdicts[i] === true);
+        if (matches.length !== 1 || verdicts.includes(void 0)) return { blocked: true };
+        return saved(matches[0].label, source);
+      }
     }
     const inference = reasonFromHistory(field, entries);
     if (inference) return inference;
@@ -697,6 +799,16 @@
       }
       if (new Set(months).size === 1 && ["text", "textarea"].includes(field.type) && !field.placeholder) return result(months[0], "Confirmed expected graduation month");
       if (new Set(months).size === 1 && (field.type === "month" || /^YYYY-MM$/i.test(field.placeholder || ""))) return { ...result(months[0], "Expected graduation month"), requiresReview: true };
+    }
+    if (["radio-group", "select-one", "combobox"].includes(field.type) && field.options?.length) {
+      const key2 = analogousQuestion(field.label);
+      const evidence = key2 ? entries.filter((a) => analogousQuestion(a.question) === key2) : [];
+      if (evidence.length) {
+        const answers = new Set(evidence.map((a) => questionKey(a.answer)));
+        const options2 = field.options.filter((o) => !o.disabled && o.value !== "" && answers.has(questionKey(o.label)));
+        if (answers.size !== 1 || options2.length !== 1) return { blocked: true };
+        return saved(options2[0].label, evidence[0].question);
+      }
     }
     return null;
   }
@@ -1209,7 +1321,16 @@
       }
       return null;
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const attachedOptions = (e) => {
+      if (!custom(e)) return void 0;
+      const ids = (e.getAttribute("aria-controls") || e.getAttribute("aria-owns") || "").trim().split(/\s+/);
+      const boxes = ids.map((id) => document.getElementById(id)).filter((box) => box?.matches("[role=listbox]"));
+      if (boxes.length !== 1) return void 0;
+      const options = [...boxes[0].querySelectorAll("[role=option]")];
+      if (!options.length || options.length > 100 || options.some((o) => o.hasAttribute("aria-setsize") && Number(o.getAttribute("aria-setsize")) !== options.length)) return void 0;
+      return options.map((o) => ({ value: text(o), label: text(o), disabled: o.getAttribute("aria-disabled") === "true" }));
+    };
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : attachedOptions(e) });
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const sectionFor = (name) => {
       const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);
@@ -2241,7 +2362,16 @@
       }
       return null;
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const attachedOptions = (e) => {
+      if (!custom(e)) return void 0;
+      const ids = (e.getAttribute("aria-controls") || e.getAttribute("aria-owns") || "").trim().split(/\s+/);
+      const boxes = ids.map((id) => document.getElementById(id)).filter((box) => box?.matches("[role=listbox]"));
+      if (boxes.length !== 1) return void 0;
+      const options = [...boxes[0].querySelectorAll("[role=option]")];
+      if (!options.length || options.length > 100 || options.some((o) => o.hasAttribute("aria-setsize") && Number(o.getAttribute("aria-setsize")) !== options.length)) return void 0;
+      return options.map((o) => ({ value: text(o), label: text(o), disabled: o.getAttribute("aria-disabled") === "true" }));
+    };
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : attachedOptions(e) });
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const sectionFor = (name) => {
       const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);

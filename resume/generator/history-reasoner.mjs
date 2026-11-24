@@ -75,6 +75,64 @@ const details=[
  ['polygraph',/^(?:which|what) (?:type|types|type s|kind) of polygraph (?:have you (?:had|taken)|did you (?:take|undergo))$/]
 ];
 
+// Interpret what each choice asserts. A topic in the prompt constrains the
+// interpretation; a neutral prompt requires self-describing choices.
+const statementForms=[
+ ['employment','employment',false,/^(?:i have never (?:held a job|been employed|worked for pay)|no (?:prior |previous )?(?:paid employment|employment history))$/],
+ ['employment','employment',true,/^(?:i have (?:held a job|been employed|worked for pay)(?: before)?|previously employed)$/],
+ ['employment','currentJob',true,/^(?:i am (?:currently )?employed|currently employed)$/],
+ ['employment','currentJob',false,/^(?:i am (?:currently )?(?:unemployed|not employed)|currently unemployed)$/],
+ ['clearance','clearance',false,/^(?:i have never (?:held|had) (?:a )?(?:security )?clearance|never (?:held|granted) a security clearance)$/],
+ ['clearance','clearance',true,/^i have (?:held|previously held) a security clearance$/],
+ ['clearance','activeClearance',true,/^(?:i (?:have|hold) (?:an? )?(?:active|current) security clearance|active security clearance)$/],
+ ['clearance','activeClearance',false,/^(?:i do not (?:have|hold) an active security clearance|no active security clearance)$/],
+ ['service','service',false,/^(?:i have never served in (?:the )?(?:military|armed forces)|no (?:prior )?military service)$/],
+ ['service','service',true,/^(?:i have served in (?:the )?(?:military|armed forces)|prior military service)$/],
+ ['service','currentService',true,/^i (?:currently serve|am currently serving) in (?:the )?(?:military|armed forces)$/],
+ ['government','governmentJob',false,/^(?:i have never worked for (?:the )?government|no (?:prior )?government employment)$/],
+ ['government','governmentJob',true,/^(?:i have worked for (?:the )?government|prior government employment)$/]
+];
+const choiceTopics=[
+ ['employment',/^(?:paid )?employment (?:status|background|history|experience)$/],
+ ['clearance',/^(?:security )?clearance (?:status|background|history)$/],
+ ['government',/^government employment (?:status|background|history)$/],
+ ['service',/^military (?:status|background|service|history)$/]
+];
+const neutralChoice=/^(?:(?:please )?(?:choose|select|pick|indicate) (?:the |one |a )?(?:applicable |most accurate |appropriate |following )?(?:option|statement|answer)(?: that (?:best )?(?:applies to|describes) you)?|which (?:of (?:the following|these) )?(?:(?:options?|statements?|answers?) )?(?:best |most accurately )?(?:applies to|describes) you)$/;
+function reasonFromChoices(field,entries,question){
+ if(!['select-one','combobox','radio-group'].includes(field.type)||!field.options?.length)return null;
+ const prompt=question.replace(/^(?:which (?:statement|option) (?:best|most accurately) describes|(?:please )?(?:select|indicate|describe|specify)|what is) (?:your )?/,'').replace(/^your /,'');
+ const topic=choiceTopics.find(([,pattern])=>pattern.test(prompt))?.[0];
+ if(!topic&&!neutralChoice.test(question))return null;
+ const options=field.options.filter(o=>!o.disabled&&!/^(?:|select|select one|select an option|choose one|prefer not to (?:say|answer)|i (?:prefer|do) not (?:wish )?to answer)$/.test(questionKey(o.label)));
+ if(options.length<2)return null;
+ const claims=options.map(option=>{
+  const clauses=questionKey(option.label).split(/ (?:and|but) /);
+  const parts=clauses.map(clause=>statementForms.find(form=>form[3].test(clause)));
+  return parts.every(Boolean)?parts:null;
+ });
+ if(!claims.some(Boolean))return null;
+ if(claims.some(c=>!c)||new Set(claims.flat().map(c=>c[0])).size!==1||topic&&claims[0][0][0]!==topic)return {blocked:true};
+ const evidence=evidenceFor(entries,field);
+ const matches=[];
+ for(let i=0;i<claims.length;i++){
+  const proofs=claims[i].map(([,concept,expected])=>{
+   const witnesses=evidence.get(concept);
+   if(witnesses?.size!==1)return null;
+   const witness=witnesses.values().next().value;
+   return {witness,satisfied:witness.value===expected};
+  });
+  if(proofs.some(p=>p&&!p.satisfied))continue;
+  if(proofs.some(p=>!p))return {blocked:true};
+  matches.push({option:options[i],proofs});
+ }
+ if(matches.length!==1)return {blocked:true};
+ const {option,proofs}=matches[0];
+ const sources=[...new Set(proofs.map(p=>p.witness.source))];
+ return {value:option.label,display:option.label,sourceQuestion:sources.join(' + '),requiresReview:true,
+  reason:'Supported by '+sources.join(' and '),aliases:[questionKey(option.label)]};
+}
+
 export function reasonFromHistory(field,entries){
  const question=questionKey(field.label).replace(/^\d+ /,'');
  // Some disclosures put the question after a long policy notice; others put the
@@ -93,7 +151,7 @@ export function reasonFromHistory(field,entries){
  if(/^are you currently employed or have you been employed in the past \w+ years? by /.test(question))return null;
  const parts=question.split(/\b(and|or)\b/).map(s=>s.trim());
  const concepts=detail?[detail[0]]:parts.filter((_,i)=>i%2===0).map(predicate);
- if(!concepts.some(Boolean))return null;
+ if(!concepts.some(Boolean))return reasonFromChoices(field,entries,question);
  const operators=parts.filter((_,i)=>i%2===1);
  if(!detail&&(new Set(operators).size>1||concepts.some(c=>!c)))return {blocked:true};
  const facts=evidenceFor(entries,field);

@@ -48,6 +48,39 @@ export function jobJurisdiction(location=''){
  if(countryNames.has(name)||['uk','united kingdom','south korea'].includes(name))return 'foreign';
  return '';
 }
+// Compare semantic slots while preserving the entire object, including any
+// employer, country or other qualifier the applicant originally answered.
+function analogousQuestion(label){
+ const q=questionKey(label).replace(/^\d+ /,'');
+ const templates=[
+  ['preference',/^(?:what is your preferred|please select your preferred|preferred) (.+)$/],
+  ['preference',/^(?:which|what) (.+) (?:do|would) you prefer$/],
+  ['pursuing',/^(?:which|what) (.+) are you (?:currently )?(?:pursuing|working toward|studying for)$/],
+  ['pursuing',/^(.+) (?:currently )?being pursued$/]
+ ];
+ for(const [slot,pattern] of templates){
+  const object=q.match(pattern)?.[1];
+  if(object&&!/\b(?:not|except|excluding|or|and)\b/.test(object))return slot+' '+object;
+ }
+ return '';
+}
+
+// Keep interval boundaries from the displayed label: normalizing punctuation
+// would make "2029–2031", "<2030" and "2030+" indistinguishable.
+function numericChoice(label,value){
+ const s=String(label).toLowerCase().trim().replace(/years?\b/g,'').replace(/\s+/g,' ').trim();
+ if(/^\d+$/.test(s))return value===Number(s);
+ let m=s.match(/^(\d+)\s*(?:[-–—]|to|through)\s*(\d+)$/);
+ if(m&&+m[1]<=+m[2])return +m[1]<=value&&value<=+m[2];
+ m=s.match(/^(\d+)\s*(?:\+|or (?:more|later)|and (?:above|over))$/);
+ if(m)return value>=+m[1];
+ m=s.match(/^(?:before|less than|under|<)\s*(\d+)$/);
+ if(m)return value<+m[1];
+ m=s.match(/^(?:after|more than|over|>)\s*(\d+)$/);
+ if(m)return value>+m[1];
+ return undefined;
+}
+
 export function answerRule(field,profile,memory=[],origin='',context='',now=new Date()){
  const entries=[...(profile.answers||[]),...memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context)];
  const unique=q=>{const values=entries.filter(a=>questionKey(a.question)===questionKey(q)).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
@@ -121,6 +154,20 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const source=company&&[company+' relatives',company+' relatives or acquaintances'].find(key=>unique(key));
   const pref=source||'Relatives working for the prospective employer';
   return unique(pref)?saved(unique(pref),pref):{blocked:true};
+ }
+ if(field.options?.length&&['combobox','select-one','radio-group'].includes(field.type)){
+  const year=/^(?:(?:what is your |select your |indicate your )?(?:anticipated|expected|projected) (?:graduation year|year of graduation)|(?:in )?(?:which|what) year (?:will you|do you (?:expect|plan) to) graduate)$/.test(stem);
+  const tenure=/^(?:(?:how many|number of) years of (?:paid (?:work|employment)|professional (?:employment|work)) experience(?: do you have)?|years of paid employment)$/.test(stem);
+  if(year||tenure){
+   const source=year?'Expected graduation date':'Employment experience',value=unique(source);
+   const number=year&&/^\d{4}-(?:0[1-9]|1[0-2])$/.test(value||'')?Number(value.slice(0,4)):tenure&&questionKey(value)==='none'?0:null;
+   if(number===null)return {blocked:true};
+   const options=field.options.filter(o=>!o.disabled&&o.value!==''&&!/^(?:select(?: one| an option)?|choose one|prefer not to answer)$/.test(questionKey(o.label)));
+   const verdicts=options.map(o=>tenure&&/^(?:none|no (?:paid )?experience)$/i.test(o.label.trim())?number===0:numericChoice(o.label,number));
+   const matches=options.filter((_,i)=>verdicts[i]===true);
+   if(matches.length!==1||verdicts.includes(undefined))return {blocked:true};
+   return saved(matches[0].label,source);
+  }
  }
  const inference=reasonFromHistory(field,entries);
  if(inference)return inference;
@@ -407,6 +454,16 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   }
   if(new Set(months).size===1&&['text','textarea'].includes(field.type)&&!field.placeholder)return result(months[0],'Confirmed expected graduation month');
   if(new Set(months).size===1&&(field.type==='month'||/^YYYY-MM$/i.test(field.placeholder||'')))return {...result(months[0],'Expected graduation month'),requiresReview:true};
+ }
+ if(['radio-group','select-one','combobox'].includes(field.type)&&field.options?.length){
+  const key=analogousQuestion(field.label);
+  const evidence=key?entries.filter(a=>analogousQuestion(a.question)===key):[];
+  if(evidence.length){
+   const answers=new Set(evidence.map(a=>questionKey(a.answer)));
+   const options=field.options.filter(o=>!o.disabled&&o.value!==''&&answers.has(questionKey(o.label)));
+   if(answers.size!==1||options.length!==1)return {blocked:true};
+   return saved(options[0].label,evidence[0].question);
+  }
  }
  return null;
 }

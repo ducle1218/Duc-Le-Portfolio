@@ -53,3 +53,25 @@ assert.equal(infer({'Have you undergone a polygraph?':'Yes'},either)?.display,'Y
 assert.equal(infer({},'Branch of service',{parentQuestion:'Have you served in the armed forces?',parentAnswer:'No'})?.display,'N/A');
 assert.equal(infer({'Military service':'No'},'Branch of service',{parentQuestion:'Have you served in the armed forces?',parentAnswer:'Yes'}),null);
 console.log('Multi-step entailment, direction, provenance, conflicts, conjunctions, disjunctions and contextual evidence passed.');
+
+const educationProfile={confirmed:true,values:{school:'Example University–City Campus',major:'Engineering'},answers:Object.entries({
+ 'High school name':'Example Academy','University location':'University Town','High school location':'Academy Town',
+ 'University start month':'2026-08','Expected graduation date':'2030-05','High school graduation month':'2026-06',
+ 'Full-time student enrollment':'Yes','Day for month-only school dates':'First of the month',
+ 'Degree being pursued':'Bachelor of Science','Summer internship start date':'2027-05-13'
+}).map(([question,answer])=>({question,answer}))};
+function study(school,label,type='text'){
+ return suggestField({educationEntry:true,educationSchool:school,label,type},educationProfile)?.value;
+}
+assert.equal(study('Example University','Degree'),'Bachelor of Science');
+assert.equal(study('Example University','Start Date','date'),'2026-08-01');
+assert.equal(study('Example University','End Date','date'),'2030-05-01');
+assert.equal(study('Example University','Location'),'University Town');
+assert.equal(study('Example University','Is current study?','combobox'),'Yes');
+assert.equal(study('Example Academy','Is current study?','combobox'),'No');
+assert.equal(study('Example Academy','End Date','month'),'2026-06');
+assert.equal(study('Example Academy','Location'),'Academy Town');
+assert.equal(study('Example Academy','Start Date','date'),undefined);
+assert.equal(study('Different School','Start Date','date'),undefined);
+assert.equal(study('Example Academy','Major'),undefined);
+console.log('School-specific enrollment, qualifications, locations and date precision passed.');

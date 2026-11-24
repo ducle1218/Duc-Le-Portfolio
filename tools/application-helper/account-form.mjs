@@ -1,5 +1,5 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,useFilledLogin=false,embedded=false}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,openLogin=false,useFilledLogin=false,embedded=false}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
@@ -96,12 +96,13 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   }
  }
  if(useFilledLogin)return null;
- if(openRegistration){
-  if(registration)return null;
+ if(openRegistration||openLogin){
+  if(openLogin!==registration)return null;
   const links=[...document.querySelectorAll('a[href],button,input[type=button],[role=button]')].filter(b=>{
    if(!visible(b)||b.getAttribute('aria-disabled')==='true'||b.form&&b.type==='submit')return false;
    if(b.href&&new URL(b.href,url).origin!==location.origin)return false;
-   return /^(?:new user|create (?:an? )?account|sign up|register)$/i.test((b.innerText||b.textContent||b.value||'').trim());
+   const pattern=openLogin?/^(?:sign in|log in)$/i:/^(?:new user|create (?:an? )?account|sign up|register)$/i;
+   return pattern.test((b.innerText||b.textContent||b.value||'').trim());
   });
   if(links.length!==1)return null;
   links[0].click();return {opened:true};
@@ -122,9 +123,9 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  for(const field of fields)fill(field,password);
  if(!fields.every(el=>el.isConnected&&el.value===password)||emailField&&(!emailField.isConnected||emailField.value.trim().toLowerCase()!==email.toLowerCase()))throw Error('The form changed while filling. Review the account fields.');
  if(registration&&buttons.length===1){
-  const scope=fields[0].form||buttons[0].closest('[role=dialog]')||fields[0].parentElement;
+  const scope=fields[0].form||buttons[0].closest('[role=dialog],main,[role=main]')||[...scopes][0];
   for(const box of scope.querySelectorAll('input[type=checkbox]')){
-   const words=[...(box.labels||[])].map(l=>l.textContent.trim()).join(' ').replace(/\s+/g,' ');
+   const words=([...(box.labels||[])].map(l=>l.textContent.trim()).join(' ')||box.getAttribute('aria-label')||(box.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>document.getElementById(id)?.textContent||'').join(' ')||box.closest('label')?.textContent||'').replace(/\s+/g,' ').trim();
    if(!box.checked&&!box.disabled&&/^(?:yes,? )?i (?:have read and (?:consent|agree) to|agree to|accept) (?:the |these )?terms (?:and conditions|of use|of service)[. *]*$/i.test(words))box.click();
   }
  }

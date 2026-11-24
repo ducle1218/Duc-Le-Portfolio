@@ -23,7 +23,7 @@ export function setupAccounts(getEmail,getEmployer){
    if(!el('account-employer').value)el('account-employer').value=getEmployer()||url.hostname;
   }catch{status.textContent='Open the employer website first.';}
  };
- async function useAccount(tab,signup,automatic,afterEmail=false,embeddedDocument=''){
+ async function useAccount(tab,signup,automatic,afterEmail=false,embeddedDocument='',checkedLogin=false){
   const url=new URL(tab.url);
   if(url.protocol!=='https:')return null;
   const email=(el('account-email').value||getEmail()||'').trim();
@@ -52,6 +52,22 @@ export function setupAccounts(getEmail,getEmployer){
    return 'Email entered. Complete any verification or social sign-in shown by the employer.';
   }
   const registration=automatic?scan.result.signup:signup;
+  if(automatic&&registration&&signup===undefined&&!checkedLogin&&!afterEmail){
+   const [opened]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,openLogin:true}]});
+   if(opened?.result?.opened){
+    for(let i=0;i<16;i++){
+     await new Promise(r=>setTimeout(r,450));
+     const [current]=await chrome.tabs.query({active:true,currentWindow:true});
+     if(current?.id!==tab.id||!current.url||new URL(current.url).origin!==url.origin)break;
+     if(current.status==='loading')continue;
+     const probe=(await chrome.scripting.executeScript({target:{tabId:tab.id},func:employerAccountForm,args:[{...base,url:current.url,inspectOnly:true}]}))[0]?.result;
+     if(!probe||probe.signup===true||probe.error)continue;
+     if(!probe.filledLogin&&i<3)continue;
+     return await useAccount(current,undefined,true,false,'',true)||'Review the employer sign-in screen.';
+    }
+    return 'Opened employer sign-in. Check for your saved login.';
+   }
+  }
   let password;
   try{
    password=await navigator.locks.request('employer-vault-write',()=>scanCredential(chrome.storage.local,{

@@ -190,10 +190,40 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  }
  if(/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q))return region==='us'&&citizen&&unique(proof)==='Yes'?confirmed('Yes',proof):{blocked:true};
  if(field.languageRow==='english'&&/^(reading|speaking|writing|understanding|listening)$/.test(q)&&unique('English proficiency')==='Fluent')return confirmed('Fluent','English proficiency',['fluent']);
+ if(/^(?:current (?:or |and )?last|current or most recent|last held) (?:position|job) title$/.test(q)&&fact('Employment experience')==='None')return confirmed('Not Applicable','Employment experience');
+ if(/^(?:primary )?country(?: region)? of citizenship$/.test(q)&&['combobox','select-one'].includes(field.type)){
+  const chosen=unique('Single-country citizenship preference');
+  if(chosen&&nationalities.has(questionKey(chosen)))return confirmed(chosen,'Single-country citizenship preference',chosen==='United States'?['united states','united states of america','usa','us']:undefined);
+ }
  const collegeStart=unique('University start month'),collegeEnd=unique('Expected graduation date');
  if(field.educationSchool&&questionKey(field.educationSchool)===questionKey(profile.values.school)&&['from','to actual or expected','start date','end date actual or expected'].includes(q)){
   const month=/^(?:from|start date)$/.test(q)?collegeStart:collegeEnd;
   if(/^\d{4}-\d{2}$/.test(month||'')&&(field.type==='month'||/^yyyy$/i.test(field.placeholder||'')))return confirmed(field.type==='month'?month:month.slice(0,4),'University attendance dates');
+ }
+ const savedSchool=questionKey(profile.values?.school),rowSchool=questionKey(field.educationSchool);
+ const universityRow=!!rowSchool&&(rowSchool===savedSchool||savedSchool.startsWith(rowSchool+' ')&&/ university$/.test(rowSchool));
+ const secondaryRow=!!rowSchool&&rowSchool===questionKey(fact('High school name'));
+ if(field.educationEntry){
+  if(/^(?:start date|end date|from|to actual or expected)$/.test(q)){
+   const start=/^(?:start date|from)$/.test(q);
+   const source=universityRow?(start?'University start month':'Expected graduation date'):secondaryRow&&!start?'High school graduation month':'';
+   const month=source&&unique(source);
+   if(!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(month||''))return {blocked:true};
+   if(field.type==='month')return confirmed(month,source);
+   if(field.type==='date'&&unique('Day for month-only school dates')==='First of the month')return confirmed(month+'-01',source);
+   if(/^yyyy$/i.test(field.placeholder||''))return confirmed(month.slice(0,4),source);
+   return {blocked:true};
+  }
+  if(/^(?:school |campus )?location$/.test(q)){
+   const source=universityRow?'University location':secondaryRow?'High school location':'';
+   return source&&unique(source)?confirmed(unique(source),source):{blocked:true};
+  }
+  if(/^(?:is current study|currently studying|currently attending)$/.test(q)){
+   if(universityRow&&fact('Full-time student enrollment')==='Yes')return confirmed('Yes','Full-time student enrollment');
+   if(secondaryRow&&unique('High school graduation month')&&unique('High school graduation month')<now.toISOString().slice(0,7))return confirmed('No','High school graduation month');
+   return {blocked:true};
+  }
+  if(!universityRow&&/^(?:major|field of study)$/.test(q))return {blocked:true};
  }
  const countryDependent=/^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q)||/^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
  const visaAssistance=q==='will you now or in the future require sponsorship for an immigration related employment benefit'||/^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
@@ -231,7 +261,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   return result(street,'Street from your saved address');
  }
  if(/^(zip|postal|zip postal)( code)?$/.test(q)&&zip)return result(zip,'ZIP from your saved address');
- const pursued=fact('Degree being pursued'),school=questionKey(field.educationSchool),college=school&&school===questionKey(profile.values?.school),highSchool=school&&school===questionKey(fact('High school name'));
+ const pursued=fact('Degree being pursued'),school=questionKey(field.educationSchool),college=universityRow,highSchool=school&&school===questionKey(fact('High school name'));
  if(/^(?:do you (?:have|hold) (?:a )?(?:completed |earned )?bachelor(?: s|s)? degree|have you (?:already )?(?:completed|earned|obtained) (?:a |your )?bachelor(?: s|s)? degree)$/.test(q)){
   const highest=questionKey(fact('Highest completed degree'));
   if(/^(high school diploma|associate(?: s)? degree|some college)$/.test(highest))return confirmed('No','Highest completed degree');

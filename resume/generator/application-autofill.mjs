@@ -49,7 +49,7 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
   'email address username':'email','username email address':'email','state location':'state','location city':'city','city of residence':'city','town or city':'city',
   'discipline':'major','academic discipline':'major','primary field of study':'major',
   'school affiliation':'school','university affiliation':'school','college or university name':'school',
-  'educational institution':'school','school name':'school','school or university name':'school','university or college':'school','major subject':'major','other website':'portfolio','personal portfolio url':'portfolio'
+  'educational institution':'school','school name':'school','school or university name':'school','university or college':'school','major subject':'major','other website':'portfolio','personal portfolio url':'portfolio','website':'portfolio'
  };
  const directLabel=label.replace(/^(?:please (?:enter|provide|indicate) (?:us )?(?:your )?|what is your |what s your )/,'');
  // A country selector paired with a phone input may represent a calling code.
@@ -217,6 +217,16 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  const label=e=>{
   if(/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id))return /--firstYear/i.test(e.id)?'From':'To (Actual or Expected)';
   if(isReply(e))return chatQuestion(e);
+  if(e.matches('.select2-selection')){
+   const native=e.closest('.select2-container')?.previousElementSibling;
+   const caption=native?.labels?.[0]||document.getElementById((e.getAttribute('aria-labelledby')||'').split(' ')[0]);
+   if(caption){
+    const copy=caption.cloneNode(true);
+    for(const child of copy.querySelectorAll('.screenReaderVisibility,.sr-only,[aria-live],.select2-container'))child.remove();
+    const clean=text(copy).replace(/\s*(?:select an? option|please select)\s*$/i,'').trim();
+    if(clean)return clean;
+   }
+  }
   if(e.matches('input[type=url],input[type=text]')&&/^(?:url|website url|website|link)$/.test(norm(ownLabel(e)))&&sectionFor('websites')?.contains(e))return 'Portfolio URL';
   const wrapper=e.closest('[data-automation-id^="formField-"]');
   const fieldLabel=wrapper?.querySelector('[data-automation-id="formLabel"],legend')||wrapper?.querySelector('label');
@@ -231,7 +241,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    shadowEditors.push(...host.shadowRoot.querySelectorAll(controls));shadowReplies(host.shadowRoot);
   }};
   if(!shadowEditors){shadowEditors=[];shadowReplies(document);}list.push(...shadowEditors);
-  return list.filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);};
+  return list.filter(e=>!e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);};
  const selectedValue=e=>{
   if(e.matches('[data-automation-id="searchBox"]')){
    const holder=e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]')||e.parentElement;
@@ -325,7 +335,20 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    const all=elements(),recent=all.slice(Math.max(0,all.indexOf(e)-3),all.indexOf(e)).map(c=>norm(label(c)));
    if(recent.some(s=>/right to work in (?:the )?(?:us|u s|united states)$/.test(s))&&!recent.some(s=>/work in /.test(s)&&!/work in (?:the )?(?:us|u s|united states)$/.test(s)))return {workQuestionCountry:'United States'};
   }
-  const q=norm(label(e));if(!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
+  const q=norm(label(e));
+  let entrySchool='',inSchoolRow=false;
+  if(/^(?:degree|major|field of study|location|(?:school |campus )?location|is current study|currently studying|currently attending|start date|end date|from|to actual or expected)$/.test(q)){
+   for(let row=e.parentElement;row&&row!==document.body&&row!==e.form;row=row.parentElement){
+    const inputs=[...row.querySelectorAll('input:not([type=hidden]),textarea,select,[role=combobox]')].filter(c=>visible(c));
+    const schools=inputs.filter(c=>/^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
+    if(schools.length>1)break;
+    if(schools.length===1&&inputs.some(c=>/^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))){
+     inSchoolRow=true;entrySchool=valueText(schools[0]);break;
+    }
+   }
+  }
+  if(inSchoolRow&&!['degree','degree type'].includes(q))return {educationEntry:true,educationSchool:entrySchool};
+  if(!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q))return {parentAnswer:'',parentQuestion:'',educationSchool:''};
   const all=elements(),before=all.slice(0,all.indexOf(e));let parentAnswer='',parentQuestion='',educationSchool='';
   if(/^source details?$|^if .+ please specify$/.test(q)){const parents=before.filter(c=>/^how (did|do) you (hear|learn|find out) about/.test(norm(label(c))));const last=parents.at(-1);if(last&&!empty(last))parentAnswer=valueText(last);}
   if(/^(please specify|other please specify|academic standing details)$/.test(q)){const last=before.at(-1);if(last&&!empty(last)&&/current academic standing/.test(norm(label(last)))){parentAnswer=valueText(last);parentQuestion=label(last);}}
@@ -341,7 +364,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     if([...section.querySelectorAll('p,small,div,span')].some(n=>n.childElementCount<2&&/^in the degree field provide (?:your |the )?highest level of education[.\s]*$/i.test(text(n)))){highestEducation=true;break;}
    }
   }
-  return {parentAnswer,parentQuestion,educationSchool,highestEducation,degreePair,rowDegree};
+  return {parentAnswer,parentQuestion,educationSchool:entrySchool||educationSchool,educationEntry:inSchoolRow,highestEducation,degreePair,rowDegree};
  };
  const emailSave=e=>{
   if(!e.matches('input[type=email],input[type=text]')||!/^e ?mail(?: address)?$/.test(norm(label(e))))return null;
@@ -528,19 +551,19 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     const before=new Set([...document.querySelectorAll(boxSelector)].filter(visible));
     const opener=e.matches('.ui-select-container')?(e.querySelector('.ui-select-toggle,.ui-select-match')||e):e;e.focus();if(e.getAttribute('aria-expanded')!=='true')activate(opener);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
     let boxes=[];
-    const searchInput=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
+    let searchInput=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
     const searchableAddress=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
     const writeSearch=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,value);searchInput.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
     let initialQuery='';
     for(let attempt=0;attempt<15;attempt++){
      if(location.href!==url||!e.isConnected)break;
      const ids=((e.getAttribute('aria-controls')||'')+' '+(e.getAttribute('aria-owns')||'')).trim().split(/\s+/).filter(Boolean);
-     boxes=ids.map(id=>e.getRootNode().getElementById?.(id)||document.getElementById(id)).filter(n=>n&&visible(n));
+     boxes=[...new Set(ids)].map(id=>e.getRootNode().getElementById?.(id)||document.getElementById(id)).filter(n=>n&&visible(n));
      if(!boxes.length){const local=e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');if(local)boxes=[...local.querySelectorAll(boxSelector)].filter(visible);}
      if(!boxes.length&&e.parentElement?.querySelectorAll(comboSelector).length===1)boxes=[...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
      if(!boxes.length)boxes=[...document.querySelectorAll(boxSelector)].filter(n=>visible(n)&&!before.has(n));
      boxes=boxes.filter((b,i,all)=>!all.some(other=>other!==b&&other.contains(b)));
-     if(boxes.length===1&&boxes[0].querySelector(optionSelector))break;
+     if(boxes.length===1&&[...boxes[0].querySelectorAll(optionSelector)].some(o=>!o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]')&&!/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o))))break;
      if(attempt===2&&searchInput&&searchableAddress&&!searchInput.value&&!f.phoneCountry){initialQuery=String(f.value);writeSearch(initialQuery);}
      await new Promise(r=>setTimeout(r,80));
     }
@@ -548,7 +571,8 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     const optionKey=o=>f.phoneCountry&&o.getAttribute('data-country-code')?.toLowerCase()==='us'&&/\+1\b/.test(text(o))?'united states 1':norm(text(o));
     let available=readOptions();
     // Address pickers may fetch rows only after a search. A search term is never itself a selection.
-    const isAddressPicker=searchableAddress;
+    const isAddressPicker=searchableAddress||/citizenship/.test(norm(f.label));
+    if(!searchInput&&boxes.length===1&&e.matches('.select2-selection'))searchInput=boxes[0].closest('.select2-dropdown')?.querySelector('input.select2-search__field');
     const input=searchInput;
     const query=initialQuery||(input&&isAddressPicker&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'');
     const setQuery=writeSearch;

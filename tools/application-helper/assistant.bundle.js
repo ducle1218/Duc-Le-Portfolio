@@ -467,10 +467,40 @@
     }
     if (/^if hired can you (?:furnish|provide) proof that you are eligible to work in the country where (?:the|this) job resides$/.test(q)) return region === "us" && citizen && unique(proof) === "Yes" ? confirmed("Yes", proof) : { blocked: true };
     if (field.languageRow === "english" && /^(reading|speaking|writing|understanding|listening)$/.test(q) && unique("English proficiency") === "Fluent") return confirmed("Fluent", "English proficiency", ["fluent"]);
+    if (/^(?:current (?:or |and )?last|current or most recent|last held) (?:position|job) title$/.test(q) && fact("Employment experience") === "None") return confirmed("Not Applicable", "Employment experience");
+    if (/^(?:primary )?country(?: region)? of citizenship$/.test(q) && ["combobox", "select-one"].includes(field.type)) {
+      const chosen = unique("Single-country citizenship preference");
+      if (chosen && nationalities.has(questionKey(chosen))) return confirmed(chosen, "Single-country citizenship preference", chosen === "United States" ? ["united states", "united states of america", "usa", "us"] : void 0);
+    }
     const collegeStart = unique("University start month"), collegeEnd = unique("Expected graduation date");
     if (field.educationSchool && questionKey(field.educationSchool) === questionKey(profile.values.school) && ["from", "to actual or expected", "start date", "end date actual or expected"].includes(q)) {
       const month = /^(?:from|start date)$/.test(q) ? collegeStart : collegeEnd;
       if (/^\d{4}-\d{2}$/.test(month || "") && (field.type === "month" || /^yyyy$/i.test(field.placeholder || ""))) return confirmed(field.type === "month" ? month : month.slice(0, 4), "University attendance dates");
+    }
+    const savedSchool = questionKey(profile.values?.school), rowSchool = questionKey(field.educationSchool);
+    const universityRow = !!rowSchool && (rowSchool === savedSchool || savedSchool.startsWith(rowSchool + " ") && / university$/.test(rowSchool));
+    const secondaryRow = !!rowSchool && rowSchool === questionKey(fact("High school name"));
+    if (field.educationEntry) {
+      if (/^(?:start date|end date|from|to actual or expected)$/.test(q)) {
+        const start = /^(?:start date|from)$/.test(q);
+        const source = universityRow ? start ? "University start month" : "Expected graduation date" : secondaryRow && !start ? "High school graduation month" : "";
+        const month = source && unique(source);
+        if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(month || "")) return { blocked: true };
+        if (field.type === "month") return confirmed(month, source);
+        if (field.type === "date" && unique("Day for month-only school dates") === "First of the month") return confirmed(month + "-01", source);
+        if (/^yyyy$/i.test(field.placeholder || "")) return confirmed(month.slice(0, 4), source);
+        return { blocked: true };
+      }
+      if (/^(?:school |campus )?location$/.test(q)) {
+        const source = universityRow ? "University location" : secondaryRow ? "High school location" : "";
+        return source && unique(source) ? confirmed(unique(source), source) : { blocked: true };
+      }
+      if (/^(?:is current study|currently studying|currently attending)$/.test(q)) {
+        if (universityRow && fact("Full-time student enrollment") === "Yes") return confirmed("Yes", "Full-time student enrollment");
+        if (secondaryRow && unique("High school graduation month") && unique("High school graduation month") < now.toISOString().slice(0, 7)) return confirmed("No", "High school graduation month");
+        return { blocked: true };
+      }
+      if (!universityRow && /^(?:major|field of study)$/.test(q)) return { blocked: true };
     }
     const countryDependent = /^(?:are you|will you be) (?:legally )?(?:authorized|eligible) to work in (?:the|this) country (?:of the job for which you are applying|where (?:this|the) (?:job|role|position) is (?:located|based))$/.test(q) || /^(?:will|do) you (?:now or in the future )?(?:require|need) (?:employer )?sponsorship for an? (?:employment|work) visa$/.test(q);
     const visaAssistance = q === "will you now or in the future require sponsorship for an immigration related employment benefit" || /^(?:will|do) you (?:require|need) (?:employment |work )?visa assistance(?: now or in the future)?(?: from (?:us|our company))?$/.test(q);
@@ -510,7 +540,7 @@
       return result(street, "Street from your saved address");
     }
     if (/^(zip|postal|zip postal)( code)?$/.test(q) && zip) return result(zip, "ZIP from your saved address");
-    const pursued = fact("Degree being pursued"), school = questionKey(field.educationSchool), college = school && school === questionKey(profile.values?.school), highSchool = school && school === questionKey(fact("High school name"));
+    const pursued = fact("Degree being pursued"), school = questionKey(field.educationSchool), college = universityRow, highSchool = school && school === questionKey(fact("High school name"));
     if (/^(?:do you (?:have|hold) (?:a )?(?:completed |earned )?bachelor(?: s|s)? degree|have you (?:already )?(?:completed|earned|obtained) (?:a |your )?bachelor(?: s|s)? degree)$/.test(q)) {
       const highest = questionKey(fact("Highest completed degree"));
       if (/^(high school diploma|associate(?: s)? degree|some college)$/.test(highest)) return confirmed("No", "Highest completed degree");
@@ -852,6 +882,16 @@
     const label = (e) => {
       if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
+      if (e.matches(".select2-selection")) {
+        const native = e.closest(".select2-container")?.previousElementSibling;
+        const caption = native?.labels?.[0] || document.getElementById((e.getAttribute("aria-labelledby") || "").split(" ")[0]);
+        if (caption) {
+          const copy = caption.cloneNode(true);
+          for (const child of copy.querySelectorAll(".screenReaderVisibility,.sr-only,[aria-live],.select2-container")) child.remove();
+          const clean = text(copy).replace(/\s*(?:select an? option|please select)\s*$/i, "").trim();
+          if (clean) return clean;
+        }
+      }
       if (e.matches("input[type=url],input[type=text]") && /^(?:url|website url|website|link)$/.test(norm(ownLabel(e))) && sectionFor("websites")?.contains(e)) return "Portfolio URL";
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
@@ -881,7 +921,7 @@
         shadowReplies(document);
       }
       list.push(...shadowEditors);
-      return list.filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+      return list.filter((e) => !e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     };
     const selectedValue = (e) => {
       if (e.matches('[data-automation-id="searchBox"]')) {
@@ -1003,6 +1043,20 @@
         if (recent.some((s) => /right to work in (?:the )?(?:us|u s|united states)$/.test(s)) && !recent.some((s) => /work in /.test(s) && !/work in (?:the )?(?:us|u s|united states)$/.test(s))) return { workQuestionCountry: "United States" };
       }
       const q = norm(label(e));
+      let entrySchool = "", inSchoolRow = false;
+      if (/^(?:degree|major|field of study|location|(?:school |campus )?location|is current study|currently studying|currently attending|start date|end date|from|to actual or expected)$/.test(q)) {
+        for (let row = e.parentElement; row && row !== document.body && row !== e.form; row = row.parentElement) {
+          const inputs = [...row.querySelectorAll("input:not([type=hidden]),textarea,select,[role=combobox]")].filter((c) => visible(c));
+          const schools = inputs.filter((c) => /^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
+          if (schools.length > 1) break;
+          if (schools.length === 1 && inputs.some((c) => /^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))) {
+            inSchoolRow = true;
+            entrySchool = valueText(schools[0]);
+            break;
+          }
+        }
+      }
+      if (inSchoolRow && !["degree", "degree type"].includes(q)) return { educationEntry: true, educationSchool: entrySchool };
       if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
@@ -1039,7 +1093,7 @@
           }
         }
       }
-      return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
+      return { parentAnswer, parentQuestion, educationSchool: entrySchool || educationSchool, educationEntry: inSchoolRow, highestEducation, degreePair, rowDegree };
     };
     const emailSave = (e) => {
       if (!e.matches("input[type=email],input[type=text]") || !/^e ?mail(?: address)?$/.test(norm(label(e)))) return null;
@@ -1318,7 +1372,7 @@
           if (e.getAttribute("aria-expanded") !== "true") activate(opener);
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
-          const searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          let searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
           const searchableAddress = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
@@ -1328,7 +1382,7 @@
           for (let attempt = 0; attempt < 15; attempt++) {
             if (location.href !== url || !e.isConnected) break;
             const ids = ((e.getAttribute("aria-controls") || "") + " " + (e.getAttribute("aria-owns") || "")).trim().split(/\s+/).filter(Boolean);
-            boxes = ids.map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
+            boxes = [...new Set(ids)].map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
             if (!boxes.length) {
               const local = e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');
               if (local) boxes = [...local.querySelectorAll(boxSelector)].filter(visible);
@@ -1336,7 +1390,7 @@
             if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
-            if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
+            if (boxes.length === 1 && [...boxes[0].querySelectorAll(optionSelector)].some((o) => !o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]') && !/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o)))) break;
             if (attempt === 2 && searchInput && searchableAddress && !searchInput.value && !f.phoneCountry) {
               initialQuery = String(f.value);
               writeSearch(initialQuery);
@@ -1347,7 +1401,8 @@
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
           const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
-          const isAddressPicker = searchableAddress;
+          const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
+          if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
           const input = searchInput;
           const query = initialQuery || (input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
           const setQuery = writeSearch;
@@ -1597,7 +1652,8 @@
       "university or college": "school",
       "major subject": "major",
       "other website": "portfolio",
-      "personal portfolio url": "portfolio"
+      "personal portfolio url": "portfolio",
+      "website": "portfolio"
     };
     const directLabel = label.replace(/^(?:please (?:enter|provide|indicate) (?:us )?(?:your )?|what is your |what s your )/, "");
     if ((label === "country" || /^(?:(?:phone(?: number)? )?country code|country phone code|phone country|country calling code|dial code)$/.test(label)) && (field.phoneCountry || /phone|dial|calling/i.test(field.id + " " + field.name + " " + label))) {
@@ -1805,6 +1861,16 @@
     const label = (e) => {
       if (/^education-.+--(?:first|last)YearAttended-dateSectionYear-input$/i.test(e.id)) return /--firstYear/i.test(e.id) ? "From" : "To (Actual or Expected)";
       if (isReply(e)) return chatQuestion(e);
+      if (e.matches(".select2-selection")) {
+        const native = e.closest(".select2-container")?.previousElementSibling;
+        const caption = native?.labels?.[0] || document.getElementById((e.getAttribute("aria-labelledby") || "").split(" ")[0]);
+        if (caption) {
+          const copy = caption.cloneNode(true);
+          for (const child of copy.querySelectorAll(".screenReaderVisibility,.sr-only,[aria-live],.select2-container")) child.remove();
+          const clean = text(copy).replace(/\s*(?:select an? option|please select)\s*$/i, "").trim();
+          if (clean) return clean;
+        }
+      }
       if (e.matches("input[type=url],input[type=text]") && /^(?:url|website url|website|link)$/.test(norm(ownLabel(e))) && sectionFor("websites")?.contains(e)) return "Portfolio URL";
       const wrapper = e.closest('[data-automation-id^="formField-"]');
       const fieldLabel = wrapper?.querySelector('[data-automation-id="formLabel"],legend') || wrapper?.querySelector("label");
@@ -1834,7 +1900,7 @@
         shadowReplies(document);
       }
       list.push(...shadowEditors);
-      return list.filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
+      return list.filter((e) => !e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     };
     const selectedValue = (e) => {
       if (e.matches('[data-automation-id="searchBox"]')) {
@@ -1956,6 +2022,20 @@
         if (recent.some((s) => /right to work in (?:the )?(?:us|u s|united states)$/.test(s)) && !recent.some((s) => /work in /.test(s) && !/work in (?:the )?(?:us|u s|united states)$/.test(s))) return { workQuestionCountry: "United States" };
       }
       const q = norm(label(e));
+      let entrySchool = "", inSchoolRow = false;
+      if (/^(?:degree|major|field of study|location|(?:school |campus )?location|is current study|currently studying|currently attending|start date|end date|from|to actual or expected)$/.test(q)) {
+        for (let row = e.parentElement; row && row !== document.body && row !== e.form; row = row.parentElement) {
+          const inputs = [...row.querySelectorAll("input:not([type=hidden]),textarea,select,[role=combobox]")].filter((c) => visible(c));
+          const schools = inputs.filter((c) => /^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
+          if (schools.length > 1) break;
+          if (schools.length === 1 && inputs.some((c) => /^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))) {
+            inSchoolRow = true;
+            entrySchool = valueText(schools[0]);
+            break;
+          }
+        }
+      }
+      if (inSchoolRow && !["degree", "degree type"].includes(q)) return { educationEntry: true, educationSchool: entrySchool };
       if (!/not completed|degree|gpa|grade point|overall result|field of study|^from$|^to actual or expected$|^start date$|^end date actual or expected$|^source detail|please specify|academic standing details/.test(q)) return { parentAnswer: "", parentQuestion: "", educationSchool: "" };
       const all = elements(), before = all.slice(0, all.indexOf(e));
       let parentAnswer = "", parentQuestion = "", educationSchool = "";
@@ -1992,7 +2072,7 @@
           }
         }
       }
-      return { parentAnswer, parentQuestion, educationSchool, highestEducation, degreePair, rowDegree };
+      return { parentAnswer, parentQuestion, educationSchool: entrySchool || educationSchool, educationEntry: inSchoolRow, highestEducation, degreePair, rowDegree };
     };
     const emailSave = (e) => {
       if (!e.matches("input[type=email],input[type=text]") || !/^e ?mail(?: address)?$/.test(norm(label(e)))) return null;
@@ -2271,7 +2351,7 @@
           if (e.getAttribute("aria-expanded") !== "true") activate(opener);
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
-          const searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          let searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
           const searchableAddress = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
@@ -2281,7 +2361,7 @@
           for (let attempt = 0; attempt < 15; attempt++) {
             if (location.href !== url || !e.isConnected) break;
             const ids = ((e.getAttribute("aria-controls") || "") + " " + (e.getAttribute("aria-owns") || "")).trim().split(/\s+/).filter(Boolean);
-            boxes = ids.map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
+            boxes = [...new Set(ids)].map((id) => e.getRootNode().getElementById?.(id) || document.getElementById(id)).filter((n) => n && visible(n));
             if (!boxes.length) {
               const local = e.closest('[data-automation-id^="formField-"],.iti,.react-tel-input,.intl-tel-input,.selectize-control,.ui-select-container,.ts-wrapper');
               if (local) boxes = [...local.querySelectorAll(boxSelector)].filter(visible);
@@ -2289,7 +2369,7 @@
             if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
-            if (boxes.length === 1 && boxes[0].querySelector(optionSelector)) break;
+            if (boxes.length === 1 && [...boxes[0].querySelectorAll(optionSelector)].some((o) => !o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]') && !/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o)))) break;
             if (attempt === 2 && searchInput && searchableAddress && !searchInput.value && !f.phoneCountry) {
               initialQuery = String(f.value);
               writeSearch(initialQuery);
@@ -2300,7 +2380,8 @@
           const readOptions = () => boxes.length === 1 ? [...boxes[0].querySelectorAll(optionSelector)].filter((o) => visible(o) && !disabled(o) && !o.classList.contains("ng-option-disabled")).filter((o) => !o.matches("input,textarea") && !o.matches('[role="listbox"],[role="tree"],[role="menu"]')).filter((o, i, all2) => !all2.some((other) => other !== o && o.contains(other) && norm(text(o)) === norm(text(other)))) : [];
           const optionKey = (o) => f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
-          const isAddressPicker = searchableAddress;
+          const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
+          if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
           const input = searchInput;
           const query = initialQuery || (input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
           const setQuery = writeSearch;

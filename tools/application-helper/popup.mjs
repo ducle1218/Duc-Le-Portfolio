@@ -91,13 +91,13 @@ async function verifyEmployerEmail(tab,email){
 }
 const verificationAttempts=new Set();
 async function resumeAfterChange(tab,signature){
- for(let i=0;i<16&&remainingSteps>0;i++){
+ for(let i=0;i<40&&remainingSteps>0;i++){
   await new Promise(r=>setTimeout(r,450));
   const [active]=await chrome.tabs.query({active:true,currentWindow:true});
   if(active?.id!==tab.id||!active.url||new URL(active.url).origin!==new URL(tab.url).origin)return;
   try{
    const {result}=await scanDocument(active);
-   if(signature===stepSignature(result))continue;
+   if(signature===stepSignature(result)||!result.fields.length&&!result.hasPasswordField&&!result.hasEmailSignIn&&!result.needsEmailVerification)continue;
    remainingSteps--;continuing=true;
    try{await $('scan').onclick();if(review&&review.fields.length)await $('fill').onclick();}finally{continuing=false;}
    return;

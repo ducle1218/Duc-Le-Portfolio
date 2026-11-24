@@ -1,7 +1,22 @@
 import {scanCredential} from './account-vault.mjs';
 import {employerAccountForm} from './account-form.mjs';
 
+async function acceptRegistrationNotice(url){
+ if(location.href!==url)return;
+ const shown=e=>e.getClientRects().length&&!e.disabled;
+ const links=[...document.querySelectorAll('a,button')].filter(e=>shown(e)&&/^read and accept (?:the |our )?(?:data )?privacy (?:statement|notice|policy)[. ]*$/i.test(e.textContent.trim()));
+ if(links.length!==1||links[0].target==='_blank'||links[0].href&&/^https?:/i.test(links[0].href)&&new URL(links[0].href).origin!==location.origin)return;
+ links[0].click();
+ for(let i=0;i<18&&location.href===url;i++){
+  await new Promise(r=>setTimeout(r,120));
+  const dialogs=[...document.querySelectorAll('dialog,[role=dialog],[aria-modal=true]')].filter(e=>shown(e)&&/privacy (statement|notice|policy)/i.test(e.innerText));
+  if(dialogs.length!==1)continue;
+  const buttons=[...dialogs[0].querySelectorAll('button,input[type=button],[role=button]')].filter(e=>shown(e)&&/^(?:i )?(?:accept|agree)$/i.test((e.textContent||e.value).trim()));
+  if(buttons.length===1)buttons[0].click();return;
+ }
+}
 function accountScope(url,employer){
+ const tenant=url.searchParams.get('company');if(tenant&&/^[\w.-]{1,100}$/.test(tenant))return 'company/'+tenant.toLowerCase();
  const parts=url.pathname.split('/').filter(Boolean);
  if(/\.(?:myworkdayjobs\.com|eightfold\.ai|icims\.com)$/.test(url.hostname))return url.hostname;
  if(url.hostname.endsWith('.taleo.net')&&parts[0]==='careersection'&&parts[1])return 'careersection/'+parts[1];
@@ -10,7 +25,7 @@ function accountScope(url,employer){
  return employer.toLowerCase();
 }
 
-export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined){
+export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined,getIdentity=()=>({})){
  const el=id=>document.getElementById(id);
  const panel=el('employer-account'),status=el('account-status'),create=el('account-create'),login=el('account-login');
  panel.ontoggle=async()=>{
@@ -28,7 +43,7 @@ export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined){
   if(url.protocol!=='https:')return null;
   const email=(el('account-email').value||getEmail()||'').trim();
   const employer=(el('account-employer').value||getEmployer()||url.hostname).trim();
-  const base={url:url.href,signup,email,automatic,afterEmail,recruiterVisibility:getVisibility(),embedded:!!embeddedDocument};
+  const base={url:url.href,signup,email,automatic,afterEmail,recruiterVisibility:getVisibility(),identity:getIdentity(),embedded:!!embeddedDocument};
   const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id,...(embeddedDocument?{documentIds:[embeddedDocument]}:{})},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
   if(scan?.result?.error)throw Error(scan.result.error);
   if(!scan?.result||scan.result.available===false)return null;
@@ -52,7 +67,9 @@ export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined){
    return 'Email entered. Complete any verification or social sign-in shown by the employer.';
   }
   const registration=automatic?scan.result.signup:signup;
-  if(automatic&&registration&&signup===undefined&&!checkedLogin&&!afterEmail){
+  const knownSites=(await chrome.storage.local.get('employerSites')).employerSites||[];
+  const hasAccount=knownSites.some(row=>row.origin===url.origin&&row.email===email.toLowerCase()&&row.scope===accountScope(url,employer));
+  if(automatic&&registration&&signup===undefined&&!checkedLogin&&!afterEmail&&hasAccount){
    const [opened]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,openLogin:true}]});
    if(opened?.result?.opened){
     for(let i=0;i<16;i++){
@@ -95,6 +112,7 @@ export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined){
    throw error;
   }finally{el('account-passphrase').value='';}
   el('legacy-unlock').hidden=true;
+  if(registration&&automatic)await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:acceptRegistrationNotice,args:[url.href]});
   const [result]=await chrome.scripting.executeScript({target:{tabId:tab.id,documentIds:[scan.documentId]},func:employerAccountForm,args:[{...base,signup:registration,password}]});
   if(result?.result?.error)throw Error(result.result.error);
   return result?.result||'The account form changed. Check the website for the next step.';

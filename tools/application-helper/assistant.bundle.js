@@ -981,7 +981,7 @@
       if (!origins.some((src) => {
         try {
           const u = new URL(src);
-          return u.protocol === "https:" && u.origin === location.origin && (u.pathname === location.pathname || window.frameElement?.src === src);
+          return u.protocol === "https:" && u.origin === location.origin && (u.pathname === location.pathname || window.frameElement?.src === src || window.parent !== window && document.referrer && new URL(document.referrer).origin !== location.origin);
         } catch {
           return false;
         }
@@ -991,7 +991,7 @@
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects?.()?.length && getComputedStyle(e).visibility !== "hidden";
-    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.chosen-single,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"],[role="checkbox"]';
     const activate = (e, option = false) => {
       if (option) e.scrollIntoView?.({ block: "nearest" });
@@ -1073,7 +1073,7 @@
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"],[role="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
-    const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
+    const original = (e) => e.matches(".chosen-single") ? e.closest(".chosen-container")?.previousElementSibling : e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
       if (!e) return "";
       const copy = e.cloneNode(true);
@@ -1179,6 +1179,7 @@
       return list.filter((e) => !e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     };
     const selectedValue = (e) => {
+      if (e.matches(".chosen-single")) return e.classList.contains("chosen-default") ? "" : text(e.querySelector("span"));
       if (e.matches("input[role=combobox],input[aria-autocomplete=list]") && e.getAttribute("aria-invalid") === "true") return "";
       if (e.matches('[data-automation-id="searchBox"]')) {
         const holder = e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]') || e.parentElement;
@@ -1617,10 +1618,13 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasCodePrompt: /enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]"), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasCodePrompt: /enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]") || /\b(?:resume|résumé|cv)\b/i.test(text(document.body)) && /drag\s*(?:and|&)\s*drop\s+(?:it|here|files?)/i.test(text(document.body)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
-          return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
+          const hint = [frame.title, frame.name, frame.id, u.hostname, u.pathname].join(" "), rect = frame.getBoundingClientRect();
+          const jobHint = /career|recruit|open positions|job(?:s|introduction|application)?\b|applicant|candidate|apply/i.test(hint);
+          const utility = /captcha|analytics|advertis|doubleclick|youtube|vimeo|maps\.google|chatbot|newsletter|cookieconsent/i.test(hint);
+          return u.protocol === "https:" && !utility && (jobHint || rect.width >= 300 && rect.height >= 180 || u.origin === location.origin) ? [u.href] : [];
         } catch {
           return [];
         }
@@ -1703,7 +1707,7 @@
           if (selectedRadio(e) === matching[0]) filled++;
           else skipped++;
         } else if (custom(e)) {
-          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.chosen-results,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
           const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="gridcell"][aria-selected],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
@@ -1730,6 +1734,7 @@
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
             searchInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            if (e.matches(".chosen-single")) searchInput.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
           };
           let initialQuery = "";
           for (let attempt = 0; attempt < 15; attempt++) {
@@ -1759,9 +1764,14 @@
           const optionKey = (o) => f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(text(o))) ? "advanced" : f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
           const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
+          if (!searchInput && boxes.length === 1) {
+            const searches = [...boxes[0].querySelectorAll("input:not([readonly]):not([type=hidden])")].filter((n) => visible(n) && !disabled(n));
+            if (searches.length === 1) searchInput = searches[0];
+          }
+          if (!searchInput && e.matches(".chosen-single")) searchInput = e.closest(".chosen-container")?.querySelector(".chosen-search input");
           if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
           const input = searchInput;
-          const query = initialQuery || (input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
+          const query = initialQuery || (input && (isAddressPicker || !f.sourceTree && !academicPicker && (input.getAttribute("aria-autocomplete") === "list" || input.type === "search" || e.matches(".chosen-single,.select2-selection") || /search|type to/i.test(input.placeholder || ""))) && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
           const setQuery = writeSearch;
           if (query) {
             if (!initialQuery) setQuery(query);
@@ -2145,7 +2155,7 @@
       if (!origins.some((src) => {
         try {
           const u = new URL(src);
-          return u.protocol === "https:" && u.origin === location.origin && (u.pathname === location.pathname || window.frameElement?.src === src);
+          return u.protocol === "https:" && u.origin === location.origin && (u.pathname === location.pathname || window.frameElement?.src === src || window.parent !== window && document.referrer && new URL(document.referrer).origin !== location.origin);
         } catch {
           return false;
         }
@@ -2155,7 +2165,7 @@
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const visible = (e) => !!e.getClientRects?.()?.length && getComputedStyle(e).visibility !== "hidden";
-    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+    const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.chosen-single,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"],[role="checkbox"]';
     const activate = (e, option = false) => {
       if (option) e.scrollIntoView?.({ block: "nearest" });
@@ -2237,7 +2247,7 @@
       const g = group(e), selector = checkbox(e) ? 'input[type="checkbox"],[role="checkbox"]' : 'input[type="radio"],[role="radio"]';
       return [...(g || e.form || e.getRootNode?.() || document).querySelectorAll(selector)].filter((r) => g ? group(r) === g && (checkbox(e) || g.getAttribute("role") === "radiogroup" || !e.name || r.name === e.name) : !!e.name && r.name === e.name && r.form === e.form);
     };
-    const original = (e) => e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
+    const original = (e) => e.matches(".chosen-single") ? e.closest(".chosen-container")?.previousElementSibling : e.matches(".selectize-input,.ts-control") ? e.closest(".selectize-control,.ts-wrapper")?.previousElementSibling : null;
     const labelText = (e) => {
       if (!e) return "";
       const copy = e.cloneNode(true);
@@ -2343,6 +2353,7 @@
       return list.filter((e) => !e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter((e) => !e.parentElement?.closest(comboSelector)).filter((e) => !choice(e) || radios(e)[0] === e);
     };
     const selectedValue = (e) => {
+      if (e.matches(".chosen-single")) return e.classList.contains("chosen-default") ? "" : text(e.querySelector("span"));
       if (e.matches("input[role=combobox],input[aria-autocomplete=list]") && e.getAttribute("aria-invalid") === "true") return "";
       if (e.matches('[data-automation-id="searchBox"]')) {
         const holder = e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]') || e.parentElement;
@@ -2781,10 +2792,13 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasCodePrompt: /enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]"), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), hasCodePrompt: /enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)), hasUpload: !!document.querySelector("input[type=file],[ondrop],[data-dropzone]") || /\b(?:resume|résumé|cv)\b/i.test(text(document.body)) && /drag\s*(?:and|&)\s*drop\s+(?:it|here|files?)/i.test(text(document.body)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
-          return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
+          const hint = [frame.title, frame.name, frame.id, u.hostname, u.pathname].join(" "), rect = frame.getBoundingClientRect();
+          const jobHint = /career|recruit|open positions|job(?:s|introduction|application)?\b|applicant|candidate|apply/i.test(hint);
+          const utility = /captcha|analytics|advertis|doubleclick|youtube|vimeo|maps\.google|chatbot|newsletter|cookieconsent/i.test(hint);
+          return u.protocol === "https:" && !utility && (jobHint || rect.width >= 300 && rect.height >= 180 || u.origin === location.origin) ? [u.href] : [];
         } catch {
           return [];
         }
@@ -2867,7 +2881,7 @@
           if (selectedRadio(e) === matching[0]) filled++;
           else skipped++;
         } else if (custom(e)) {
-          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+          const boxSelector = '[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.chosen-results,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
           const optionSelector = '[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="gridcell"][aria-selected],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
           const before = new Set([...document.querySelectorAll(boxSelector)].filter(visible));
           const opener = e.matches(".ui-select-container") ? e.querySelector(".ui-select-toggle,.ui-select-match") || e : e;
@@ -2894,6 +2908,7 @@
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
             searchInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            if (e.matches(".chosen-single")) searchInput.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
           };
           let initialQuery = "";
           for (let attempt = 0; attempt < 15; attempt++) {
@@ -2923,9 +2938,14 @@
           const optionKey = (o) => f.sourceQuestion === "English proficiency" && /^(?:level )?\d+ advanced$|^advanced \d+$/.test(norm(text(o))) ? "advanced" : f.phoneCountry && o.getAttribute("data-country-code")?.toLowerCase() === "us" && /\+1\b/.test(text(o)) ? "united states 1" : norm(text(o));
           let available = readOptions();
           const isAddressPicker = searchableAddress || /citizenship/.test(norm(f.label));
+          if (!searchInput && boxes.length === 1) {
+            const searches = [...boxes[0].querySelectorAll("input:not([readonly]):not([type=hidden])")].filter((n) => visible(n) && !disabled(n));
+            if (searches.length === 1) searchInput = searches[0];
+          }
+          if (!searchInput && e.matches(".chosen-single")) searchInput = e.closest(".chosen-container")?.querySelector(".chosen-search input");
           if (!searchInput && boxes.length === 1 && e.matches(".select2-selection")) searchInput = boxes[0].closest(".select2-dropdown")?.querySelector("input.select2-search__field");
           const input = searchInput;
-          const query = initialQuery || (input && isAddressPicker && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
+          const query = initialQuery || (input && (isAddressPicker || !f.sourceTree && !academicPicker && (input.getAttribute("aria-autocomplete") === "list" || input.type === "search" || e.matches(".chosen-single,.select2-selection") || /search|type to/i.test(input.placeholder || ""))) && !f.phoneCountry && boxes.length === 1 && !input.value && !available.some((o) => aliases3.includes(optionKey(o))) ? String(f.value) : "");
           const setQuery = writeSearch;
           if (query) {
             if (!initialQuery) setQuery(query);
@@ -3188,9 +3208,17 @@
       }
       return null;
     };
-    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!(resumeSection(e) || sharedResumeSection(e));
+    const resumeContext = (e) => {
+      for (let node = e; node && node !== document.body; node = node.parentElement) {
+        const words = text(node);
+        if (words.length > 1100 || /cover letter|transcript|passport|photo|certificate/i.test(words)) break;
+        if (/upload (?:your |a )?(?:resume|résumé|cv)\b/i.test(words)) return true;
+      }
+      return false;
+    };
+    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!(resumeSection(e) || sharedResumeSection(e) || resumeContext(e)) || /drag\s*(?:and|&)\s*drop (?:it|here|files?)/i.test(text(e)) && resumeContext(e);
     const eligibleZone = (e) => isResumeZone(e) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
-    const dropLabels = [...document.querySelectorAll("span,p,div,button,label")].filter((e) => e.childElementCount === 0 && /^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(text(e)));
+    const dropLabels = [...document.querySelectorAll("span,p,div,button,label")].filter((e) => text(e).length < 250 && /(?:^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$|drag\s*(?:and|&)\s*drop (?:it|here|files?))/i.test(text(e)));
     const zones = candidates.length ? [] : [.../* @__PURE__ */ new Set([...document.querySelectorAll(dropSelector), ...dropLabels])].filter(eligibleZone);
     const containers = zones.filter((z) => !zones.some((other) => other !== z && z.contains(other)));
     const zone = containers.length === 1 ? containers[0] : null;
@@ -3373,6 +3401,7 @@
       if (entry.expiresAt <= Date.now() || location.origin !== entry.origin) return;
       host = el("div");
       host.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:2147483647;";
+      host.hidden = next.displayMode === "top";
       root = host.attachShadow({ mode: "closed" });
       const style = el("style");
       style.textContent = `:host{all:initial}*{box-sizing:border-box}.panel{width:350px;max-width:calc(100vw - 32px);color:#f1f0ed;background:#151719;border:1px solid #62686c;border-radius:16px;box-shadow:0 12px 50px #0006;font:14px/1.5 system-ui;padding:18px}header{display:flex;align-items:center;gap:8px}header strong{flex:1}button{font:inherit;cursor:pointer;border:1px solid #555d62;background:#252a2e;color:inherit;border-radius:7px;padding:8px 12px}button:hover{background:#363e44}button:focus-visible{outline:2px solid #a9d5ed}button:disabled{opacity:.5;cursor:default}small{display:block;color:#b8bfc4}p{margin:10px 0}h3{font-size:15px;margin:12px 0 0}.answers{max-height:240px;overflow:auto;margin:12px 0}.answer{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #383e42}.answer span{overflow-wrap:anywhere}input{accent-color:#c4dbea}footer{display:flex;gap:8px}.fill{background:#edf1f3;color:#151719} [hidden]{display:none!important}`;
@@ -3455,7 +3484,7 @@
         if (!entry?.autoResume || !entry.resume || entry.resumeUploaded || autoResumeBusy) return;
         const inputs = [...document.querySelectorAll('input[type="file"]')].filter((e) => !e.disabled && !e.files?.length);
         inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]')].filter((e) => /drop (?:your |a )?(?:resume|résumé|cv|files?)\b/i.test(e.textContent)));
-        if (!inputs.length) inputs.push(...[...document.querySelectorAll("span,p,div,button,label")].filter((e) => e.childElementCount === 0 && /^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(e.textContent.trim())));
+        if (!inputs.length) inputs.push(...[...document.querySelectorAll("span,p,div,button,label")].filter((e) => e.textContent.length < 250 && /(?:^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$|drag\s*(?:and|&)\s*drop (?:it|here|files?))/i.test(e.textContent.trim())));
         if (!inputs.length || inputs.every((input) => autoTried.has(input))) return;
         for (const input of inputs) autoTried.add(input);
         autoResumeBusy = true;
@@ -3528,7 +3557,7 @@
       }
       scan.onclick = async () => {
         const form = scanForm();
-        if (form.hasPasswordField || form.hasEmailSignIn || form.hasCodePrompt || form.needsEmailVerification || form.applicationFrames?.length || form.canAdvance) {
+        if (form.hasPasswordField || form.hasEmailSignIn || form.hasCodePrompt || form.needsEmailVerification || form.embeddedForms || !entry.resume || form.applicationFrames?.length || form.canAdvance) {
           await chrome.runtime.sendMessage({ type: "full-helper", scan: true });
           return;
         }
@@ -3594,6 +3623,9 @@
       entry = null;
       review = null;
     };
+    chrome.storage?.onChanged?.addListener((changes, area) => {
+      if (area === "local" && changes.helperDisplay && host) host.hidden = changes.helperDisplay.newValue === "top";
+    });
     chrome.runtime.onMessage.addListener((message, sender) => {
       if (sender.id === chrome.runtime.id && message?.type === "application-handoff") mount(message.entry);
     });

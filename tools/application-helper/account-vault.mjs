@@ -51,7 +51,7 @@ export async function scanCredential(storage,options,keyStore=deviceKey){
  }
  return accountCredential(storage,{...options,key,sitePassword:entry?'':generatedPassword(options.min,options.max,options.alphanumeric)});
 }
-export async function accountCredential(storage,{origin,employer,email,phrase,repeat,signup,sitePassword,key:device,scope='',alphanumeric=false}){
+export async function accountCredential(storage,{origin,employer,email,phrase,repeat,signup,sitePassword,key:device,scope='',alphanumeric=false,min=1,max=128}){
  const entry=(await storage.get(vaultKey))[vaultKey];
  if(!entry&&!signup)throw unknown('Create an account with the helper first.');
  if(!entry&&!device&&(phrase.length<12||phrase!==repeat))throw Error('Choose a vault passphrase of at least 12 characters and enter it twice.');
@@ -70,14 +70,17 @@ export async function accountCredential(storage,{origin,employer,email,phrase,re
  }
  const label=employer.trim().toLowerCase(),identity=email.trim().toLowerCase();
  if(!label||!identity)throw Error('Enter the employer name and your account email.');
- const saved=vault.accounts.some(a=>a.origin===origin&&a.email===identity&&(a.scope&&scope?a.scope===scope:a.label===label));
- if(alphanumeric&&(!/^[a-zA-Z0-9]{8,30}$/.test(vault.password)||!/[A-Z]/.test(vault.password)))throw Error('Your saved shared password does not meet SilkRoad’s letters-and-numbers rule. Enter a site-specific password manually.');
- if(saved)return vault.password;
+ const saved=vault.accounts.find(a=>a.origin===origin&&a.email===identity&&(a.scope&&scope?a.scope===scope:a.label===label));
+ const current=saved?.password||vault.password;
+ const compatible=current.length>=min&&current.length<=max&&(!alphanumeric||/^[a-zA-Z0-9]+$/.test(current));
+ if(saved&&(!signup||compatible))return current;
  if(!signup)throw unknown('No saved login matches this website, employer name and email.');
- vault.accounts.push({origin,label,email:identity,scope});
+ const account=saved||{origin,label,email:identity,scope};
+ if(!compatible)account.password=generatedPassword(min,max,alphanumeric);
+ if(!saved)vault.accounts.push(account);
  const iv=random(12),data=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,encoder.encode(JSON.stringify(vault)));
  await storage.set({[vaultKey]:{...(salt?{salt}:{deviceOnly:true}),iv:encode(iv),data:encode(data)}});
- return vault.password;
+ return account.password||vault.password;
 }
 
 export async function savedEmployerSites(storage,keyStore=deviceKey){

@@ -1,5 +1,5 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,openLogin=false,useFilledLogin=false,embedded=false,recruiterVisibility}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,openLogin=false,useFilledLogin=false,embedded=false,identity={},recruiterVisibility}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
@@ -26,7 +26,7 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   const alphanumeric=/only (?:contain|use) letters and numbers/i.test(rules)||first.id==='ohpassword'&&confirm.id==='ohconfirmpassword';
   const statedMin=Number(rules.match(/(?:at least|minimum of) (\d+) characters/i)?.[1]||0);
   const min=Math.max(statedMin,alphanumeric?8:1,...pair.map(el=>el.minLength||0));
-  const statedMax=Number(rules.match(/(?:not be longer than|maximum of|no more than) (\d+) characters/i)?.[1]||128);
+  const statedMax=Number(rules.match(/(?:not be longer than|maximum of|no more than) (\d+)\b/i)?.[1]||128);
   const max=Math.min(statedMax,alphanumeric?30:128,...pair.map(el=>el.maxLength>0?el.maxLength:128));
   if(inspectOnly)return {mixed:true,available:true,signup:true,min,max,alphanumeric};
   if(!password||password.length<min||password.length>max||alphanumeric&&(!/^[A-Za-z0-9]+$/.test(password)||!/[A-Z]/.test(password))||pair.some(el=>{const copy=el.cloneNode(false);copy.value=password;return copy.validity.patternMismatch;}))throw Error('The saved password does not match the password requirements on this form.');
@@ -64,8 +64,8 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   if(repeatEmails.length>1||primaryEmails.length!==1&&!(amazon&&afterEmail&&emails.length===0))continue;
   if(scope.action&&new URL(scope.action,url).origin!==location.origin)continue;
   const controls=[...scope.querySelectorAll('button,input[type=submit],[role=button]')].filter(el=>shown(el)&&(!el.form||el.form===scope));
-  const title=el=>(el.innerText||el.textContent||el.value||el.getAttribute('aria-label')||'').trim();
-  const heading=[...scope.querySelectorAll('legend,h1,h2,[role=heading]')].map(title).join(' ');
+  const title=el=>(el?.innerText||el?.textContent||el?.value||el?.getAttribute?.('aria-label')||'').trim();
+  const heading=[...scope.querySelectorAll('legend,h1,h2,[role=heading]')].map(title).join(' ')||title(document.querySelector('h1')||scope.querySelector('legend')||{});
   if(/(?:reset|forgot|recover|change)[-_ /]*(?:your[-_ /]*)?password/i.test(heading+' '+location.pathname))continue;
   function actions(pattern){
    const matches=controls.filter(el=>pattern.test(title(el)));
@@ -76,6 +76,9 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   }
   const create=actions(/^(?:create (?:an? |my |your )?(?:amazon jobs? )?account|register|sign up)$/i);
   const login=actions(/^(?:sign ?in|log ?in)$/i);
+  if(!create.length&&/\b(?:create|register) (?:an? |your )?(?:new )?account\b/i.test(heading)){
+   const next=actions(/^continue$/i);if(next.length===1)create.push(next[0]);
+  }
   if(amazon&&afterEmail&&!create.length&&!login.length){
    const next=controls.filter(el=>/^continue$/i.test(title(el)));
    if(next.length===1){
@@ -122,10 +125,12 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   if(links.length!==1)return null;
   links[0].click();return {opened:true};
  }
- const statedMaximum=Number((fields[0].form?.innerText||'').match(/(?:not be longer than|maximum of|no more than) (\d+) characters/i)?.[1]||128);
+ const statedMaximum=Number((fields[0].form?.innerText||'').match(/(?:not be longer than|maximum of|no more than) (\d+)\b/i)?.[1]||128);
  const max=Math.min(statedMaximum,...fields.map(el=>el.maxLength>=0?el.maxLength:Infinity));
  const min=Math.max(1,...fields.map(el=>el.minLength||0));
- if(!password)return automatic?{signup:registration,min,max:Number.isFinite(max)?max:128}:true;
+ const rules=fields[0].form?.innerText||'';
+ const alphanumeric=/only (?:contain|use) letters and numbers|letters and numbers only/i.test(rules);
+ if(!password)return automatic?{signup:registration,min,max:Number.isFinite(max)?max:128,alphanumeric}:true;
  if(registration&&(password.length>max||password.length<min||fields.some(el=>{
   const probe=el.cloneNode(false);probe.value=password;return probe.validity?.patternMismatch;
  })))throw Error('This site rejects the shared password format. Review its password requirements.');
@@ -141,6 +146,17 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
  if(!fields.every(el=>el.isConnected&&el.value===password)||emailField&&(!emailField.isConnected||emailField.value.trim().toLowerCase()!==email.toLowerCase()))throw Error('The form changed while filling. Review the account fields.');
  if(registration&&buttons.length===1){
   const scope=fields[0].form||buttons[0].closest('[role=dialog],main,[role=main]')||[...scopes][0];
+  const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z]+/g,' ').trim();
+  for(const el of scope.querySelectorAll('input,select')){
+   if(!visible(el))continue;
+   const name=normalize([...(el.labels||[])].map(l=>l.textContent).join(' ')||el.getAttribute('aria-label')||el.name);
+   if(el.tagName==='SELECT'&&/^(?:country|country region)(?: of residence)?$/.test(name)&&identity.country&&(!el.value||/select|choose/i.test(el.selectedOptions?.[0]?.textContent||''))){
+    const options=[...el.options].filter(o=>!o.disabled&&normalize(o.textContent).replace(/ of america$/,'')===normalize(identity.country).replace(/ of america$/,''));
+    if(options.length===1){el.value=options[0].value;el.dispatchEvent(new Event('change',{bubbles:true}));}
+   }else if(el.tagName==='INPUT'&&!el.value&&/^(?:legal )?(first|last) name$/.test(name)){
+    const value=name.includes('first')?identity.firstName:identity.lastName;if(value)fill(el,value);
+   }
+  }
   if(recruiterVisibility==='Only recruiters managing jobs I apply to'){
    const choices=[...scope.querySelectorAll('input[type=radio]')].filter(radio=>
     [...radio.labels||[]].some(label=>label.textContent.trim().toLowerCase()===recruiterVisibility.toLowerCase())||

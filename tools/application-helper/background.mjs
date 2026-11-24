@@ -154,11 +154,26 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     entry.origin=target.origin;await chrome.storage.local.set({profile:entry.profile});await chrome.storage.session.set({[key(tab.id)]:entry});await chrome.storage.session.remove(targetKey);await attach(tab.id,tab,target.autoJob!=null);if(target.autoJob)await chrome.tabs.remove(target.workerId).catch(()=>{});return {ok:true,started:true,connected:true};
    }
   }
+  if(message.type==='show-panel'&&extensionPage(sender)){
+   const tab=await chrome.tabs.get(message.tabId);
+   if(!employerURL(tab.url))return {ok:false};
+   let entry=await record(tab.id);
+   if(!entry){const {profile}=await chrome.storage.local.get('profile');if(!profile)return {ok:false};
+    const u=new URL(tab.url);entry={origin:u.origin,profile,job:{url:u.origin+u.pathname,title:tab.title||'Application',company:u.hostname,location:''},expiresAt:Date.now()+1800000};
+    await chrome.storage.session.set({[key(tab.id)]:entry});
+   }
+   await attach(tab.id,tab,true);return {ok:true};
+  }
+  if(message.type==='delegate-upload'&&extensionPage(sender)){
+   const entry=await record(message.tabId),tab=await chrome.tabs.get(message.tabId);
+   if(!entry?.resume||new URL(tab.url).origin!==entry.origin||!employerURL(message.frameUrl)||!message.documentId)return {ok:false};
+   await chrome.storage.session.set({[key(message.tabId)]:{...entry,uploadFrame:{documentId:message.documentId,url:message.frameUrl}}});return {ok:true};
+  }
   if(['claim-resume','open-resume-preview','full-helper'].includes(message?.type)){
    const id=extensionPage(sender)?Number(message.tabId):sender.tab?.id;
    const entry=await record(id);
-   if(!entry||(!extensionPage(sender)&&(sender.id!==chrome.runtime.id||!employerURL(sender.url)||new URL(sender.url).origin!==entry.origin)))return {ok:false};
-   if(message.type==='full-helper'){if(message.scan)await chrome.storage.session.set({panelScan:{id,time:Date.now()}});await chrome.action.openPopup();return {ok:true};}
+   if(!entry||(!extensionPage(sender)&&(sender.id!==chrome.runtime.id||!employerURL(sender.url)||(new URL(sender.url).origin!==entry.origin&&!(message.type==='claim-resume'&&sender.frameId>0&&sender.documentId===entry.uploadFrame?.documentId&&sender.url===entry.uploadFrame?.url&&new URL(sender.tab.url).origin===entry.origin)))))return {ok:false};
+   if(message.type==='full-helper'){await chrome.storage.session.set({panelScan:{id,time:Date.now(),scan:!!message.scan}});await chrome.action.openPopup();return {ok:true};}
    if(!entry.resume)return {ok:false};
    if(message.type==='open-resume-preview'){await chrome.tabs.create({url:chrome.runtime.getURL('preview.html')+'?tab='+id});return {ok:true};}
    if(entry.resume.sha256!==message.sha256||entry.resumeUploaded||uploadLocks.has(id))return {ok:false};
@@ -186,7 +201,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
    const jobs=await chrome.storage.session.get(null);
    const recent=Object.entries(jobs).find(([k,t])=>k.startsWith('resume-target:')&&t.autoJob&&t.original===tab.url&&t.tabId===tab.id&&t.expiresAt>Date.now());
    if(recent)return {ok:true,pending:!recent[1].failed};
-   const job=(await chrome.scripting.executeScript({target:{tabId:tab.id},func:readPosting}))[0]?.result;
+   const job=(await chrome.scripting.executeScript({target:{tabId:tab.id,...(message.documentId?{documentIds:[message.documentId]}:{})},func:readPosting}))[0]?.result;
    if(!job)return {ok:true,pending:false};
    const token=crypto.randomUUID(),worker=await chrome.tabs.create({url:'about:blank',active:false});
    await chrome.storage.session.set({['resume-target:'+token]:{origin:new URL(tab.url).origin,original:tab.url,tabId:tab.id,workerId:worker.id,autoJob:job,expiresAt:Date.now()+120000}});
@@ -225,7 +240,7 @@ async function attach(id,tab,activeScan=false){
  if(injecting.has(id))return;const entry=await record(id);if(!entry)return;
  if(!employerURL(tab.url)||new URL(tab.url).origin!==entry.origin){await chrome.action.setBadgeText({tabId:id,text:'↗'});return;}
  if(!activeScan&&!await chrome.permissions.contains({origins:[originPattern(tab.url)]}))return;
- injecting.add(id);try{const memory=(await readMemory()).filter(a=>a.scope==='*'||a.scope===entry.origin);const evidence=await portfolio(false);await chrome.scripting.executeScript({target:{tabId:id},files:['assistant.bundle.js']});await chrome.tabs.sendMessage(id,{type:'application-handoff',entry:{...entry,memory,portfolio:evidence}});await chrome.action.setBadgeText({tabId:id,text:'ON'});}catch{await chrome.action.setBadgeText({tabId:id,text:'!'}).catch(()=>{});}finally{injecting.delete(id);}
+ injecting.add(id);try{const memory=(await readMemory()).filter(a=>a.scope==='*'||a.scope===entry.origin);const evidence=await portfolio(false);await chrome.scripting.executeScript({target:{tabId:id},files:['assistant.bundle.js']});await chrome.tabs.sendMessage(id,{type:'application-handoff',entry:{...entry,memory,portfolio:evidence,displayMode:(await chrome.storage.local.get('helperDisplay')).helperDisplay||'both'}});await chrome.action.setBadgeText({tabId:id,text:'ON'});}catch{await chrome.action.setBadgeText({tabId:id,text:'!'}).catch(()=>{});}finally{injecting.delete(id);}
 }
 chrome.tabs.onUpdated.addListener((id,change,tab)=>{if(change.status==='complete')attach(id,tab).catch(()=>{});});
 chrome.tabs.onRemoved.addListener(id=>{chrome.storage.session.remove([key(id),'resume-receipt:'+id]).catch(()=>{});});

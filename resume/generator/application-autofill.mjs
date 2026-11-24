@@ -146,11 +146,11 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
 // Self-contained: the popup injects this same bridge for scan, remember and fill.
 export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail=''}={}){
  if(action==='scan-chat'&&!origins.includes(location.origin))return null;
- if(action==='scan-frame'){if(!origins.some(src=>{try{const u=new URL(src);return u.protocol==='https:'&&u.origin===location.origin&&(u.pathname===location.pathname||window.frameElement?.src===src);}catch{return false;}}))return null;action='scan';}
+ if(action==='scan-frame'){if(!origins.some(src=>{try{const u=new URL(src);return u.protocol==='https:'&&u.origin===location.origin&&(u.pathname===location.pathname||window.frameElement?.src===src||window.parent!==window&&document.referrer&&new URL(document.referrer).origin!==location.origin);}catch{return false;}}))return null;action='scan';}
  const text=e=>(e?.innerText||e?.textContent||'').trim();
  const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const visible=e=>!!e.getClientRects?.()?.length&&getComputedStyle(e).visibility!=='hidden';
- const comboSelector='[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
+ const comboSelector='[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.chosen-single,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
  const controls='[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,'+comboSelector+',[role="radio"],[role="checkbox"]';
  const activate=(e,option=false)=>{
   if(option)e.scrollIntoView?.({block:"nearest"});
@@ -212,7 +212,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
    }
   }let p=e.parentElement;for(let i=0;i<6&&p&&p!==document.body;i++,p=p.parentElement){if(p.querySelectorAll('input:not([type="checkbox"]),select,textarea').length)break;if(p.querySelectorAll('input[type="checkbox"]').length>1&&p.querySelector('p,legend,label:not([for]),[aria-labelledby],.question-label,.form-label,.control-label'))return p;}return null;};
  const radios=e=>{if(checkbox(e)&&/^(?:not completed|i am fluent in this language)$/.test(norm(ownLabel(e))))return [e];const g=group(e),selector=checkbox(e)?'input[type="checkbox"],[role="checkbox"]':'input[type="radio"],[role="radio"]';return [...(g||e.form||e.getRootNode?.()||document).querySelectorAll(selector)].filter(r=>g?group(r)===g&&(checkbox(e)||g.getAttribute('role')==='radiogroup'||!e.name||r.name===e.name):!!e.name&&r.name===e.name&&r.form===e.form);};
- const original=e=>e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
+ const original=e=>e.matches('.chosen-single')?e.closest('.chosen-container')?.previousElementSibling:e.matches('.selectize-input,.ts-control')?e.closest('.selectize-control,.ts-wrapper')?.previousElementSibling:null;
  const labelText=e=>{if(!e)return '';const copy=e.cloneNode(true);for(const control of copy.querySelectorAll(controls+',button,[role="listbox"],.selectize-control,.ui-select-match,.select2-container,.ts-wrapper'))control.remove();return text(copy);};
  const useful=s=>/^(select|please select|choose|open menu|clear|select an option|select one)[. …]*$/i.test((s||'').trim())?'':s;
  const ownLabel=e=>(useful(e.getAttribute('aria-label'))||useful(labelled(e))||[...(e.labels||[]),...([...document.querySelectorAll('label[for]')].filter(l=>e.id&&l.getAttribute('for')===e.id))].map(labelText).filter((v,i,a)=>a.indexOf(v)===i).join(' ')||labelText(e.closest('label'))||'').trim();
@@ -288,6 +288,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   if(!shadowEditors){shadowEditors=[];shadowReplies(document);}list.push(...shadowEditors);
   return list.filter(e=>!e.matches('select.select2-hidden-accessible[aria-hidden="true"]')).filter(e=>!e.parentElement?.closest(comboSelector)).filter(e=>!choice(e)||radios(e)[0]===e);};
  const selectedValue=e=>{
+  if(e.matches('.chosen-single'))return e.classList.contains('chosen-default')?'':text(e.querySelector('span'));
   if(e.matches('input[role=combobox],input[aria-autocomplete=list]')&&e.getAttribute('aria-invalid')==='true')return '';
   if(e.matches('[data-automation-id="searchBox"]')){
    const holder=e.closest('[data-automation-id^="formField"],[data-automation-id="multiSelectContainer"]')||e.parentElement;
@@ -622,7 +623,10 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
   const jobLocation=countries.size===1?[...countries][0]:'';
   const posting=postings.length===1?postings[0]:null;
   const jobEmployer=posting?.hiringOrganization?.name||'',jobIndustry=typeof posting?.industry==='string'?posting.industry:'';
-  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),hasCodePrompt:/enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)),hasUpload:!!document.querySelector('input[type=file],[ondrop],[data-dropzone]'),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);return u.origin===location.origin&&u.protocol==='https:'?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
+  const all=elements();return {url:location.href,stepLabel:text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]'))||text([...document.querySelectorAll('h1,h2')].find(visible)),hasCodePrompt:/enter (?:the |your )?(?:verification |security )?code/i.test(text(document.body)),hasUpload:!!document.querySelector('input[type=file],[ondrop],[data-dropzone]')||/\b(?:resume|résumé|cv)\b/i.test(text(document.body))&&/drag\s*(?:and|&)\s*drop\s+(?:it|here|files?)/i.test(text(document.body)),canAdvance:!!nextControl(),jobLocation,jobEmployer,jobIndustry,needsEmailVerification:!!document.querySelector('input[type=password]')&&/please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)),fields:all.map(snapshot).filter(f=>choice(all[f.index])?choiceVisible(all[f.index]):visible(all[f.index])).concat(listFields()),applicationFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{try{const u=new URL(frame.src,location.href);const hint=[frame.title,frame.name,frame.id,u.hostname,u.pathname].join(' '),rect=frame.getBoundingClientRect();
+    const jobHint=/career|recruit|open positions|job(?:s|introduction|application)?\b|applicant|candidate|apply/i.test(hint);
+    const utility=/captcha|analytics|advertis|doubleclick|youtube|vimeo|maps\.google|chatbot|newsletter|cookieconsent/i.test(hint);
+    return u.protocol==='https:'&&!utility&&(jobHint||rect.width>=300&&rect.height>=180||u.origin===location.origin)?[u.href]:[];}catch{return [];}}),chatFrames:[...document.querySelectorAll('iframe[src]')].filter(visible).flatMap(frame=>{
    try{const u=new URL(frame.src,location.href);return u.protocol==='https:'&&(/(^|\.)paradox\.ai$/.test(u.hostname)||/\b(chat|chatbot|olivia)\b/i.test([frame.title,frame.id,frame.name].join(' ')))?[u.origin]:[];}catch{return [];}
   }),hasEmailSignIn:[...document.querySelectorAll('h1,h2,h3,[role=heading]')].some(h=>visible(h)&&/^(?:sign in|log in)$/i.test(text(h))),hasPasswordField:!!document.querySelector('input[type=password i]'),embeddedForms:document.querySelectorAll('iframe').length};
  }
@@ -665,7 +669,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
     if(matching.length!==1){skipped++;continue;}matching[0].click();await new Promise(r=>setTimeout(r,60));
     if(selectedRadio(e)===matching[0])filled++;else skipped++;
    }else if(custom(e)){
-    const boxSelector='[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
+    const boxSelector='[class*="__menu-list"],[id^="react-select-"][id$="-listbox"],[role="listbox"],[role="menu"],[role="tree"],[role="grid"],[data-automation-id="activeListContainer"],[data-automation-id="promptOptionsContainer"],.iti__country-list,.country-list,[class$="-menu-list"],.ng-dropdown-panel,.select2-results__options,.chosen-results,.mat-select-panel,.dropdown-menu,.selectize-dropdown,.ui-select-choices,.ts-dropdown';
     const optionSelector='[class*="__option"],[id^="react-select-"][id*="-option-"],[role="option"],[role="gridcell"][aria-selected],[role="treeitem"],[data-automation-id="menuItem"],[data-automation-id="promptOption"],[data-automation-id="promptLeafNode"],.iti__country,.country[data-country-code],[class$="-option"],.ng-option,.select2-results__option,mat-option,[role="menuitem"],li,[tabindex]:not([tabindex="-1"]),[data-selectable],.ui-select-choices-row';
     const before=new Set([...document.querySelectorAll(boxSelector)].filter(visible));
     const opener=e.matches('.ui-select-container')?(e.querySelector('.ui-select-toggle,.ui-select-match')||e):e;e.focus();if(e.getAttribute('aria-expanded')!=='true')activate(opener);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
@@ -684,7 +688,7 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
      }finally{searchInput.form?.removeEventListener('submit',preventSubmit,true);}
     }
     const searchableAddress=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
-    const writeSearch=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,value);searchInput.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
+    const writeSearch=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,value);searchInput.dispatchEvent(new Event('input',{bubbles:true,composed:true}));if(e.matches('.chosen-single'))searchInput.dispatchEvent(new KeyboardEvent('keyup',{bubbles:true}));};
     let initialQuery='';
     for(let attempt=0;attempt<15;attempt++){
      if(location.href!==url||!e.isConnected)break;
@@ -704,9 +708,14 @@ export function formBridge({action='scan',url,fields=[],origins=[],expectedEmail
     let available=readOptions();
     // Address pickers may fetch rows only after a search. A search term is never itself a selection.
     const isAddressPicker=searchableAddress||/citizenship/.test(norm(f.label));
+    if(!searchInput&&boxes.length===1){
+     const searches=[...boxes[0].querySelectorAll('input:not([readonly]):not([type=hidden])')].filter(n=>visible(n)&&!disabled(n));
+     if(searches.length===1)searchInput=searches[0];
+    }
+    if(!searchInput&&e.matches('.chosen-single'))searchInput=e.closest('.chosen-container')?.querySelector('.chosen-search input');
     if(!searchInput&&boxes.length===1&&e.matches('.select2-selection'))searchInput=boxes[0].closest('.select2-dropdown')?.querySelector('input.select2-search__field');
     const input=searchInput;
-    const query=initialQuery||(input&&isAddressPicker&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'');
+    const query=initialQuery||(input&&(isAddressPicker||!f.sourceTree&&!academicPicker&&(input.getAttribute('aria-autocomplete')==='list'||input.type==='search'||e.matches('.chosen-single,.select2-selection')||/search|type to/i.test(input.placeholder||'')))&&!f.phoneCountry&&boxes.length===1&&!input.value&&!available.some(o=>aliases.includes(optionKey(o)))?String(f.value):'');
     const setQuery=writeSearch;
     if(query){
      if(!initialQuery)setQuery(query);

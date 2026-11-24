@@ -13,7 +13,7 @@ if(!globalThis.__ducApplicationHelper){
  const stop=()=>{clearTimeout(timer);clearTimeout(debounce);observer?.disconnect();host?.remove();entry=null;review=null;};
  function mount(next){
   stop();entry=next;remembering=false;autoTried=new WeakSet();autoResumeBusy=false;lastSignature='';if(entry.expiresAt<=Date.now()||location.origin!==entry.origin)return;
-  host=el('div');host.style.cssText='position:fixed;bottom:20px;right:20px;z-index:2147483647;';root=host.attachShadow({mode:'closed'});
+  host=el('div');host.style.cssText='position:fixed;bottom:20px;right:20px;z-index:2147483647;';host.hidden=next.displayMode==='top';root=host.attachShadow({mode:'closed'});
   const style=el('style');style.textContent=`:host{all:initial}*{box-sizing:border-box}.panel{width:350px;max-width:calc(100vw - 32px);color:#f1f0ed;background:#151719;border:1px solid #62686c;border-radius:16px;box-shadow:0 12px 50px #0006;font:14px/1.5 system-ui;padding:18px}header{display:flex;align-items:center;gap:8px}header strong{flex:1}button{font:inherit;cursor:pointer;border:1px solid #555d62;background:#252a2e;color:inherit;border-radius:7px;padding:8px 12px}button:hover{background:#363e44}button:focus-visible{outline:2px solid #a9d5ed}button:disabled{opacity:.5;cursor:default}small{display:block;color:#b8bfc4}p{margin:10px 0}h3{font-size:15px;margin:12px 0 0}.answers{max-height:240px;overflow:auto;margin:12px 0}.answer{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #383e42}.answer span{overflow-wrap:anywhere}input{accent-color:#c4dbea}footer{display:flex;gap:8px}.fill{background:#edf1f3;color:#151719} [hidden]{display:none!important}`;
   const panel=el('section');panel.className='panel';panel.setAttribute('aria-label','Application Helper');
   const header=el('header'),title=el('strong','Application Helper'),minimize=el('button','−'),close=el('button','×');minimize.setAttribute('aria-label','Collapse application helper');close.setAttribute('aria-label','End application helper');header.append(title,minimize,close);
@@ -34,7 +34,7 @@ if(!globalThis.__ducApplicationHelper){
    if(!entry?.autoResume||!entry.resume||entry.resumeUploaded||autoResumeBusy)return;
    const inputs=[...document.querySelectorAll('input[type="file"]')].filter(e=>!e.disabled&&!e.files?.length);
    inputs.push(...[...document.querySelectorAll('[ondrop],[data-dropzone],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]')].filter(e=>/drop (?:your |a )?(?:resume|résumé|cv|files?)\b/i.test(e.textContent)));
-   if(!inputs.length)inputs.push(...[...document.querySelectorAll('span,p,div,button,label')].filter(e=>e.childElementCount===0&&/^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(e.textContent.trim())));
+   if(!inputs.length)inputs.push(...[...document.querySelectorAll('span,p,div,button,label')].filter(e=>e.textContent.length<250&&/(?:^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$|drag\s*(?:and|&)\s*drop (?:it|here|files?))/i.test(e.textContent.trim())));
    if(!inputs.length||inputs.every(input=>autoTried.has(input)))return;for(const input of inputs)autoTried.add(input);autoResumeBusy=true;const activeEntry=entry;
    try{const result=await attachResume({url:location.href,resume:entry.resume});if(entry!==activeEntry)return;status.textContent=result.message+' Nothing was submitted.';if(result.attached){entry.resumeUploaded=true;list.querySelector('input[value="resume"]')?.closest('label').remove();fill.hidden=!list.querySelector('input');await chrome.runtime.sendMessage({type:'resume-attached',sha256:entry.resume.sha256});}}
    catch{if(entry===activeEntry)status.textContent='Automatic attachment could not finish. Use Fill selected to retry or attach the PDF manually.';}finally{autoResumeBusy=false;}
@@ -50,7 +50,7 @@ if(!globalThis.__ducApplicationHelper){
    status.textContent=review.fields.length?`${review.fields.length} suggested answers`:'Open the employer’s application form or sign in. Supported empty fields will appear here.';
    if(found.embeddedForms)status.textContent+=' Embedded forms may need opening directly and scanning with the extension button.';
   }
-  scan.onclick=async()=>{const form=scanForm();if(form.hasPasswordField||form.hasEmailSignIn||form.hasCodePrompt||form.needsEmailVerification||form.applicationFrames?.length||form.canAdvance){await chrome.runtime.sendMessage({type:'full-helper',scan:true});return;}if(entry?.profile.values.school)await formBridge({action:'prepare-education'});scanNow();};fill.onclick=async()=>{
+  scan.onclick=async()=>{const form=scanForm();if(form.hasPasswordField||form.hasEmailSignIn||form.hasCodePrompt||form.needsEmailVerification||form.embeddedForms||!entry.resume||form.applicationFrames?.length||form.canAdvance){await chrome.runtime.sendMessage({type:'full-helper',scan:true});return;}if(entry?.profile.values.school)await formBridge({action:'prepare-education'});scanNow();};fill.onclick=async()=>{
    if(filling)return;if(!review||Date.now()-review.createdAt>120000){scanNow();status.textContent='Suggestions refreshed. Review them again before filling.';return;}
    const checked=[...list.querySelectorAll('input')].filter(c=>c.checked),fields=checked.filter(c=>c.value!=='resume').map(c=>review.fields[Number(c.value)]),withResume=checked.some(c=>c.value==='resume');
    if(!fields.length&&!withResume){status.textContent='Select an answer or the tailored PDF.';return;}
@@ -62,5 +62,6 @@ if(!globalThis.__ducApplicationHelper){
   scanNow();observer=new MutationObserver(()=>{clearTimeout(debounce);debounce=setTimeout(()=>scanNow(true),700);});observer.observe(document.body||document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','style','aria-hidden']});
   timer=setTimeout(()=>{stop();chrome.runtime.sendMessage({type:'stop-handoff'}).catch(()=>{});},Math.max(0,entry.expiresAt-Date.now()));
  }
+ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&changes.helperDisplay&&host)host.hidden=changes.helperDisplay.newValue==='top';});
  chrome.runtime.onMessage.addListener((message,sender)=>{if(sender.id===chrome.runtime.id&&message?.type==='application-handoff')mount(message.entry);});
 }

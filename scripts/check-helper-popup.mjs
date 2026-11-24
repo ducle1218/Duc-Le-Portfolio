@@ -29,10 +29,11 @@ addPortfolioEvidence($('suggestions'),{portfolioDerived:true,sources:[{title:'<i
 assert.equal($('suggestions').querySelector('script'),null);assert.equal($('suggestions').querySelector('img'),null);
 console.log('PASS: empty-bank portfolio inference reaches popup, citations are escaped, suggestions start selected and only explicitly selected suggestions fill.');
 const parentUrl='https://employer.example/apply',childUrl=parentUrl+'?embedded=1';
+chrome.webNavigation={getAllFrames:async()=>[{frameId:1,parentFrameId:0,documentId:'application-doc',url:childUrl}]};
 chrome.scripting.executeScript=async({args,target})=>{
  const action=args[0].action;
- if(action==='scan-frame')return [{frameId:1,documentId:'application-doc',result:{url:childUrl,fields:[{index:0,type:'email',label:'Email'},{index:1,type:'select-one',required:true,label:'Privacy notice',options:[]}]}}];
- if(action==='scan')return [{result:{url:parentUrl,fields:[{type:'combobox',navigation:true,label:'Toggle menu'}],applicationFrames:[childUrl]}}];
+ if(action==='scan'&&target.documentIds?.[0]==='application-doc')return [{frameId:1,documentId:'application-doc',result:{url:childUrl,fields:[{index:0,type:'email',label:'Email'},{index:1,type:'select-one',required:true,label:'Privacy notice',options:[]}]}}];
+ if(action==='scan')return [{frameId:0,result:{url:parentUrl,fields:[{type:'combobox',navigation:true,label:'Toggle menu'}],applicationFrames:[childUrl]}}];
  return [{result:false}];
 };
 await $('scan').onclick();
@@ -40,14 +41,15 @@ assert.match($('status').textContent,/Privacy notice/);
 assert.match($('suggestions').textContent,/Email/i);
 console.log('PASS: navigation controls do not mask the embedded application and unresolved required fields are reported.');
 let nextClicks=0;
+chrome.webNavigation.getAllFrames=async()=>[{frameId:2,parentFrameId:0,documentId:'completed-step',url:childUrl}];
 chrome.scripting.executeScript=async({args,target})=>{
  const action=args[0].action;
  if(action==='advance'){
   assert.deepEqual(target.documentIds,['completed-step']);assert.equal(args[0].expectedEmail,'sample@example.com');
   nextClicks++;return [{result:true}];
  }
- if(action==='scan-frame')return [{frameId:2,documentId:'completed-step',result:{url:childUrl,canAdvance:true,fields:[{type:'email',label:'Email',filled:true}]}}];
- if(action==='scan')return [{result:{url:parentUrl,applicationFrames:nextClicks?[]:[childUrl],fields:nextClicks?[{type:'text',label:'Unknown follow-up'}]:[]}}];
+ if(action==='scan'&&target.documentIds?.[0]==='completed-step')return [{frameId:2,documentId:'completed-step',result:{url:childUrl,canAdvance:true,fields:[{type:'email',label:'Email',filled:true}]}}];
+ if(action==='scan')return [{frameId:0,result:{url:parentUrl,applicationFrames:nextClicks?[]:[childUrl],fields:nextClicks?[{type:'text',label:'Unknown follow-up'}]:[]}}];
  return [{result:false}];
 };
 await $('scan').onclick();assert.equal(nextClicks,1);
@@ -93,6 +95,10 @@ assert.equal(shared.length,16);assert.equal(rememberedKey.extractable,false);
 assert.match(shared,/[A-Z]/);assert.match(shared,/[a-z]/);assert.match(shared,/\d/);assert.match(shared,/[^A-Za-z0-9]/);
 assert(!JSON.stringify(local.get('employer-vault-v1')).includes(shared));
 assert.equal(await scanCredential(chrome.storage.local,other,keys),shared);
+const constrained={...other,origin:'https://short.example.com',employer:'Short',min:8,max:12,signup:true};
+const shorter=await scanCredential(chrome.storage.local,constrained,keys);
+assert.equal(shorter.length,12);
+assert.equal(await scanCredential(chrome.storage.local,{...constrained,signup:false},keys),shorter);
 assert.equal(await scanCredential(chrome.storage.local,{...credentials,signup:false},keys),shared);
 await assert.rejects(scanCredential(chrome.storage.local,{...credentials,signup:false,email:'different@example.com'},keys),/No saved login/);
 
@@ -113,6 +119,6 @@ assert.equal(registrations,3);
 console.log('PASS: automatic account recognition, generated shared password, remembered key, repeat sign-in and existing vault migration.');
 const {savedEmployerSites}=await import('../tools/application-helper/account-vault.mjs');
 const sites=await savedEmployerSites(chrome.storage.local,keys);
-assert.equal(sites.length,2);
+assert.equal(sites.length,3);assert(!JSON.stringify(sites).includes(shorter));
 assert(sites.every(row=>Object.keys(row).sort().join(',')==='email,origin,scope'));
 assert(!JSON.stringify(sites).includes(shared));

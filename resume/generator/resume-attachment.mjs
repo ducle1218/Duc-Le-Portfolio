@@ -37,9 +37,16 @@ export async function attachResume({url,resume}){
  // Prefer the file input. Some uploaders expose only a drop target and create the file input on demand.
  const dropSelector='[ondrop],[data-dropzone],[data-automation-id*="drop" i],[data-bind*="drop:"],[class*="dropzone" i],[class*="drop-zone" i],[role="application"],[role="presentation"],[class*="droparea" i],[class*="drop-area" i]';
  const resumeSection=e=>{for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role=heading]')];if(headings.length)return headings.length===1&&/^(?:resume|résumé|cv)(?:\s*\/\s*cv)?$/i.test(text(headings[0]))?p:null;}return null;};
- const isResumeZone=e=>/\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e))||(/\bdrop (?:a |your )?files?\b/i.test(text(e))&&!!(resumeSection(e)||sharedResumeSection(e)));
+ const resumeContext=e=>{
+  for(let node=e;node&&node!==document.body;node=node.parentElement){
+   const words=text(node);if(words.length>1100||/cover letter|transcript|passport|photo|certificate/i.test(words))break;
+   if(/upload (?:your |a )?(?:resume|résumé|cv)\b/i.test(words))return true;
+  }
+  return false;
+ };
+ const isResumeZone=e=>/\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e))||(/\bdrop (?:a |your )?files?\b/i.test(text(e))&&!!(resumeSection(e)||sharedResumeSection(e)||resumeContext(e)))||(/drag\s*(?:and|&)\s*drop (?:it|here|files?)/i.test(text(e))&&resumeContext(e));
  const eligibleZone=e=>isResumeZone(e)&&!/cover letter|transcript|passport|photo|certificate/i.test(text(e))&&e.getClientRects().length;
- const dropLabels=[...document.querySelectorAll('span,p,div,button,label')].filter(e=>e.childElementCount===0&&/^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$/i.test(text(e)));
+ const dropLabels=[...document.querySelectorAll('span,p,div,button,label')].filter(e=>text(e).length<250&&/(?:^drop (?:your |a )?(?:files?|resume|résumé|cv)(?: here)?$|drag\s*(?:and|&)\s*drop (?:it|here|files?))/i.test(text(e)));
  const zones=candidates.length?[]:[...new Set([...document.querySelectorAll(dropSelector),...dropLabels])].filter(eligibleZone);
  const containers=zones.filter(z=>!zones.some(other=>other!==z&&z.contains(other)));
  const zone=containers.length===1?containers[0]:null;

@@ -67,8 +67,15 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   const title=el=>(el.innerText||el.textContent||el.value||el.getAttribute('aria-label')||'').trim();
   const heading=[...scope.querySelectorAll('legend,h1,h2,[role=heading]')].map(title).join(' ');
   if(/(?:reset|forgot|recover|change)[-_ /]*(?:your[-_ /]*)?password/i.test(heading+' '+location.pathname))continue;
-  const create=controls.filter(el=>/^(?:create (?:an? |my |your )?(?:amazon jobs? )?account|register|sign up)$/i.test(title(el)));
-  const login=controls.filter(el=>/^(?:sign ?in|log ?in)$/i.test(title(el)));
+  function actions(pattern){
+   const matches=controls.filter(el=>pattern.test(title(el)));
+   // Some forms expose both a styled button wrapper and its native submitter.
+   const submitters=matches.filter(el=>el.form===scope&&el.type==='submit');
+   if(submitters.length===1&&matches.every(el=>el===submitters[0]||!el.matches('button,input')))return submitters;
+   return matches.filter(el=>!matches.some(child=>child!==el&&el.contains(child)));
+  }
+  const create=actions(/^(?:create (?:an? |my |your )?(?:amazon jobs? )?account|register|sign up)$/i);
+  const login=actions(/^(?:sign ?in|log ?in)$/i);
   if(amazon&&afterEmail&&!create.length&&!login.length){
    const next=controls.filter(el=>/^continue$/i.test(title(el)));
    if(next.length===1){

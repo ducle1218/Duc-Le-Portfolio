@@ -15,7 +15,7 @@ console.log('PASS: compact popup states, manifest rejection with correct-file gu
 // Exercise the popup with no saved Q&A and real public project evidence.
 const {preparePortfolio}=await import('../resume/generator/portfolio-answers.mjs');
 const knowledge=preparePortfolio(JSON.parse(await readFile(new URL('../data/portfolio.json',import.meta.url))),JSON.parse(await readFile(new URL('../data/resume-match-profile.json',import.meta.url))));
-local.set('profile',{confirmed:true,values:{firstName:'Sample',lastName:'Applicant'},answers:[]});
+local.set('profile',{confirmed:true,values:{firstName:'Sample',lastName:'Applicant',email:'sample@example.com'},answers:[]});
 chrome.runtime.sendMessage=async message=>message.type==='portfolio-read'?{ok:true,portfolio:{state:'ready',knowledge,fetchedAt:Date.now()}}:message.type==='get-handoff'?{ok:true,entry:null}:{ok:true,items:[]};
 let filled=[];
 chrome.scripting={executeScript:async ({args})=>args[0].action==='scan'?[{result:{url:'https://employer.example/apply',fields:[{id:'cad',type:'text',label:'Do you have experience with SolidWorks?'},{id:'project',type:'textarea',label:'Describe a robotics project you worked on.'}]}}]:(filled=args[0].fields,[{result:{filled:filled.length,skipped:0}}])};
@@ -28,6 +28,17 @@ const {addPortfolioEvidence}=await import('../tools/application-helper/portfolio
 addPortfolioEvidence($('suggestions'),{portfolioDerived:true,sources:[{title:'<img src=x>',quote:'<script>bad()</script>',url:'https://ducle1218.github.io/Duc-Le-Portfolio/?project=box-12'}]});
 assert.equal($('suggestions').querySelector('script'),null);assert.equal($('suggestions').querySelector('img'),null);
 console.log('PASS: empty-bank portfolio inference reaches popup, citations are escaped, suggestions start selected and only explicitly selected suggestions fill.');
+const parentUrl='https://employer.example/apply',childUrl=parentUrl+'?embedded=1';
+chrome.scripting.executeScript=async({args,target})=>{
+ const action=args[0].action;
+ if(action==='scan-frame')return [{frameId:1,documentId:'application-doc',result:{url:childUrl,fields:[{index:0,type:'email',label:'Email'},{index:1,type:'select-one',required:true,label:'Privacy notice',options:[]}]}}];
+ if(action==='scan')return [{result:{url:parentUrl,fields:[{type:'combobox',navigation:true,label:'Toggle menu'}],applicationFrames:[childUrl]}}];
+ return [{result:false}];
+};
+await $('scan').onclick();
+assert.match($('status').textContent,/Privacy notice/);
+assert.match($('suggestions').textContent,/Email/i);
+console.log('PASS: navigation controls do not mask the embedded application and unresolved required fields are reported.');
 const {accountCredential}=await import('../tools/application-helper/account-vault.mjs');
 const origin='https://careers.example',email='candidate@example.com',phrase='sample vault passphrase',sitePassword='Fixture-only-42!';
 const credentials={origin,email,employer:'First employer',phrase,repeat:phrase,sitePassword,signup:true};
@@ -78,6 +89,8 @@ assert.equal(employerAccountForm(auto).signup,false);
 assert.match(employerAccountForm({...auto,signup:false,password:shared}),/Sign-in requested/);
 assert.equal(registrations,2);
 button.textContent='Create Account';form.append(inputs[2]);inputs[2].value='';
+const wrapper=document.createElement('div');wrapper.setAttribute('role','button');wrapper.getClientRects=()=>[{}];
+button.replaceWith(wrapper);wrapper.append(button);
 assert.equal(employerAccountForm(auto).signup,true);
 assert.match(employerAccountForm({...auto,signup:true,password:shared}),/Registration requested/);
 assert.equal(inputs[2].value,shared);assert.equal(registrations,3);

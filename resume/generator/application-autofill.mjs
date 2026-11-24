@@ -42,6 +42,17 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  const rule=answerRule(field,profile,memory,origin,context);if(rule?.blocked)return null;
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
  if((!label&&!rule)||(!rule&&!common&&!background&&/password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)))return null;
+ if(field.digitsPhone&&!field.disabled){
+  const phone=String(profile.values?.phone||'');
+  if(/^[+()\d .-]+$/.test(phone)){
+   const digits=phone.replace(/\D/g,'');
+   if(!field.filled||field.phoneBefore!==digits&&field.phoneBefore?.replace(/\D/g,'')===digits)return {value:digits,display:digits,reason:'Phone format required by this form',sourceQuestion:'Profile phone'};
+  }
+ }
+ if(rule?.sourceQuestion==='Recruiter profile visibility'&&field.currentRecruiterScope&&field.type==='radio-group'&&!field.disabled){
+  const target=field.options.filter(o=>!o.disabled&&normalize(o.label)===normalize(rule.value));
+  if(target.length===1)return {...rule,value:target[0].value,display:target[0].label};
+ }
  if(field.emailSave&&field.emailValue&&field.emailValue.toLowerCase()===profile.values?.email?.toLowerCase()&&!field.disabled)return {value:profile.values.email,display:profile.values.email,reason:'Save the matching email in this field'};
  if(!['text','email','tel','url','textarea','select-one','combobox','radio-group','checkbox-group','number','date','month'].includes(field.type)||(field.filled&&!(field.languageRow==='english'&&field.currentLevel==='basic'&&rule?.value==='Fluent'))||field.disabled)return null;
  const patterns={firstName:/^(legal )?(first|given) name$/,lastName:/^(legal )?(last name|family name|surname)$/,fullName:/^(legal |full |legal full )?name$/,email:/^(personal |primary |contact )?e ?mail( address)?$/,phone:/^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/,city:/^(current |home )?city$/,state:/^(current |home )?(state|province|state province)$/,postalCode:/^(zip|postal|zip postal)( code)?$/,country:/^(current |home )?country( of residence)?$/,school:/^(current )?(university|school|college|school university|school or university|university college)( name)?$/,major:/^(major|field of study|academic major)$/,graduationYear:/^(expected |anticipated )graduation year$/,portfolio:/^(portfolio|personal website|portfolio website)( url| link)?$/,linkedin:/^linkedin( profile| account)?( url| link)?$/,github:/^github( profile)?( url| link)?$/};
@@ -292,6 +303,14 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
  };
  const context=e=>{
   const wording=norm(label(e));
+  if(radio(e)){
+   const selected=selectedRadio(e);
+   if(selected&&/^any company recruiter (?:worldwide|in my country region of residence)$/.test(norm(optionLabel(selected))))return {currentRecruiterScope:optionLabel(selected)};
+  }
+  if(/^(?:primary |mobile |cell |contact )?(?:phone|telephone)(?: number)?$/.test(wording)&&e.matches('input')){
+   const help=(e.getAttribute('aria-describedby')||'').split(/\s+/).map(id=>text(document.getElementById(id))).join(' ')+' '+text(e.parentElement);
+   if(/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help)||e.validity?.patternMismatch)return {digitsPhone:true,phoneBefore:e.value};
+  }
   if(/^(reading|speaking|writing|understanding|listening)$/.test(wording)){
    for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
     const langs=[...p.querySelectorAll(controls)].filter(c=>/^(language|language name)$/.test(norm(label(c)))&&visible(c));
@@ -304,7 +323,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    if(headings.some(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h))))&&headings.every(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h)))))return {employmentEntry:true};
    break;
   }
-  if(/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)){
+  if(/(?:confirm|verify|repeat|re ?type|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)){
    const scope=e.form||e.closest('[role="dialog"]')||document;
    const originals=[...scope.querySelectorAll('input')].filter(c=>c!==e&&visible(c)&&/^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
    return {primaryEmail:originals.length===1?originals[0].value||'':originals.length>1?'ambiguous':''};
@@ -384,7 +403,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   if(headings.length!==1)return null;
   for(let p=headings[0].parentElement;p&&p!==document.body;p=p.parentElement){
    if(p.querySelector(name==='skills'?'input:not([type=hidden])':'button,input:not([type=hidden]),select,[role="combobox"]')){
-    const other=[...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some(h=>h!==headings[0]&&!/^languages? \d+$/i.test(text(h)));
+    const other=[...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some(h=>h!==headings[0]&&!new RegExp('^'+name+'s? \\d+$','i').test(text(h))&&!/^languages? \d+$/i.test(text(h)));
     return other?null:p;
    }
   }
@@ -534,7 +553,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     const save=emailSave(e);if(save){save.click();await pause(150);if(!e.isConnected||!emailSave(e))filled++;else skipped++;}else skipped++;
     continue;
    }
-   if(location.href!==url||!e||!e.isConnected||(!empty(e)&&!(f.languageRow==='english'&&f.currentLevel==='basic'&&context(e).languageRow==='english'&&norm(valueText(e))==='basic'&&f.display==='Fluent'))||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
+   if(location.href!==url||!e||!e.isConnected||(!empty(e)&&!(f.currentRecruiterScope&&context(e).currentRecruiterScope===f.currentRecruiterScope&&norm(f.display)==='only recruiters managing jobs i apply to')&&!(f.digitsPhone&&context(e).digitsPhone&&e.value===f.phoneBefore&&e.value.replace(/\D/g,'')===f.value)&&!(f.languageRow==='english'&&f.currentLevel==='basic'&&context(e).languageRow==='english'&&norm(valueText(e))==='basic'&&f.display==='Fluent'))||disabled(e)||!(choice(e)?choiceVisible(e):visible(e))||label(e)!==f.label||type(e)!==f.type||(e.name||'')!==f.name||(e.id||'')!==f.id){skipped++;continue;}
    const currentContext=context(e);if(('primaryEmail' in f&&currentContext.primaryEmail&&String(currentContext.primaryEmail).trim().toLowerCase()!==String(f.value).trim().toLowerCase())||(f.degreePair&&(!currentContext.degreePair||f.rowDegree&&f.rowDegree!==currentContext.rowDegree))||(f.includesCitizenCategory&&!currentContext.includesCitizenCategory)||(f.parentIncludesCitizenCategory&&!currentContext.parentIncludesCitizenCategory)||(f.parentQuestion&&currentContext.parentQuestion!==f.parentQuestion)||(f.parentAnswer&&currentContext.parentAnswer!==f.parentAnswer)||(f.educationSchool&&currentContext.educationSchool!==f.educationSchool)){skipped++;continue;}
    if(checkbox(e)){
     const choices=radios(e),labels=f.selectedLabels||[],matching=choices.filter(r=>!disabled(r)&&choiceVisible(r)&&labels.some(l=>norm(l)===norm(optionLabel(r))));
@@ -552,6 +571,18 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
     const opener=e.matches('.ui-select-container')?(e.querySelector('.ui-select-toggle,.ui-select-match')||e):e;e.focus();if(e.getAttribute('aria-expanded')!=='true')activate(opener);if(e.getAttribute('aria-expanded')!=='true')e.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',code:'ArrowDown',bubbles:true}));
     let boxes=[];
     let searchInput=e.matches('input:not([readonly])')?e:e.querySelector('input:not([readonly]):not([type="hidden"])');
+    const academicPicker=/^(?:school or university|school|university|field of study|major)$/.test(norm(f.label));
+    if(academicPicker&&searchInput){
+     const target=String(f.value);
+     const term=/school|university/.test(norm(f.label))?target.split(/[–—]|\s+-\s+/)[0].trim():target;
+     const preventSubmit=event=>event.preventDefault();
+     searchInput.form?.addEventListener('submit',preventSubmit,true);
+     try{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,term);
+      searchInput.dispatchEvent(new Event('input',{bubbles:true}));
+      for(const kind of ['keydown','keyup'])searchInput.dispatchEvent(new KeyboardEvent(kind,{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true,cancelable:true}));
+     }finally{searchInput.form?.removeEventListener('submit',preventSubmit,true);}
+    }
     const searchableAddress=/^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
     const writeSearch=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(searchInput,value);searchInput.dispatchEvent(new Event('input',{bubbles:true,composed:true}));};
     let initialQuery='';
@@ -563,6 +594,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
      if(!boxes.length&&e.parentElement?.querySelectorAll(comboSelector).length===1)boxes=[...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
      if(!boxes.length)boxes=[...document.querySelectorAll(boxSelector)].filter(n=>visible(n)&&!before.has(n));
      boxes=boxes.filter((b,i,all)=>!all.some(other=>other!==b&&other.contains(b)));
+     if(academicPicker&&boxes.length===1&&!Array.from(boxes[0].querySelectorAll(optionSelector)).some(o=>norm(text(o))===norm(f.value))){await new Promise(r=>setTimeout(r,80));continue;}
      if(boxes.length===1&&[...boxes[0].querySelectorAll(optionSelector)].some(o=>!o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]')&&!/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o))))break;
      if(attempt===2&&searchInput&&searchableAddress&&!searchInput.value&&!f.phoneCountry){initialQuery=String(f.value);writeSearch(initialQuery);}
      await new Promise(r=>setTimeout(r,80));

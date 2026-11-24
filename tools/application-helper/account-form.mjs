@@ -1,21 +1,24 @@
 // Executed in the active tab only after an account action in the popup.
-export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,openLogin=false,useFilledLogin=false,embedded=false}){
+export function employerAccountForm({url,signup,email,password,inspectOnly=false,automatic=false,afterEmail=false,openRegistration=false,openLogin=false,useFilledLogin=false,embedded=false,recruiterVisibility}){
  try{return run();}catch(error){return {error:error.message};}
  function run(){
  if(location.href!==url||location.protocol!=='https:')throw Error('The page changed. Reopen the helper on the employer website.');
  const visible=el=>!el.disabled&&!el.readOnly&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';
  if(embedded){
   const caption=el=>[el.name,el.id,el.getAttribute('aria-label'),...[...(el.labels||[])].map(l=>l.textContent)].join(' ').toLowerCase();
-  const forms=[...document.forms].filter(form=>form.querySelectorAll('input[type=password]').length===2&&[...form.querySelectorAll('input,select,textarea')].some(el=>visible(el)&&/\b(?:address|city|postal|state|degree|school|resume|contact method)\b/i.test(caption(el))));
+  const forms=[...document.forms].filter(form=>form.querySelectorAll('input[type=password]').length===2&&[...form.querySelectorAll('input,select,textarea')].some(el=>visible(el)&&!(/e.?mail/i.test(caption(el)))&&/\b(?:address|city|postal|state|degree|school|resume|contact method)\b/i.test(caption(el))));
   if(forms.length!==1)return null;
   const form=forms[0],pair=[...form.querySelectorAll('input[type=password]')];
-  const confirmations=pair.filter(el=>/confirm|repeat|verify|re.?enter/i.test(caption(el)));
+  const confirmations=pair.filter(el=>/confirm|repeat|verify|re.?type|re.?enter/i.test(caption(el)));
   if(confirmations.length!==1||pair.some(el=>el.autocomplete==='current-password'||/\b(?:current|old|previous) password\b/.test(caption(el))))return null;
   const confirm=confirmations[0],first=pair.find(el=>el!==confirm);
   if(!form.contains(first)||confirm.form!==form||first.form!==form||new URL(form.action||url,url).origin!==location.origin||[...form.querySelectorAll('[formaction]')].some(b=>new URL(b.formAction,url).origin!==location.origin))return null;
   const emails=[...form.querySelectorAll('input')].filter(el=>el.form===form&&visible(el)&&(el.type==='email'||el.type==='text'&&/e.?mail/i.test(caption(el))));
-  if(emails.length!==1||!email)return null;
-  const identity=emails[0];
+  const repeats=emails.filter(el=>/re.?type|confirm|repeat|verify|re.?enter/i.test(caption(el)));
+  const primary=emails.filter(el=>!repeats.includes(el));
+  if(primary.length!==1||repeats.length>1||!email)return null;
+  const identity=primary[0];
+  if(repeats.some(el=>el.value&&el.value.trim().toLowerCase()!==email.toLowerCase()))return {mixed:true,available:false};
   if(inspectOnly&&(first.value||confirm.value||identity.value&&identity.value.trim().toLowerCase()!==email.toLowerCase()))return {mixed:true,available:false};
   if(identity.value&&identity.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The application uses a different email from your employer account.');
   if(first.value||confirm.value)return null;
@@ -23,10 +26,11 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   const alphanumeric=/only (?:contain|use) letters and numbers/i.test(rules)||first.id==='ohpassword'&&confirm.id==='ohconfirmpassword';
   const statedMin=Number(rules.match(/(?:at least|minimum of) (\d+) characters/i)?.[1]||0);
   const min=Math.max(statedMin,alphanumeric?8:1,...pair.map(el=>el.minLength||0));
-  const max=Math.min(alphanumeric?30:128,...pair.map(el=>el.maxLength>0?el.maxLength:128));
+  const statedMax=Number(rules.match(/(?:not be longer than|maximum of|no more than) (\d+) characters/i)?.[1]||128);
+  const max=Math.min(statedMax,alphanumeric?30:128,...pair.map(el=>el.maxLength>0?el.maxLength:128));
   if(inspectOnly)return {mixed:true,available:true,signup:true,min,max,alphanumeric};
   if(!password||password.length<min||password.length>max||alphanumeric&&(!/^[A-Za-z0-9]+$/.test(password)||!/[A-Z]/.test(password))||pair.some(el=>{const copy=el.cloneNode(false);copy.value=password;return copy.validity.patternMismatch;}))throw Error('The saved password does not match the password requirements on this form.');
-  fill(identity,email);identity.focus();identity.blur();first.focus();
+  fill(identity,email);for(const repeat of repeats)fill(repeat,email);identity.focus();identity.blur();first.focus();
   if(!visible(first)||!visible(confirm))throw Error('The employer has not enabled both password fields yet.');
   for(const el of [first,confirm])fill(el,password);
   return first.value===password&&confirm.value===password?'Employer email and password filled.':null;
@@ -55,7 +59,9 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   if(fields.length>2)continue;
   const inputs=[...scope.querySelectorAll('input')].filter(el=>shown(el)&&(!el.form||el.form===scope));
   const emails=inputs.filter(el=>el.type==='email'||(['text',''].includes(el.type)&&/email|user.?name/i.test([el.name,el.id,el.autocomplete,el.getAttribute('aria-label'),...[...(el.labels||[])].map(l=>l.textContent)].join(' '))));
-  if(emails.length!==1&&!(amazon&&afterEmail&&emails.length===0))continue;
+  const repeatEmails=emails.filter(el=>/re.?type|confirm|repeat|verify|re.?enter/i.test([el.name,el.id,el.getAttribute('aria-label'),...[...(el.labels||[])].map(l=>l.textContent)].join(' ')));
+  const primaryEmails=emails.filter(el=>!repeatEmails.includes(el));
+  if(repeatEmails.length>1||primaryEmails.length!==1&&!(amazon&&afterEmail&&emails.length===0))continue;
   if(scope.action&&new URL(scope.action,url).origin!==location.origin)continue;
   const controls=[...scope.querySelectorAll('button,input[type=submit],[role=button]')].filter(el=>shown(el)&&(!el.form||el.form===scope));
   const title=el=>(el.innerText||el.textContent||el.value||el.getAttribute('aria-label')||'').trim();
@@ -82,11 +88,12 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   if(!automatic&&registration&&fields.length!==2)continue;
   const buttons=registration?create:login;
   if(buttons.some(el=>el.hasAttribute('formaction')&&new URL(el.getAttribute('formaction'),url).origin!==location.origin))continue;
-  candidates.push({fields,emailField:emails[0],buttons,registration});
+  if(repeatEmails.length&&!registration)continue;
+  candidates.push({fields,emailField:primaryEmails[0],repeatEmail:repeatEmails[0],buttons,registration});
  }
  if(automatic&&candidates.length!==1)return null;
  if(candidates.length!==1)throw Error(signup?'Open a registration form with an email, password and confirmation field.':'Open a sign-in form with an email and password field.');
- const {fields,emailField,buttons,registration}=candidates[0];
+ const {fields,emailField,repeatEmail,buttons,registration}=candidates[0];
  if(emailField&&(emailField.readOnly||emailField.disabled)&&!emailField.value.trim())throw Error('The employer must populate the account email before scanning.');
  if(emailField?.value.trim()&&emailField.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The form contains a different email. Check the account before continuing.');
  if(automatic&&!registration&&emailField?.value.trim().toLowerCase()===email.toLowerCase()&&fields[0].value&&buttons.length===1){
@@ -96,6 +103,7 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   }
  }
  if(useFilledLogin)return null;
+ if(repeatEmail?.value&&repeatEmail.value.trim().toLowerCase()!==email.toLowerCase())throw Error('The confirmation email differs from the account email.');
  if(openRegistration||openLogin){
   if(openLogin!==registration)return null;
   const links=[...document.querySelectorAll('a[href],button,input[type=button],[role=button]')].filter(b=>{
@@ -107,7 +115,8 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   if(links.length!==1)return null;
   links[0].click();return {opened:true};
  }
- const max=Math.min(...fields.map(el=>el.maxLength>=0?el.maxLength:Infinity));
+ const statedMaximum=Number((fields[0].form?.innerText||'').match(/(?:not be longer than|maximum of|no more than) (\d+) characters/i)?.[1]||128);
+ const max=Math.min(statedMaximum,...fields.map(el=>el.maxLength>=0?el.maxLength:Infinity));
  const min=Math.max(1,...fields.map(el=>el.minLength||0));
  if(!password)return automatic?{signup:registration,min,max:Number.isFinite(max)?max:128}:true;
  if(registration&&(password.length>max||password.length<min||fields.some(el=>{
@@ -120,10 +129,20 @@ export function employerAccountForm({url,signup,email,password,inspectOnly=false
   for(const event of ['input','change'])el.dispatchEvent(new Event(event,{bubbles:true}));
  }
  if(emailField&&!emailField.readOnly&&!emailField.disabled)fill(emailField,email);
+ if(repeatEmail)fill(repeatEmail,email);
  for(const field of fields)fill(field,password);
  if(!fields.every(el=>el.isConnected&&el.value===password)||emailField&&(!emailField.isConnected||emailField.value.trim().toLowerCase()!==email.toLowerCase()))throw Error('The form changed while filling. Review the account fields.');
  if(registration&&buttons.length===1){
   const scope=fields[0].form||buttons[0].closest('[role=dialog],main,[role=main]')||[...scopes][0];
+  if(recruiterVisibility==='Only recruiters managing jobs I apply to'){
+   const choices=[...scope.querySelectorAll('input[type=radio]')].filter(radio=>
+    [...radio.labels||[]].some(label=>label.textContent.trim().toLowerCase()===recruiterVisibility.toLowerCase())||
+    radio.getAttribute('aria-label')?.trim().toLowerCase()===recruiterVisibility.toLowerCase());
+   if(choices.length===1&&!choices[0].checked){
+    choices[0].click();
+    if(!choices[0].checked)throw Error('Select your recruiter visibility before creating this account.');
+   }
+  }
   for(const box of scope.querySelectorAll('input[type=checkbox]')){
    const words=([...(box.labels||[])].map(l=>l.textContent.trim()).join(' ')||box.getAttribute('aria-label')||(box.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>document.getElementById(id)?.textContent||'').join(' ')||box.closest('label')?.textContent||'').replace(/\s+/g,' ').trim();
    if(!box.checked&&!box.disabled&&/^(?:yes,? )?i (?:have read and (?:consent|agree) to|agree to|accept) (?:the |these )?terms (?:and conditions|of use|of service)[. *]*$/i.test(words))box.click();

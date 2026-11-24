@@ -221,6 +221,15 @@
   ];
   function reasonFromHistory(field, entries) {
     const question = questionKey(field.label).replace(/^\d+ /, "");
+    const isDefenseHistory = /\bdo you now or did you at any time in the past \d+ months serve as an official or employee of (?:the )?(?:dod|department of defense)(?: for more information see [\w ]+)?$/.test(question);
+    const isHistoryChoice = question.includes("post government employment") && question.includes("former military personnel") && question.includes("government employees") && ["select-one", "combobox", "radio-group"].includes(field.type);
+    if (isDefenseHistory || isHistoryChoice) {
+      const facts3 = evidenceFor(entries, field);
+      const absent = (c) => facts3.get(c)?.size === 1 && facts3.get(c).has(false);
+      if (!absent("governmentJob") || !absent("service")) return { blocked: true };
+      const statement = "I have never been employed by the U.S. government or the U.S. Armed Forces.";
+      return { value: isDefenseHistory ? "No" : statement, display: isDefenseHistory ? "No" : statement, reason: "No prior government employment or military service", sourceQuestion: [facts3.get("governmentJob").get(false).source, facts3.get("service").get(false).source].join(" + "), requiresReview: true, aliases: isDefenseHistory ? ["no"] : [questionKey(statement), questionKey(statement).replaceAll("u s", "us")] };
+    }
     const detail = details.find(([, pattern]) => pattern.test(question));
     if (/^are you currently employed or have you been employed in the past \w+ years? by /.test(question)) return null;
     const parts = question.split(/\b(and|or)\b/).map((s) => s.trim());
@@ -351,7 +360,7 @@
       ["Previous security clearance", /^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
     ];
     const confirmed = (value, sourceQuestion, aliases3) => ({ ...result(value, "From your application profile", aliases3), sourceQuestion, requiresReview: true });
-    if (/^(?:(?:please )?(?:confirm|verify|repeat|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)) {
+    if (/^(?:(?:please )?(?:confirm|verify|repeat|re ?type|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)) {
       const email = profile.values?.email;
       if (!email || field.primaryEmail && field.primaryEmail.trim().toLowerCase() !== email.trim().toLowerCase()) return { blocked: true };
       return confirmed(email, "Profile email");
@@ -430,6 +439,9 @@
       const race = fact("Race / ethnic background");
       if (questionKey(race) === "asian not hispanic or latino") return confirmed(race, "Race / ethnic background", ["asian not hispanic latino", "asian not hispanic or latino", "asian"]);
     }
+    const restricted = "Only recruiters managing jobs I apply to";
+    if ((/^(?:make my profile visible to|profile visibility|who can (?:see|view) (?:my|your) profile)$/.test(q) || (field.options || []).some((o) => questionKey(o.label) === questionKey(restricted))) && unique("Recruiter profile visibility") === restricted) return confirmed(restricted, "Recruiter profile visibility");
+    if (/^are you (?:a |an? )?protected veteran$/.test(q) && unique("Protected veteran status") === "I am not a protected veteran") return confirmed("No", "Protected veteran status", ["no", "no i am not a protected veteran", "i am not a protected veteran", "not a protected veteran"]);
     if ((/^(?:protected )?veteran (?:self identification )?status$/.test(q) || /^please select your protected veteran status\b/.test(q)) && unique("Protected veteran status") === "I am not a protected veteran")
       return confirmed("I am not a protected veteran", "Protected veteran status", ["i am not a protected veteran", "i am not a protected veteran i prefer not to answer", "not a protected veteran", "i am not a veteran", "not a veteran", "i am not a protected veteran or veteran"]);
     const agreement = "I have read and understand and I agree to the above";
@@ -994,6 +1006,14 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      if (radio(e)) {
+        const selected = selectedRadio(e);
+        if (selected && /^any company recruiter (?:worldwide|in my country region of residence)$/.test(norm(optionLabel(selected)))) return { currentRecruiterScope: optionLabel(selected) };
+      }
+      if (/^(?:primary |mobile |cell |contact )?(?:phone|telephone)(?: number)?$/.test(wording) && e.matches("input")) {
+        const help = (e.getAttribute("aria-describedby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") + " " + text(e.parentElement);
+        if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
+      }
       if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
         for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
           const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
@@ -1006,7 +1026,7 @@
         if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
         break;
       }
-      if (/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
+      if (/(?:confirm|verify|repeat|re ?type|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
         const scope = e.form || e.closest('[role="dialog"]') || document;
         const originals = [...scope.querySelectorAll("input")].filter((c) => c !== e && visible(c) && /^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
         return { primaryEmail: originals.length === 1 ? originals[0].value || "" : originals.length > 1 ? "ambiguous" : "" };
@@ -1113,7 +1133,7 @@
       if (headings.length !== 1) return null;
       for (let p = headings[0].parentElement; p && p !== document.body; p = p.parentElement) {
         if (p.querySelector(name === "skills" ? "input:not([type=hidden])" : 'button,input:not([type=hidden]),select,[role="combobox"]')) {
-          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !/^languages? \d+$/i.test(text(h)));
+          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !new RegExp("^" + name + "s? \\d+$", "i").test(text(h)) && !/^languages? \d+$/i.test(text(h)));
           return other ? null : p;
         }
       }
@@ -1334,7 +1354,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -1373,6 +1393,20 @@
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
           let searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          const academicPicker = /^(?:school or university|school|university|field of study|major)$/.test(norm(f.label));
+          if (academicPicker && searchInput) {
+            const target = String(f.value);
+            const term = /school|university/.test(norm(f.label)) ? target.split(/[–—]|\s+-\s+/)[0].trim() : target;
+            const preventSubmit = (event) => event.preventDefault();
+            searchInput.form?.addEventListener("submit", preventSubmit, true);
+            try {
+              Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, term);
+              searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+              for (const kind of ["keydown", "keyup"]) searchInput.dispatchEvent(new KeyboardEvent(kind, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+            } finally {
+              searchInput.form?.removeEventListener("submit", preventSubmit, true);
+            }
+          }
           const searchableAddress = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
@@ -1390,6 +1424,10 @@
             if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
+            if (academicPicker && boxes.length === 1 && !Array.from(boxes[0].querySelectorAll(optionSelector)).some((o) => norm(text(o)) === norm(f.value))) {
+              await new Promise((r) => setTimeout(r, 80));
+              continue;
+            }
             if (boxes.length === 1 && [...boxes[0].querySelectorAll(optionSelector)].some((o) => !o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]') && !/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o)))) break;
             if (attempt === 2 && searchInput && searchableAddress && !searchInput.value && !f.phoneCountry) {
               initialQuery = String(f.value);
@@ -1630,6 +1668,17 @@
     if (rule?.blocked) return null;
     if (/^(in )?(what|which) country( region)?$/.test(label)) return null;
     if (!label && !rule || !rule && !common && !background && /password|citizen|sponsor|authoriz|eligible|eligibility|veteran|disabil|\bsex\b|gender|race|ethnic|pronoun|birth|social security|consent|agree|certify|signature|salary|compensation|gpa|completed|previous|\breference|emergency|guardian|parent|\breferr|manager|supervisor/.test(label)) return null;
+    if (field.digitsPhone && !field.disabled) {
+      const phone = String(profile.values?.phone || "");
+      if (/^[+()\d .-]+$/.test(phone)) {
+        const digits = phone.replace(/\D/g, "");
+        if (!field.filled || field.phoneBefore !== digits && field.phoneBefore?.replace(/\D/g, "") === digits) return { value: digits, display: digits, reason: "Phone format required by this form", sourceQuestion: "Profile phone" };
+      }
+    }
+    if (rule?.sourceQuestion === "Recruiter profile visibility" && field.currentRecruiterScope && field.type === "radio-group" && !field.disabled) {
+      const target = field.options.filter((o) => !o.disabled && normalize(o.label) === normalize(rule.value));
+      if (target.length === 1) return { ...rule, value: target[0].value, display: target[0].label };
+    }
     if (field.emailSave && field.emailValue && field.emailValue.toLowerCase() === profile.values?.email?.toLowerCase() && !field.disabled) return { value: profile.values.email, display: profile.values.email, reason: "Save the matching email in this field" };
     if (!["text", "email", "tel", "url", "textarea", "select-one", "combobox", "radio-group", "checkbox-group", "number", "date", "month"].includes(field.type) || field.filled && !(field.languageRow === "english" && field.currentLevel === "basic" && rule?.value === "Fluent") || field.disabled) return null;
     const patterns = { firstName: /^(legal )?(first|given) name$/, lastName: /^(legal )?(last name|family name|surname)$/, fullName: /^(legal |full |legal full )?name$/, email: /^(personal |primary |contact )?e ?mail( address)?$/, phone: /^(primary |contact |mobile |cell )?(phone|telephone)( number)?$/, city: /^(current |home )?city$/, state: /^(current |home )?(state|province|state province)$/, postalCode: /^(zip|postal|zip postal)( code)?$/, country: /^(current |home )?country( of residence)?$/, school: /^(current )?(university|school|college|school university|school or university|university college)( name)?$/, major: /^(major|field of study|academic major)$/, graduationYear: /^(expected |anticipated )graduation year$/, portfolio: /^(portfolio|personal website|portfolio website)( url| link)?$/, linkedin: /^linkedin( profile| account)?( url| link)?$/, github: /^github( profile)?( url| link)?$/ };
@@ -1973,6 +2022,14 @@
     };
     const context = (e) => {
       const wording = norm(label(e));
+      if (radio(e)) {
+        const selected = selectedRadio(e);
+        if (selected && /^any company recruiter (?:worldwide|in my country region of residence)$/.test(norm(optionLabel(selected)))) return { currentRecruiterScope: optionLabel(selected) };
+      }
+      if (/^(?:primary |mobile |cell |contact )?(?:phone|telephone)(?: number)?$/.test(wording) && e.matches("input")) {
+        const help = (e.getAttribute("aria-describedby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") + " " + text(e.parentElement);
+        if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
+      }
       if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
         for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
           const langs = [...p.querySelectorAll(controls)].filter((c) => /^(language|language name)$/.test(norm(label(c))) && visible(c));
@@ -1985,7 +2042,7 @@
         if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
         break;
       }
-      if (/(?:confirm|verify|repeat|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
+      if (/(?:confirm|verify|repeat|re ?type|re ?enter).*e ?mail|e ?mail.*confirmation/.test(wording)) {
         const scope = e.form || e.closest('[role="dialog"]') || document;
         const originals = [...scope.querySelectorAll("input")].filter((c) => c !== e && visible(c) && /^(?:primary |personal |contact )?e ?mail(?: address)?$/.test(norm(label(c))));
         return { primaryEmail: originals.length === 1 ? originals[0].value || "" : originals.length > 1 ? "ambiguous" : "" };
@@ -2092,7 +2149,7 @@
       if (headings.length !== 1) return null;
       for (let p = headings[0].parentElement; p && p !== document.body; p = p.parentElement) {
         if (p.querySelector(name === "skills" ? "input:not([type=hidden])" : 'button,input:not([type=hidden]),select,[role="combobox"]')) {
-          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !/^languages? \d+$/i.test(text(h)));
+          const other = [...p.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].some((h) => h !== headings[0] && !new RegExp("^" + name + "s? \\d+$", "i").test(text(h)) && !/^languages? \d+$/i.test(text(h)));
           return other ? null : p;
         }
       }
@@ -2313,7 +2370,7 @@
           } else skipped++;
           continue;
         }
-        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
+        if (location.href !== url || !e || !e.isConnected || !empty(e) && !(f.currentRecruiterScope && context(e).currentRecruiterScope === f.currentRecruiterScope && norm(f.display) === "only recruiters managing jobs i apply to") && !(f.digitsPhone && context(e).digitsPhone && e.value === f.phoneBefore && e.value.replace(/\D/g, "") === f.value) && !(f.languageRow === "english" && f.currentLevel === "basic" && context(e).languageRow === "english" && norm(valueText(e)) === "basic" && f.display === "Fluent") || disabled(e) || !(choice(e) ? choiceVisible(e) : visible(e)) || label(e) !== f.label || type(e) !== f.type || (e.name || "") !== f.name || (e.id || "") !== f.id) {
           skipped++;
           continue;
         }
@@ -2352,6 +2409,20 @@
           if (e.getAttribute("aria-expanded") !== "true") e.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", code: "ArrowDown", bubbles: true }));
           let boxes = [];
           let searchInput = e.matches("input:not([readonly])") ? e : e.querySelector('input:not([readonly]):not([type="hidden"])');
+          const academicPicker = /^(?:school or university|school|university|field of study|major)$/.test(norm(f.label));
+          if (academicPicker && searchInput) {
+            const target = String(f.value);
+            const term = /school|university/.test(norm(f.label)) ? target.split(/[–—]|\s+-\s+/)[0].trim() : target;
+            const preventSubmit = (event) => event.preventDefault();
+            searchInput.form?.addEventListener("submit", preventSubmit, true);
+            try {
+              Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, term);
+              searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+              for (const kind of ["keydown", "keyup"]) searchInput.dispatchEvent(new KeyboardEvent(kind, { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+            } finally {
+              searchInput.form?.removeEventListener("submit", preventSubmit, true);
+            }
+          }
           const searchableAddress = /^(?:current |home )?(?:country(?: of residence)?|state(?: province)?|province|city|county|postal code|zip(?: code)?|address line 1)$/.test(norm(f.label));
           const writeSearch = (value) => {
             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput, value);
@@ -2369,6 +2440,10 @@
             if (!boxes.length && e.parentElement?.querySelectorAll(comboSelector).length === 1) boxes = [...e.parentElement.querySelectorAll(boxSelector)].filter(visible);
             if (!boxes.length) boxes = [...document.querySelectorAll(boxSelector)].filter((n) => visible(n) && !before.has(n));
             boxes = boxes.filter((b, i, all2) => !all2.some((other) => other !== b && other.contains(b)));
+            if (academicPicker && boxes.length === 1 && !Array.from(boxes[0].querySelectorAll(optionSelector)).some((o) => norm(text(o)) === norm(f.value))) {
+              await new Promise((r) => setTimeout(r, 80));
+              continue;
+            }
             if (boxes.length === 1 && [...boxes[0].querySelectorAll(optionSelector)].some((o) => !o.matches('[aria-disabled="true"],.loading-results,[role="alert"],[aria-busy="true"]') && !/^(?:searching|loading)(?: results)?[.… ]*$/i.test(text(o)))) break;
             if (attempt === 2 && searchInput && searchableAddress && !searchInput.value && !f.phoneCountry) {
               initialQuery = String(f.value);
@@ -2591,8 +2666,19 @@
       }
       return best;
     };
+    const sharedResumeSection = (e) => {
+      for (let node = e.parentElement; node && node !== document.body; node = node.parentElement) {
+        const headings = [...node.querySelectorAll("h1,h2,h3,h4,legend,[role=heading]")];
+        if (!headings.length) continue;
+        if (headings.length !== 1 || !/^r[eé]sum[eé]\s*\/\s*cv\s*\/\s*cover letter\s*\/\s*other attachments$/i.test(text(headings[0]))) return null;
+        if (node.querySelectorAll("input[type=file]").length > 1 || /drop cover letter here|upload (?:your |a )?cover letter/i.test(text(node))) return null;
+        return node;
+      }
+      return null;
+    };
     const candidates = inputs.filter((e) => {
       if (e.disabled) return false;
+      if (sharedResumeSection(e) && !/cover letter|transcript|passport|photo|certificate/i.test(label(e))) return true;
       const words = context(e);
       return (/\b(resume|résumé|cv|curriculum vitae)\b/i.test(words) || inputs.length === 1 && pageUpload) && !/cover letter|transcript|passport|photo|certificate/i.test(words);
     });
@@ -2604,7 +2690,7 @@
       }
       return null;
     };
-    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!resumeSection(e);
+    const isResumeZone = (e) => /\bdrop\s+(?:your\s+|a\s+)?(?:resume|résumé|cv)\b/i.test(text(e)) || /\bdrop (?:a |your )?files?\b/i.test(text(e)) && !!(resumeSection(e) || sharedResumeSection(e));
     const eligibleZone = (e) => isResumeZone(e) && !/cover letter|transcript|passport|photo|certificate/i.test(text(e)) && e.getClientRects().length;
     const zones = candidates.length ? [] : [...document.querySelectorAll(dropSelector)].filter(eligibleZone);
     const containers = zones.filter((z) => !zones.some((other) => other !== z && z.contains(other)));

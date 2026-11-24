@@ -68,7 +68,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   ['Previous security clearance',/^(security clearance inactive within 2 years|have you ever held a security clearance)$/]
  ];
  const confirmed=(value,sourceQuestion,aliases)=>({...result(value,'From your application profile',aliases),sourceQuestion,requiresReview:true});
- if(/^(?:(?:please )?(?:confirm|verify|repeat|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)){
+ if(/^(?:(?:please )?(?:confirm|verify|repeat|re ?type|re ?enter)(?: your)? e ?mail(?: address)?|e ?mail(?: address)? confirmation)$/.test(q)){
   const email=profile.values?.email;
   if(!email||field.primaryEmail&&field.primaryEmail.trim().toLowerCase()!==email.trim().toLowerCase())return {blocked:true};
   return confirmed(email,'Profile email');
@@ -153,6 +153,9 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const race=fact('Race / ethnic background');
   if(questionKey(race)==='asian not hispanic or latino')return confirmed(race,'Race / ethnic background',['asian not hispanic latino','asian not hispanic or latino','asian']);
  }
+ const restricted='Only recruiters managing jobs I apply to';
+ if((/^(?:make my profile visible to|profile visibility|who can (?:see|view) (?:my|your) profile)$/.test(q)||(field.options||[]).some(o=>questionKey(o.label)===questionKey(restricted)))&&unique('Recruiter profile visibility')===restricted)return confirmed(restricted,'Recruiter profile visibility');
+ if(/^are you (?:a |an? )?protected veteran$/.test(q)&&unique('Protected veteran status')==='I am not a protected veteran')return confirmed('No','Protected veteran status',['no','no i am not a protected veteran','i am not a protected veteran','not a protected veteran']);
  if((/^(?:protected )?veteran (?:self identification )?status$/.test(q)||/^please select your protected veteran status\b/.test(q))&&unique('Protected veteran status')==='I am not a protected veteran')
   return confirmed('I am not a protected veteran','Protected veteran status',['i am not a protected veteran','i am not a protected veteran i prefer not to answer','not a protected veteran','i am not a veteran','not a veteran','i am not a protected veteran or veteran']);
  const agreement='I have read and understand and I agree to the above';

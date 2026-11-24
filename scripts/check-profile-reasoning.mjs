@@ -75,3 +75,15 @@ assert.equal(study('Example Academy','Start Date','date'),undefined);
 assert.equal(study('Different School','Start Date','date'),undefined);
 assert.equal(study('Example Academy','Major'),undefined);
 console.log('School-specific enrollment, qualifications, locations and date precision passed.');
+
+const serviceHistory={'Government employment':'No','Military service':'No'};
+const certification='Various laws restrict the post-government employment activities of former military personnel and federal government employees. Which statement applies?';
+assert.equal(infer(serviceHistory,certification)?.value,'I have never been employed by the U.S. government or the U.S. Armed Forces.');
+assert.equal(infer({'Employment experience':'None'},certification),null);
+assert.equal(infer(serviceHistory,'Section 847 concerns employment restrictions. Do you now, or did you at any time in the past 24 months, serve as an official or employee of the DoD? For more information, see National Defense Authorization Act (Section 847).')?.value,'No');
+assert.equal(infer({'Protected veteran status':'I am not a protected veteran'},'Are you a protected veteran?')?.value,'No');
+const visibility='Only recruiters managing jobs I apply to';
+assert.equal(infer({'Recruiter profile visibility':visibility},'Make My Profile Visible to',{type:'radio-group',options:[{value:'restricted',label:visibility}]})?.value,'restricted');
+assert.equal(suggestField({label:'Retype Email Address',type:'text'},{confirmed:true,values:{email:'sample@example.com'},answers:[]})?.value,'sample@example.com');
+assert.equal(suggestField({label:'Primary Phone',type:'tel',filled:true,digitsPhone:true,phoneBefore:'(202) 555-0101'},{confirmed:true,values:{phone:'2025550101'},answers:[]})?.value,'2025550101');
+console.log('Disclosure choices, private visibility, email confirmation and telephone formatting passed.');

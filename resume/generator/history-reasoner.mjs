@@ -77,6 +77,17 @@ const details=[
 
 export function reasonFromHistory(field,entries){
  const question=questionKey(field.label).replace(/^\d+ /,'');
+ // Some disclosures put the question after a long policy notice; others put the
+ // factual statement in the choices. Resolve only the applicant's work history.
+ const isDefenseHistory=/\bdo you now or did you at any time in the past \d+ months serve as an official or employee of (?:the )?(?:dod|department of defense)(?: for more information see [\w ]+)?$/.test(question);
+ const isHistoryChoice=question.includes('post government employment')&&question.includes('former military personnel')&&question.includes('government employees')&&['select-one','combobox','radio-group'].includes(field.type);
+ if(isDefenseHistory||isHistoryChoice){
+  const facts=evidenceFor(entries,field);
+  const absent=c=>facts.get(c)?.size===1&&facts.get(c).has(false);
+  if(!absent('governmentJob')||!absent('service'))return {blocked:true};
+  const statement='I have never been employed by the U.S. government or the U.S. Armed Forces.';
+  return {value:isDefenseHistory?'No':statement,display:isDefenseHistory?'No':statement,reason:'No prior government employment or military service',sourceQuestion:[facts.get('governmentJob').get(false).source,facts.get('service').get(false).source].join(' + '),requiresReview:true,aliases:isDefenseHistory?['no']:[questionKey(statement),questionKey(statement).replaceAll('u s','us')]};
+ }
  const detail=details.find(([,pattern])=>pattern.test(question));
  // Legacy handlers recognize qualified employment windows and named sectors.
  if(/^are you currently employed or have you been employed in the past \w+ years? by /.test(question))return null;

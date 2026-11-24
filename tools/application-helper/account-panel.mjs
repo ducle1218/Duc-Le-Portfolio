@@ -10,7 +10,7 @@ function accountScope(url,employer){
  return employer.toLowerCase();
 }
 
-export function setupAccounts(getEmail,getEmployer){
+export function setupAccounts(getEmail,getEmployer,getVisibility=()=>undefined){
  const el=id=>document.getElementById(id);
  const panel=el('employer-account'),status=el('account-status'),create=el('account-create'),login=el('account-login');
  panel.ontoggle=async()=>{
@@ -28,7 +28,7 @@ export function setupAccounts(getEmail,getEmployer){
   if(url.protocol!=='https:')return null;
   const email=(el('account-email').value||getEmail()||'').trim();
   const employer=(el('account-employer').value||getEmployer()||url.hostname).trim();
-  const base={url:url.href,signup,email,automatic,afterEmail,embedded:!!embeddedDocument};
+  const base={url:url.href,signup,email,automatic,afterEmail,recruiterVisibility:getVisibility(),embedded:!!embeddedDocument};
   const [scan]=await chrome.scripting.executeScript({target:{tabId:tab.id,...(embeddedDocument?{documentIds:[embeddedDocument]}:{})},func:employerAccountForm,args:[{...base,inspectOnly:true}]});
   if(scan?.result?.error)throw Error(scan.result.error);
   if(!scan?.result||scan.result.available===false)return null;

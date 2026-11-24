@@ -968,7 +968,7 @@
     }
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-    const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
+    const visible = (e) => !!e.getClientRects?.()?.length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
     const activate = (e, option = false) => {
@@ -2072,7 +2072,7 @@
     }
     const text = (e) => (e?.innerText || e?.textContent || "").trim();
     const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-    const visible = (e) => !!e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
+    const visible = (e) => !!e.getClientRects?.()?.length && getComputedStyle(e).visibility !== "hidden";
     const comboSelector = '[role="combobox"],input[aria-controls][aria-expanded],[role="searchbox"][aria-controls],[aria-haspopup="listbox"],[role="button"][aria-haspopup="true"],button[aria-haspopup="true"],button[aria-haspopup="menu"],button[data-automation-id][aria-expanded],button[aria-controls][aria-expanded],input[data-automation-id="searchBox"],button[data-automation-id="selectWidget"],button[name][aria-required],button[data-automation-id="countryRegion"],button[data-automation-id="degree"],input[aria-autocomplete="list"],.iti__selected-country,.iti__selected-flag,.selected-flag,.dropdown-toggle,.ng-select,.select2-selection,mat-select,.selectize-input,.ui-select-container,.ts-control';
     const controls = '[contenteditable][data-placeholder],[contenteditable][aria-label],[contenteditable="true"][role="textbox"],[contenteditable="plaintext-only"],input,select,textarea,' + comboSelector + ',[role="radio"]';
     const activate = (e, option = false) => {

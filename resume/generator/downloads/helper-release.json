@@ -1,6 +1,6 @@
 {
-  "version": "1.18.0",
-  "sha256": "ba4a43e07409a1db779567d7f10da2daca413ee307b7b654474b389ddb5459c1",
+  "version": "1.19.0",
+  "sha256": "cac0dc8a777c3b39bc6619106febf323dca0ffb6de6ef9fb6a60ab88659343bf",
   "files": [
     "manifest.json",
     "popup.html",
@@ -14,6 +14,7 @@
     "application-autofill.mjs",
     "answer-memory.mjs",
     "answer-rules.mjs",
+    "history-reasoner.mjs",
     "portfolio-answers.mjs",
     "answer-pagination.mjs",
     "common-questions.mjs",

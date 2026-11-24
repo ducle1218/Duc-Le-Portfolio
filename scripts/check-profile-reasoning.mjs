@@ -29,3 +29,27 @@ check('Have you been employed by a private sector company?',undefined);
 check('Hispanic or Latino?',undefined);
 check('Which types of polygraph have you had?',undefined);
 console.log('Profile reasoning regression checks passed.');
+
+function infer(facts,label,context={}){
+ const answers=Object.entries(facts).map(([question,answer])=>({question,answer}));
+ return suggestField({label,type:'combobox',...context},{confirmed:true,values:{},answers});
+}
+const noWork={'Employment experience':'None'};
+const currentGovernment='Do you currently work for the government?';
+assert.equal(infer(noWork,currentGovernment)?.display,'No');
+assert.equal(infer(noWork,currentGovernment)?.sourceQuestion,'Employment experience');
+assert.equal(infer({'Government employment':'Yes'},currentGovernment),null);
+assert.equal(infer({'Active security clearance':'Yes'},'Have you been granted a security clearance?')?.display,'Yes');
+assert.equal(infer({'Active security clearance':'No'},'Have you been granted a security clearance?'),null);
+assert.equal(infer({'Previous security clearance':'No'},'Do you possess a valid security clearance?')?.display,'No');
+assert.equal(infer({'Previous security clearance':'No','Active security clearance':'Yes'},'Do you possess a valid security clearance?'),null);
+assert.equal(infer({'Military service':'No'},'Which kind of polygraph did you take?'),null);
+assert.equal(infer(noWork,'Has your spouse worked for the government?'),null);
+assert.equal(infer(noWork,'Do you currently work for the government and have you undergone a polygraph?')?.display,'No');
+const either='Do you currently work for the government or have you undergone a polygraph?';
+assert.equal(infer(noWork,either),null);
+assert.equal(infer({...noWork,'Polygraph history':'None'},either)?.display,'No');
+assert.equal(infer({'Have you undergone a polygraph?':'Yes'},either)?.display,'Yes');
+assert.equal(infer({},'Branch of service',{parentQuestion:'Have you served in the armed forces?',parentAnswer:'No'})?.display,'N/A');
+assert.equal(infer({'Military service':'No'},'Branch of service',{parentQuestion:'Have you served in the armed forces?',parentAnswer:'Yes'}),null);
+console.log('Multi-step entailment, direction, provenance, conflicts, conjunctions, disjunctions and contextual evidence passed.');

@@ -1,3 +1,4 @@
+import {reasonFromHistory} from './history-reasoner.mjs';
 import {questionKey,commonQuestion} from './common-questions.mjs?v=20261123.3';
 
 // Editable memories, seeded once by the helper. Dates are for summer 2027 only.
@@ -51,6 +52,8 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  const unique=q=>{const values=entries.filter(a=>questionKey(a.question)===questionKey(q)).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
  const result=(value,reason,aliases)=>({value,display:value,reason,sourceQuestion:'Saved preferences',requiresReview:false,...(aliases?{aliases}:{} )});
  const q=questionKey(field.label),fact=name=>{const values=entries.filter(a=>commonQuestion(a.question)?.question===name).map(a=>a.answer.trim());return new Set(values).size===1?values[0]:null;};
+ const inference=reasonFromHistory(field,entries);
+ if(inference)return inference;
  const prescreen='Willing to complete a U.S. Government Security Prescreen Questionnaire';
  const prescreenQuestion=q.split(' your no answer')[0];
  if(/(?:^| )are you willing to (?:complete|fill out) (?:a |the )?security pre ?screen(?:ing)? questionnaire$/.test(prescreenQuestion)&&unique(prescreen))

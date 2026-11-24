@@ -110,4 +110,12 @@ const options=['Yes I consent','No I do not consent'].map(label=>({label,value:l
 for(const [channel,employer,industry,expected] of [['email','Example','','Yes I consent'],['text/SMS','Example','','No I do not consent'],['text/SMS','Leidos','Software development','No I do not consent'],['SMS','Example','Defense contracting','No I do not consent'],['SMS','Lockheed Martin','','Yes I consent'],['SMS','Example','Software development','Yes I consent'],['SMS','Google','','Yes I consent'],['SMS','Googleton','','No I do not consent']]){
  assert.equal(answer(consent(channel),{type:'select-one',jobEmployer:employer,jobIndustry:industry,options}),expected);
 }
+const educationFacts={'Highest completed degree':'High school diploma','Citizenships':'United States; Vietnam','Relatives working for the prospective employer':'No'};
+const yesNo={type:'select-one',options:['Yes','No'].map(label=>({label,value:label}))};
+assert.equal(infer(educationFacts,'Do you have a High School Diploma or GED?',yesNo)?.value,'Yes');
+assert.equal(infer(educationFacts,'Do you have a High School Diploma and GED?',yesNo)?.value,undefined);
+assert.equal(infer(educationFacts,'Are you a US citizen or national, lawful permanent resident, asylee, or refugee?',yesNo)?.value,'Yes');
+assert.equal(infer(educationFacts,'Are you a US citizen and lawful permanent resident?',yesNo)?.value,undefined);
+assert.equal(infer(educationFacts,'Do you have relatives who work for our company?',yesNo)?.value,'No');
+assert.equal(infer({...educationFacts,'Example relatives':'Yes'},'Do you have relatives who work for Example?',{...yesNo,jobEmployer:'Example'})?.value,'Yes');
 console.log('Employment eligibility, earned and pursued degrees, disclosure subjects, relocation and contextual contact consent passed.');

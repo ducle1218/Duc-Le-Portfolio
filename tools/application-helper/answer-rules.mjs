@@ -16,6 +16,7 @@ export function ageThreshold(q){
 }
 export function dateConcept(q){
  const s=questionKey(String(q||'').split('?')[0]).replace(/ date year month day$| date year month$| yyyy mm dd$| yyyy mm$/,'');
+ if(/^(?:when (?:do you (?:expect|plan) to|will you) graduate|(?:what is your |please (?:provide|enter) your )?(?:expected|anticipated) (?:date of graduation|graduation month and year))$/.test(s))return 'graduation';
  if(/^(what is your |when is your )?(expected |anticipated )?graduation (date|day month year)$/.test(s))return 'graduation';
  if(/^(summer internship start date|when (can|could) you start|when are you available to start|(?:what is your |please (?:provide|indicate) your )?(earliest (?:(?:available|possible) )?(?:internship )?start date|(?:internship )?start date|availability to start))( for an internship)?$/.test(s))return 'start';
  if(/^(summer internship end date|(?:what is your |please (?:provide|indicate) your )?(latest (?:(?:available|possible) )?(?:internship )?end date|(?:internship )?end date))( for an internship)?$/.test(s))return 'end';
@@ -104,6 +105,23 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
  if(proofOnly&&usCitizen&&unique(proofFact)==='Yes'&&(/\b(?:united states|u s|us)$/.test(stem)||jobJurisdiction(field.jobLocation)==='us'))return saved('Yes',proofFact);
  if(usEligible&&usCitizen)return saved('Yes','Citizenships');
  if(usProof&&usCitizen&&unique(proofFact)==='Yes'&&/\bin (?:the )?(?:united states|u s|us)$/.test(stem))return saved('Yes',proofFact);
+ // Evaluate alternatives against an evidenced qualification. The same words in a
+ // question requiring both qualifications do not establish a positive answer.
+ const alternatives=stem.replace(/^(do you (?:have|hold|possess)|are you) (?:an? )?/,'').replace(/\b(?:an?|either)\b/g,' ').replace(/\s+/g,' ').trim();
+ const diplomaOption=/^(?:high school diploma|ged|general equivalency diploma)(?: or (?:high school diploma|ged|equivalent|general equivalency diploma))*$/;
+ if(/^do you (?:have|hold|possess) /.test(stem)&&diplomaOption.test(alternatives)&&alternatives.includes('high school diploma')&&questionKey(unique('Highest completed degree'))==='high school diploma')return saved('Yes','Highest completed degree');
+ const statuses=alternatives.replace(/\bu s\b|\bunited states\b/g,'us');
+ if(stem.startsWith('are you ')&&usCitizen&&/\bus citizen\b/.test(statuses)&&
+    /^(?:us citizen)(?: (?:or )?(?:us national|national|lawful permanent resident|permanent resident|asylee|refugee))+$/.test(statuses)&&/\bor\b/.test(alternatives))return saved('Yes','Citizenships');
+ const familyEmployer=/^(?:do you have (?:any )?(?:relatives?|family members?) (?:who |that )?(?:work(?:s|ing)? (?:for|at)|(?:are )?employed (?:by|at))|(?:are|is) (?:any of )?your (?:relatives?|family members?) (?:currently )?(?:employed (?:by|at)|working (?:at|for))) (.+)$/.exec(stem);
+ const company=field.jobEmployer||(!context.startsWith('page:')&&context);
+ if(familyEmployer&&(/^(?:us|here|(?:our|this|the) (?:company|organization))$/.test(familyEmployer[1])||company&&familyEmployer[1]===questionKey(company))){
+  const explicit=memory.filter(a=>questionKey(a.question)===stem&&a.scope===origin&&a.context===context);
+  if(explicit.length){const answers=new Set(explicit.map(a=>a.answer));return answers.size===1?saved(explicit[0].answer,explicit[0].question):{blocked:true};}
+  const source=company&&[company+' relatives',company+' relatives or acquaintances'].find(key=>unique(key));
+  const pref=source||'Relatives working for the prospective employer';
+  return unique(pref)?saved(unique(pref),pref):{blocked:true};
+ }
  const inference=reasonFromHistory(field,entries);
  if(inference)return inference;
  const prescreen='Willing to complete a U.S. Government Security Prescreen Questionnaire';
@@ -266,7 +284,7 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
    if(!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(month||''))return {blocked:true};
    if(field.type==='month')return confirmed(month,source);
    if(field.type==='date'&&unique('Day for month-only school dates')==='First of the month')return confirmed(month+'-01',source);
-   if(/^yyyy$/i.test(field.placeholder||''))return confirmed(month.slice(0,4),source);
+   if(field.yearOnly||/^yyyy$/i.test(field.placeholder||'')||field.maxLength===4||field.type==='number'&&Number(field.min)>=1900&&Number(field.max)<=2200&&Number(field.max)>=2000)return confirmed(month.slice(0,4),source);
    return {blocked:true};
   }
   if(/^(?:school |campus )?location$/.test(q)){
@@ -382,6 +400,11 @@ export function answerRule(field,profile,memory=[],origin='',context='',now=new 
   const values=entries.filter(a=>dateConcept(a.question)==='graduation').map(a=>a.answer.trim());
   // Never invent a graduation day from a known month or year.
   const months=values.filter(v=>/^\d{4}-\d{2}(?:-\d{2})?$/.test(v)).map(v=>v.slice(0,7));
+  if(new Set(months).size===1){
+   if(field.type==='date'&&unique('Day for month-only school dates')==='First of the month')return confirmed(months[0]+'-01','Expected graduation date');
+   if(/^yyyy$/i.test(field.placeholder||'')||field.maxLength===4)return confirmed(months[0].slice(0,4),'Expected graduation date');
+   if(/^mm\s*\/\s*yyyy$/i.test(field.placeholder||''))return confirmed(months[0].slice(5)+'/'+months[0].slice(0,4),'Expected graduation date');
+  }
   if(new Set(months).size===1&&['text','textarea'].includes(field.type)&&!field.placeholder)return result(months[0],'Confirmed expected graduation month');
   if(new Set(months).size===1&&(field.type==='month'||/^YYYY-MM$/i.test(field.placeholder||'')))return {...result(months[0],'Expected graduation month'),requiresReview:true};
  }

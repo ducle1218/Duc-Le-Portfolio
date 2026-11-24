@@ -297,6 +297,7 @@
   }
   function dateConcept(q) {
     const s = questionKey(String(q || "").split("?")[0]).replace(/ date year month day$| date year month$| yyyy mm dd$| yyyy mm$/, "");
+    if (/^(?:when (?:do you (?:expect|plan) to|will you) graduate|(?:what is your |please (?:provide|enter) your )?(?:expected|anticipated) (?:date of graduation|graduation month and year))$/.test(s)) return "graduation";
     if (/^(what is your |when is your )?(expected |anticipated )?graduation (date|day month year)$/.test(s)) return "graduation";
     if (/^(summer internship start date|when (can|could) you start|when are you available to start|(?:what is your |please (?:provide|indicate) your )?(earliest (?:(?:available|possible) )?(?:internship )?start date|(?:internship )?start date|availability to start))( for an internship)?$/.test(s)) return "start";
     if (/^(summer internship end date|(?:what is your |please (?:provide|indicate) your )?(latest (?:(?:available|possible) )?(?:internship )?end date|(?:internship )?end date))( for an internship)?$/.test(s)) return "end";
@@ -360,10 +361,10 @@
         }
         const tenant = hostname.match(/^([a-z0-9-]+)\.wd\d+\.myworkdayjobs\.com$/i)?.[1];
         const employerDomain = hostname.match(/(?:^|\.)(amazon|google|microsoft|leidos|lockheedmartin|northropgrumman|boeing|raytheon|nvidia|apple)\.(?:com|jobs)$/i)?.[1];
-        const company = questionKey(field.jobEmployer || !context.startsWith("page:") && context || tenant || employerDomain).replace(/ (?:corporation|corp|inc|llc|company)$/, "");
-        const recognized = /^(?:lockheed(?: ?martin)?|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company);
+        const company2 = questionKey(field.jobEmployer || !context.startsWith("page:") && context || tenant || employerDomain).replace(/ (?:corporation|corp|inc|llc|company)$/, "");
+        const recognized = /^(?:lockheed(?: ?martin)?|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company2);
         const technology = /^(?:big tech|tech(?:nology)?|information technology(?: and services)?|software(?: development| publishing)?|computer software|semiconductors|computer hardware(?: manufacturing)?|technology information and internet)$/i.test(questionKey(field.jobIndustry));
-        const excluded = /^leidos\b/.test(company) || /^leidos/i.test(tenant || employerDomain || "");
+        const excluded = /^leidos\b/.test(company2) || /^leidos/i.test(tenant || employerDomain || "");
         sms2 = !excluded && (recognized || technology) ? "Yes" : "No";
       }
       const email = unique("Email recruiting contact");
@@ -399,6 +400,23 @@
     if (proofOnly && usCitizen && unique(proofFact) === "Yes" && (/\b(?:united states|u s|us)$/.test(stem) || jobJurisdiction(field.jobLocation) === "us")) return saved("Yes", proofFact);
     if (usEligible && usCitizen) return saved("Yes", "Citizenships");
     if (usProof && usCitizen && unique(proofFact) === "Yes" && /\bin (?:the )?(?:united states|u s|us)$/.test(stem)) return saved("Yes", proofFact);
+    const alternatives = stem.replace(/^(do you (?:have|hold|possess)|are you) (?:an? )?/, "").replace(/\b(?:an?|either)\b/g, " ").replace(/\s+/g, " ").trim();
+    const diplomaOption = /^(?:high school diploma|ged|general equivalency diploma)(?: or (?:high school diploma|ged|equivalent|general equivalency diploma))*$/;
+    if (/^do you (?:have|hold|possess) /.test(stem) && diplomaOption.test(alternatives) && alternatives.includes("high school diploma") && questionKey(unique("Highest completed degree")) === "high school diploma") return saved("Yes", "Highest completed degree");
+    const statuses = alternatives.replace(/\bu s\b|\bunited states\b/g, "us");
+    if (stem.startsWith("are you ") && usCitizen && /\bus citizen\b/.test(statuses) && /^(?:us citizen)(?: (?:or )?(?:us national|national|lawful permanent resident|permanent resident|asylee|refugee))+$/.test(statuses) && /\bor\b/.test(alternatives)) return saved("Yes", "Citizenships");
+    const familyEmployer = /^(?:do you have (?:any )?(?:relatives?|family members?) (?:who |that )?(?:work(?:s|ing)? (?:for|at)|(?:are )?employed (?:by|at))|(?:are|is) (?:any of )?your (?:relatives?|family members?) (?:currently )?(?:employed (?:by|at)|working (?:at|for))) (.+)$/.exec(stem);
+    const company = field.jobEmployer || !context.startsWith("page:") && context;
+    if (familyEmployer && (/^(?:us|here|(?:our|this|the) (?:company|organization))$/.test(familyEmployer[1]) || company && familyEmployer[1] === questionKey(company))) {
+      const explicit = memory.filter((a) => questionKey(a.question) === stem && a.scope === origin && a.context === context);
+      if (explicit.length) {
+        const answers = new Set(explicit.map((a) => a.answer));
+        return answers.size === 1 ? saved(explicit[0].answer, explicit[0].question) : { blocked: true };
+      }
+      const source = company && [company + " relatives", company + " relatives or acquaintances"].find((key2) => unique(key2));
+      const pref = source || "Relatives working for the prospective employer";
+      return unique(pref) ? saved(unique(pref), pref) : { blocked: true };
+    }
     const inference = reasonFromHistory(field, entries);
     if (inference) return inference;
     const prescreen = "Willing to complete a U.S. Government Security Prescreen Questionnaire";
@@ -555,7 +573,7 @@
         if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(month || "")) return { blocked: true };
         if (field.type === "month") return confirmed(month, source);
         if (field.type === "date" && unique("Day for month-only school dates") === "First of the month") return confirmed(month + "-01", source);
-        if (/^yyyy$/i.test(field.placeholder || "")) return confirmed(month.slice(0, 4), source);
+        if (field.yearOnly || /^yyyy$/i.test(field.placeholder || "") || field.maxLength === 4 || field.type === "number" && Number(field.min) >= 1900 && Number(field.max) <= 2200 && Number(field.max) >= 2e3) return confirmed(month.slice(0, 4), source);
         return { blocked: true };
       }
       if (/^(?:school |campus )?location$/.test(q)) {
@@ -672,6 +690,11 @@
     if (date === "graduation") {
       const values = entries.filter((a) => dateConcept(a.question) === "graduation").map((a) => a.answer.trim());
       const months = values.filter((v) => /^\d{4}-\d{2}(?:-\d{2})?$/.test(v)).map((v) => v.slice(0, 7));
+      if (new Set(months).size === 1) {
+        if (field.type === "date" && unique("Day for month-only school dates") === "First of the month") return confirmed(months[0] + "-01", "Expected graduation date");
+        if (/^yyyy$/i.test(field.placeholder || "") || field.maxLength === 4) return confirmed(months[0].slice(0, 4), "Expected graduation date");
+        if (/^mm\s*\/\s*yyyy$/i.test(field.placeholder || "")) return confirmed(months[0].slice(5) + "/" + months[0].slice(0, 4), "Expected graduation date");
+      }
       if (new Set(months).size === 1 && ["text", "textarea"].includes(field.type) && !field.placeholder) return result(months[0], "Confirmed expected graduation month");
       if (new Set(months).size === 1 && (field.type === "month" || /^YYYY-MM$/i.test(field.placeholder || ""))) return { ...result(months[0], "Expected graduation month"), requiresReview: true };
     }
@@ -1076,7 +1099,12 @@
         }
       }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
-        const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+        if (p === e.form) break;
+        const rowLabels = /^(?:company(?: name)?|employer(?: name)?|(?:job|position) title|role description|job description|location|from|to|start date|end date|i currently work here)$/.test(wording) ? [...p.querySelectorAll("input:not([type=hidden]),select,textarea,[role=combobox]")].map((c) => norm(ownLabel(c))) : [];
+        const hasSchool = rowLabels.some((s) => /^(?:school|school or university|university)(?: name)?$/.test(s));
+        if (hasSchool) break;
+        if (rowLabels.some((s) => /^(?:job title|position title)$/.test(s)) && rowLabels.some((s) => /^(?:company|company name|employer|employer name)$/.test(s))) return { employmentEntry: true };
+        const headings = [...p.querySelectorAll('h1,h2,h3,h4,h5,h6,legend,[role="heading"]')];
         if (!headings.length) continue;
         if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
         break;
@@ -1123,7 +1151,7 @@
         for (let row = e.parentElement; row && row !== document.body && row !== e.form; row = row.parentElement) {
           const inputs = [...row.querySelectorAll("input:not([type=hidden]),textarea,select,[role=combobox]")].filter((c) => visible(c));
           const schools = inputs.filter((c) => /^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
-          if (schools.length > 1) break;
+          if (schools.length > 1 || inputs.some((c) => /^(?:job title|position title|employer name)$/.test(norm(ownLabel(c))))) break;
           if (schools.length === 1 && inputs.some((c) => /^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))) {
             inSchoolRow = true;
             entrySchool = valueText(schools[0]);
@@ -1181,7 +1209,7 @@
       }
       return null;
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const sectionFor = (name) => {
       const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);
@@ -1719,7 +1747,16 @@
     if (Number.isInteger(half) && normalize(parts.slice(0, half).join(" ")) === normalize(parts.slice(half).join(" "))) field = { ...field, label: parts.slice(0, half).join(" ") };
     else field = { ...field, label: wording };
     const label = normalize(field.label).replace(/\b(required|optional)\b/g, "").trim();
-    if (field.employmentEntry && label !== "current professional title" && profile.answers?.some((a) => commonQuestion(a.question)?.question === "Employment experience" && normalize(a.answer) === "none")) return null;
+    if (field.employmentEntry && label !== "current professional title") {
+      const history = profile.answers?.filter((a) => commonQuestion(a.question)?.question === "Employment experience") || [];
+      if (history.length && history.every((a) => normalize(a.answer) === "none")) {
+        if (!field.filled && !field.disabled && ["text", "textarea"].includes(field.type) && (field.required && /^(?:job title|position title|company|company name|employer|employer name)$/.test(label) || /^(?:role description|job description)$/.test(label))) {
+          const value2 = field.type === "textarea" ? "I have never been employed." : "Never employed";
+          if (!field.maxLength || field.maxLength < 0 || field.maxLength >= value2.length) return { value: value2, display: value2, reason: "No prior employment", sourceQuestion: "Employment experience" };
+        }
+        return null;
+      }
+    }
     const common = commonQuestion(label), background = backgroundAnswer(label, profile, memory.filter((a) => a.scope === "*" || a.scope === origin && a.context === context));
     const rule = answerRule(field, profile, memory, origin, context);
     if (rule?.blocked) return null;
@@ -2094,7 +2131,12 @@
         }
       }
       for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
-        const headings = [...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+        if (p === e.form) break;
+        const rowLabels = /^(?:company(?: name)?|employer(?: name)?|(?:job|position) title|role description|job description|location|from|to|start date|end date|i currently work here)$/.test(wording) ? [...p.querySelectorAll("input:not([type=hidden]),select,textarea,[role=combobox]")].map((c) => norm(ownLabel(c))) : [];
+        const hasSchool = rowLabels.some((s) => /^(?:school|school or university|university)(?: name)?$/.test(s));
+        if (hasSchool) break;
+        if (rowLabels.some((s) => /^(?:job title|position title)$/.test(s)) && rowLabels.some((s) => /^(?:company|company name|employer|employer name)$/.test(s))) return { employmentEntry: true };
+        const headings = [...p.querySelectorAll('h1,h2,h3,h4,h5,h6,legend,[role="heading"]')];
         if (!headings.length) continue;
         if (headings.some((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h)))) && headings.every((h) => /^(employment history|work experience)( \d+)?$/.test(norm(text(h))))) return { employmentEntry: true };
         break;
@@ -2141,7 +2183,7 @@
         for (let row = e.parentElement; row && row !== document.body && row !== e.form; row = row.parentElement) {
           const inputs = [...row.querySelectorAll("input:not([type=hidden]),textarea,select,[role=combobox]")].filter((c) => visible(c));
           const schools = inputs.filter((c) => /^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
-          if (schools.length > 1) break;
+          if (schools.length > 1 || inputs.some((c) => /^(?:job title|position title|employer name)$/.test(norm(ownLabel(c))))) break;
           if (schools.length === 1 && inputs.some((c) => /^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))) {
             inSchoolRow = true;
             entrySchool = valueText(schools[0]);
@@ -2199,7 +2241,7 @@
       }
       return null;
     };
-    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
+    const snapshot = (e, index) => ({ index, label: label(e), type: type(e), name: e.name || "", id: e.id || "", maxLength: e.maxLength, yearOnly: /dateSectionYear-input$/i.test(e.id), filled: !empty(e), disabled: !!disabled(e), required: !!e.required || e.getAttribute("aria-required") === "true" || label(e).includes("*") || !!e.closest('[aria-required="true"]'), placeholder: e.placeholder || "", min: e.min || "", max: e.max || "", ...context(e), ...e.value && emailSave(e) ? { emailSave: true, emailValue: e.value } : {}, options: e.tagName === "SELECT" ? [...e.options].map((o) => ({ value: o.value, label: text(o), disabled: o.disabled })) : choice(e) ? radios(e).map((r, i) => ({ value: String(i), label: optionLabel(r), disabled: !!disabled(r) })) : void 0 });
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const sectionFor = (name) => {
       const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter((h) => visible(h) && norm(text(h)) === name);

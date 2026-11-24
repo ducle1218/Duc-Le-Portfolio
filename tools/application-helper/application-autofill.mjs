@@ -37,7 +37,17 @@ export function suggestField(field,profile,memory=[],origin='',context='',portfo
  if(Number.isInteger(half)&&normalize(parts.slice(0,half).join(' '))===normalize(parts.slice(half).join(' ')))field={...field,label:parts.slice(0,half).join(' ')};
  else field={...field,label:wording};
  const label=normalize(field.label).replace(/\b(required|optional)\b/g,'').trim();
- if(field.employmentEntry&&label!=='current professional title'&&profile.answers?.some(a=>commonQuestion(a.question)?.question==='Employment experience'&&normalize(a.answer)==='none'))return null;
+ if(field.employmentEntry&&label!=='current professional title'){
+  const history=profile.answers?.filter(a=>commonQuestion(a.question)?.question==='Employment experience')||[];
+  if(history.length&&history.every(a=>normalize(a.answer)==='none')){
+   if(!field.filled&&!field.disabled&&['text','textarea'].includes(field.type)&&
+      (field.required&&/^(?:job title|position title|company|company name|employer|employer name)$/.test(label)||/^(?:role description|job description)$/.test(label))){
+    const value=field.type==='textarea'?'I have never been employed.':'Never employed';
+    if(!field.maxLength||field.maxLength<0||field.maxLength>=value.length)return {value,display:value,reason:'No prior employment',sourceQuestion:'Employment experience'};
+   }
+   return null;
+  }
+ }
  const common=commonQuestion(label),background=backgroundAnswer(label,profile,memory.filter(a=>a.scope==='*'||a.scope===origin&&a.context===context));
  const rule=answerRule(field,profile,memory,origin,context);if(rule?.blocked)return null;
  if(/^(in )?(what|which) country( region)?$/.test(label))return null;
@@ -318,7 +328,12 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    }
   }
   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
-   const headings=[...p.querySelectorAll('h1,h2,h3,h4,legend,[role="heading"]')];
+   if(p===e.form)break;
+   const rowLabels=/^(?:company(?: name)?|employer(?: name)?|(?:job|position) title|role description|job description|location|from|to|start date|end date|i currently work here)$/.test(wording)?[...p.querySelectorAll('input:not([type=hidden]),select,textarea,[role=combobox]')].map(c=>norm(ownLabel(c))):[];
+   const hasSchool=rowLabels.some(s=>/^(?:school|school or university|university)(?: name)?$/.test(s));
+   if(hasSchool)break;
+   if(rowLabels.some(s=>/^(?:job title|position title)$/.test(s))&&rowLabels.some(s=>/^(?:company|company name|employer|employer name)$/.test(s)))return {employmentEntry:true};
+   const headings=[...p.querySelectorAll('h1,h2,h3,h4,h5,h6,legend,[role="heading"]')];
    if(!headings.length)continue;
    if(headings.some(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h))))&&headings.every(h=>/^(employment history|work experience)( \d+)?$/.test(norm(text(h)))))return {employmentEntry:true};
    break;
@@ -360,7 +375,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
    for(let row=e.parentElement;row&&row!==document.body&&row!==e.form;row=row.parentElement){
     const inputs=[...row.querySelectorAll('input:not([type=hidden]),textarea,select,[role=combobox]')].filter(c=>visible(c));
     const schools=inputs.filter(c=>/^(?:school|university|school or university)(?: name)?$/.test(norm(ownLabel(c))));
-    if(schools.length>1)break;
+    if(schools.length>1||inputs.some(c=>/^(?:job title|position title|employer name)$/.test(norm(ownLabel(c)))))break;
     if(schools.length===1&&inputs.some(c=>/^(?:degree|major|field of study)$/.test(norm(ownLabel(c))))){
      inSchoolRow=true;entrySchool=valueText(schools[0]);break;
     }
@@ -396,7 +411,7 @@ export function formBridge({action='scan',url,fields=[],origins=[]}={}){
   }
   return null;
  };
- const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),...(e.value&&emailSave(e)?{emailSave:true,emailValue:e.value}:{}),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
+ const snapshot=(e,index)=>({index,label:label(e),type:type(e),name:e.name||'',id:e.id||'',maxLength:e.maxLength,yearOnly:/dateSectionYear-input$/i.test(e.id),filled:!empty(e),disabled:!!disabled(e),required:!!e.required||e.getAttribute('aria-required')==='true'||label(e).includes('*')||!!e.closest('[aria-required="true"]'),placeholder:e.placeholder||'',min:e.min||'',max:e.max||'',...context(e),...(e.value&&emailSave(e)?{emailSave:true,emailValue:e.value}:{}),options:e.tagName==='SELECT'?[...e.options].map(o=>({value:o.value,label:text(o),disabled:o.disabled})):choice(e)?radios(e).map((r,i)=>({value:String(i),label:optionLabel(r),disabled:!!disabled(r)})):undefined});
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const sectionFor=name=>{
   const headings=[...document.querySelectorAll('h1,h2,h3,h4,h5,[role="heading"]')].filter(h=>visible(h)&&norm(text(h))===name);

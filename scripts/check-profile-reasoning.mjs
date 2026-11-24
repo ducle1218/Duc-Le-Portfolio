@@ -91,7 +91,7 @@ const facts={
  'Citizenships':'United States; Vietnam','Highest completed degree':'High school diploma',
  'Full-time student enrollment':'Yes','Degree being pursued':'Bachelor of Science in Mechanical Engineering',
  'Can provide a valid US passport, US birth certificate or certificate of naturalization on request':'Yes',
- 'SMS employer policy':'Defense or big tech only','SMS contact about my job application':'Yes','Email recruiting contact':'Yes',
+ 'SMS employer policy':'Tech or major defense only; exclude Leidos','SMS contact about my job application':'Yes','Email recruiting contact':'Yes',
  'Current or previous non-US government official':'No','Family or close relationship with a non-US government official':'No',
  'Family military service':'No','Current or former military spouse':'No','Relocation states':'NY, PA, NJ, CT, MA, VT, DE, MD, WV, OH'
 };
@@ -107,7 +107,7 @@ const relocate='Are you willing to relocate if required by the position?';
 for(const [location,value] of [['Albany, NY','Yes'],['Ohio, United States','Yes'],['Austin, TX','No'],['United States',undefined]])assert.equal(answer(relocate,{jobLocation:location}),value);
 const consent=email=>'Do you consent to being contacted by '+email+' about this or other opportunities? Click here for more information.';
 const options=['Yes I consent','No I do not consent'].map(label=>({label,value:label}));
-for(const [channel,employer,industry,expected] of [['email','Example','','Yes I consent'],['text/SMS','Example','','No I do not consent'],['text/SMS','Leidos','','Yes I consent'],['SMS','Example','Defense contracting','Yes I consent'],['SMS','Google','','Yes I consent'],['SMS','Googleton','','No I do not consent']]){
+for(const [channel,employer,industry,expected] of [['email','Example','','Yes I consent'],['text/SMS','Example','','No I do not consent'],['text/SMS','Leidos','Software development','No I do not consent'],['SMS','Example','Defense contracting','No I do not consent'],['SMS','Lockheed Martin','','Yes I consent'],['SMS','Example','Software development','Yes I consent'],['SMS','Google','','Yes I consent'],['SMS','Googleton','','No I do not consent']]){
  assert.equal(answer(consent(channel),{type:'select-one',jobEmployer:employer,jobIndustry:industry,options}),expected);
 }
 console.log('Employment eligibility, earned and pursued degrees, disclosure subjects, relocation and contextual contact consent passed.');

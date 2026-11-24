@@ -352,7 +352,7 @@
     if (contact && (channels.email || channels.sms) && (unique(policy) || unique("Email recruiting contact"))) {
       if (/\b(?:opt out|withdraw|decline|not|unsubscribe|marketing|promotional)\b/.test(stem)) return { blocked: true };
       let sms2;
-      if (channels.sms && unique(policy) === "Defense or big tech only") {
+      if (channels.sms && unique(policy) === "Tech or major defense only; exclude Leidos") {
         let hostname = "";
         try {
           hostname = new URL(origin).hostname;
@@ -361,8 +361,10 @@
         const tenant = hostname.match(/^([a-z0-9-]+)\.wd\d+\.myworkdayjobs\.com$/i)?.[1];
         const employerDomain = hostname.match(/(?:^|\.)(amazon|google|microsoft|leidos|lockheedmartin|northropgrumman|boeing|raytheon|nvidia|apple)\.(?:com|jobs)$/i)?.[1];
         const company = questionKey(field.jobEmployer || !context.startsWith("page:") && context || tenant || employerDomain).replace(/ (?:corporation|corp|inc|llc|company)$/, "");
-        const recognized = /^(?:lockheed(?: ?martin)?|leidos|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company);
-        sms2 = recognized || /\b(?:defen[sc]e|military contracting|big tech)\b/i.test(field.jobIndustry || "") ? "Yes" : "No";
+        const recognized = /^(?:lockheed(?: ?martin)?|northrop ?grumman|boeing|general dynamics|bae systems|raytheon|rtx|l3harris(?: technologies)?|anduril(?: industries)?|amazon(?: web services| com)?|aws|google|alphabet|microsoft|apple|meta(?: platforms)?|nvidia)$/.test(company);
+        const technology = /^(?:big tech|tech(?:nology)?|information technology(?: and services)?|software(?: development| publishing)?|computer software|semiconductors|computer hardware(?: manufacturing)?|technology information and internet)$/i.test(questionKey(field.jobIndustry));
+        const excluded = /^leidos\b/.test(company) || /^leidos/i.test(tenant || employerDomain || "");
+        sms2 = !excluded && (recognized || technology) ? "Yes" : "No";
       }
       const email = unique("Email recruiting contact");
       if (channels.email && channels.sms && sms2 !== email) return { blocked: true };

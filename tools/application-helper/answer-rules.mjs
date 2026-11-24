@@ -1,4 +1,4 @@
-import {reasonFromHistory} from './history-reasoner.mjs';
+import {reasonFromHistory} from './history-reasoner.mjs?v=20261123.3';
 import {questionKey,commonQuestion} from './common-questions.mjs?v=20261123.3';
 
 // Editable memories, seeded once by the helper. Dates are for summer 2027 only.

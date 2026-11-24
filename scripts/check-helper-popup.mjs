@@ -39,6 +39,19 @@ await $('scan').onclick();
 assert.match($('status').textContent,/Privacy notice/);
 assert.match($('suggestions').textContent,/Email/i);
 console.log('PASS: navigation controls do not mask the embedded application and unresolved required fields are reported.');
+let nextClicks=0;
+chrome.scripting.executeScript=async({args,target})=>{
+ const action=args[0].action;
+ if(action==='advance'){
+  assert.deepEqual(target.documentIds,['completed-step']);assert.equal(args[0].expectedEmail,'sample@example.com');
+  nextClicks++;return [{result:true}];
+ }
+ if(action==='scan-frame')return [{frameId:2,documentId:'completed-step',result:{url:childUrl,canAdvance:true,fields:[{type:'email',label:'Email',filled:true}]}}];
+ if(action==='scan')return [{result:{url:parentUrl,applicationFrames:nextClicks?[]:[childUrl],fields:nextClicks?[{type:'text',label:'Unknown follow-up'}]:[]}}];
+ return [{result:false}];
+};
+await $('scan').onclick();assert.equal(nextClicks,1);
+console.log('PASS: scanning a completed embedded step advances once and scans the following section.');
 const {accountCredential}=await import('../tools/application-helper/account-vault.mjs');
 const origin='https://careers.example',email='candidate@example.com',phrase='sample vault passphrase',sitePassword='Fixture-only-42!';
 const credentials={origin,email,employer:'First employer',phrase,repeat:phrase,sitePassword,signup:true};

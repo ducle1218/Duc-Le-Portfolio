@@ -953,7 +953,7 @@
   }
 
   // tools/application-helper/application-autofill.mjs?v=20261123.3
-  function formBridge({ action = "scan", url, fields = [], origins = [] } = {}) {
+  function formBridge({ action = "scan", url, fields = [], origins = [], expectedEmail = "" } = {}) {
     if (action === "scan-chat" && !origins.includes(location.origin)) return null;
     if (action === "scan-frame") {
       if (!origins.some((src) => {
@@ -1207,14 +1207,27 @@
       }
       return false;
     };
+    const phoneInput = (e) => e.matches("input") && (e.type === "tel" || /^(?:(?:primary|personal|mobile|cell|contact|home) )?(?:phone|telephone)(?: number)?$/.test(norm(label(e))));
+    const phoneError = (e) => {
+      if (!phoneInput(e) || !e.value) return false;
+      if (e.validity?.valid === false || e.getAttribute("aria-invalid") === "true") return true;
+      const ids = [e.getAttribute("aria-errormessage"), e.getAttribute("aria-describedby")].filter(Boolean).join(" ").split(/\s+/);
+      let help = ids.map((id) => document.getElementById(id)).filter((n) => n && visible(n)).map(text).join(" ");
+      for (let box = e.parentElement, depth = 0; box && box !== document.body && depth < 4; box = box.parentElement, depth++) {
+        if (box.querySelectorAll("input:not([type=hidden]),select,textarea").length !== 1) break;
+        help += " " + text(box);
+      }
+      return /\binvalid (?:phone|telephone|mobile)(?: number)?(?: format)?\b|\b(?:phone|telephone|mobile) number (?:format )?is (?:invalid|incorrect)\b|\benter a valid (?:phone|telephone|mobile) number\b/i.test(help);
+    };
     const context = (e) => {
       const wording = norm(label(e));
       if (radio(e)) {
         const selected = selectedRadio(e);
         if (selected && /^any company recruiter (?:worldwide|in my country region of residence)$/.test(norm(optionLabel(selected)))) return { currentRecruiterScope: optionLabel(selected) };
       }
-      if (/^(?:primary |mobile |cell |contact )?(?:phone|telephone)(?: number)?$/.test(wording) && e.matches("input")) {
+      if (phoneInput(e)) {
         const help = (e.getAttribute("aria-describedby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") + " " + text(e.parentElement);
+        if (phoneError(e)) return { digitsPhone: true, invalidPhone: true, phoneBefore: e.value };
         if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
       }
       if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
@@ -1450,19 +1463,34 @@
       }
       return complete;
     }
-    if (action === "advance") {
-      if (location.href !== url || document.querySelector("input[type=password]")) return false;
+    function nextControl() {
+      if ([...document.querySelectorAll("input[type=password]")].some(visible)) return null;
       const heading = [...document.querySelectorAll("h1,h2,[aria-current=step]")].filter(visible).map(text).join(" ");
       if (/review and submit|review your application|submit application|certification|signature/i.test(heading)) return false;
-      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit]")].filter((b) => visible(b) && !disabled(b));
-      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(text(b) || b.value))) return false;
-      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue|next(?: step| section)?)$/i.test((text(b) || b.value || "").trim()));
-      if (next.length !== 1) return false;
+      const caption = (b) => (text(b) || b.value || b.getAttribute("aria-label") || "").trim();
+      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit],[role=button]")].filter((b) => visible(b) && !disabled(b) && !b.closest("nav,[role=navigation]"));
+      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(caption(b)))) return false;
+      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue(?: to (?:the )?next (?:step|section))?|next(?: step| section)?)$/i.test(caption(b)));
+      const distinct = next.filter((b) => !next.some((other) => b !== other && b.contains(other)));
+      if (distinct.length !== 1) return null;
+      const button = distinct[0];
       const current = document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]');
       if (current && /review|submit|certif|signature|final/i.test(text(current))) return false;
-      if (next[0].type === "submit" && !/save (?:and|&) continue/i.test(text(next[0]) || next[0].value) && !current) return false;
-      if (next[0].form && !next[0].form.checkValidity() || [...document.querySelectorAll("[aria-invalid=true]")].some(visible)) return false;
-      next[0].click();
+      const scope = button.form || button.closest("form,main,[role=main],[role=dialog]") || document;
+      if (button.form?.matches(":invalid") || [...scope.querySelectorAll("[aria-invalid=true]")].some(visible)) return null;
+      const inputs = elements().filter((e) => scope.contains(e) && visible(e) && !disabled(e) && !e.closest("nav,[role=navigation],[role=search]") && !["hidden", "button", "submit", "reset", "search"].includes(type(e)));
+      if (inputs.some(phoneError) || !inputs.length && !current) return null;
+      if (inputs.some((e) => (e.required || e.getAttribute("aria-required") === "true") && empty(e))) return null;
+      if (!current && !inputs.some((e) => !empty(e))) return null;
+      const emails = inputs.filter((e) => e.type === "email" || e.autocomplete === "email" || /^(?:personal )?email(?: address)?$/.test(norm(label(e))));
+      if (expectedEmail && emails.some((e) => e.value && e.value.trim().toLowerCase() !== expectedEmail.trim().toLowerCase())) return null;
+      return button;
+    }
+    if (action === "advance") {
+      if (location.href !== url) return false;
+      const button = nextControl();
+      if (!button) return false;
+      button.click();
       return true;
     }
     if (action === "prepare-education") {
@@ -1517,7 +1545,7 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -1789,6 +1817,28 @@
             }
             if (/^MM\/DD\/YYYY$/i.test(e.placeholder || "")) fillValue = fillValue.slice(5, 7) + "/" + fillValue.slice(8, 10) + "/" + fillValue.slice(0, 4);
           }
+          if (phoneInput(e) && /^[\d ()+.-]+$/.test(fillValue)) {
+            const digits = fillValue.replace(/\D/g, "");
+            const options = [fillValue, digits];
+            if (digits.length === 10) {
+              const area = digits.slice(0, 3), local = digits.slice(3, 6), end = digits.slice(6);
+              options.push(area + "-" + local + "-" + end, "(" + area + ") " + local + "-" + end, area + " " + local + " " + end);
+            }
+            let accepted = false;
+            for (const candidate of new Set(options)) {
+              if (!e.isConnected || location.href !== url || disabled(e)) break;
+              Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(e, candidate);
+              for (const name of ["input", "change", "blur"]) e.dispatchEvent(new Event(name, { bubbles: true }));
+              await pause(160);
+              if (e.isConnected && e.value.replace(/\D/g, "") === digits && !phoneError(e)) {
+                accepted = true;
+                break;
+              }
+            }
+            if (accepted) filled++;
+            else skipped++;
+            continue;
+          }
           const proto = e.tagName === "SELECT" ? HTMLSelectElement.prototype : e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);
           e.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1900,7 +1950,7 @@
       const phone = String(profile.values?.phone || "");
       if (/^[+()\d .-]+$/.test(phone)) {
         const digits = phone.replace(/\D/g, "");
-        if (!field.filled || field.phoneBefore !== digits && field.phoneBefore?.replace(/\D/g, "") === digits) return { value: digits, display: digits, reason: "Phone format required by this form", sourceQuestion: "Profile phone" };
+        if (!field.filled || (field.invalidPhone || field.phoneBefore !== digits) && field.phoneBefore?.replace(/\D/g, "") === digits) return { value: digits, display: digits, reason: "Phone format required by this form", sourceQuestion: "Profile phone" };
       }
     }
     if (rule?.sourceQuestion === "Recruiter profile visibility" && field.currentRecruiterScope && field.type === "radio-group" && !field.disabled) {
@@ -2007,7 +2057,7 @@
     }
     return { value, display: value, ...review };
   }
-  function formBridge2({ action = "scan", url, fields = [], origins = [] } = {}) {
+  function formBridge2({ action = "scan", url, fields = [], origins = [], expectedEmail = "" } = {}) {
     if (action === "scan-chat" && !origins.includes(location.origin)) return null;
     if (action === "scan-frame") {
       if (!origins.some((src) => {
@@ -2261,14 +2311,27 @@
       }
       return false;
     };
+    const phoneInput = (e) => e.matches("input") && (e.type === "tel" || /^(?:(?:primary|personal|mobile|cell|contact|home) )?(?:phone|telephone)(?: number)?$/.test(norm(label(e))));
+    const phoneError = (e) => {
+      if (!phoneInput(e) || !e.value) return false;
+      if (e.validity?.valid === false || e.getAttribute("aria-invalid") === "true") return true;
+      const ids = [e.getAttribute("aria-errormessage"), e.getAttribute("aria-describedby")].filter(Boolean).join(" ").split(/\s+/);
+      let help = ids.map((id) => document.getElementById(id)).filter((n) => n && visible(n)).map(text).join(" ");
+      for (let box = e.parentElement, depth = 0; box && box !== document.body && depth < 4; box = box.parentElement, depth++) {
+        if (box.querySelectorAll("input:not([type=hidden]),select,textarea").length !== 1) break;
+        help += " " + text(box);
+      }
+      return /\binvalid (?:phone|telephone|mobile)(?: number)?(?: format)?\b|\b(?:phone|telephone|mobile) number (?:format )?is (?:invalid|incorrect)\b|\benter a valid (?:phone|telephone|mobile) number\b/i.test(help);
+    };
     const context = (e) => {
       const wording = norm(label(e));
       if (radio(e)) {
         const selected = selectedRadio(e);
         if (selected && /^any company recruiter (?:worldwide|in my country region of residence)$/.test(norm(optionLabel(selected)))) return { currentRecruiterScope: optionLabel(selected) };
       }
-      if (/^(?:primary |mobile |cell |contact )?(?:phone|telephone)(?: number)?$/.test(wording) && e.matches("input")) {
+      if (phoneInput(e)) {
         const help = (e.getAttribute("aria-describedby") || "").split(/\s+/).map((id) => text(document.getElementById(id))).join(" ") + " " + text(e.parentElement);
+        if (phoneError(e)) return { digitsPhone: true, invalidPhone: true, phoneBefore: e.value };
         if (/only digits and special characters|digits only|only (?:numbers|digits)|numbers only/i.test(help) || e.validity?.patternMismatch) return { digitsPhone: true, phoneBefore: e.value };
       }
       if (/^(reading|speaking|writing|understanding|listening)$/.test(wording)) {
@@ -2504,19 +2567,34 @@
       }
       return complete;
     }
-    if (action === "advance") {
-      if (location.href !== url || document.querySelector("input[type=password]")) return false;
+    function nextControl() {
+      if ([...document.querySelectorAll("input[type=password]")].some(visible)) return null;
       const heading = [...document.querySelectorAll("h1,h2,[aria-current=step]")].filter(visible).map(text).join(" ");
       if (/review and submit|review your application|submit application|certification|signature/i.test(heading)) return false;
-      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit]")].filter((b) => visible(b) && !disabled(b));
-      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(text(b) || b.value))) return false;
-      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue|next(?: step| section)?)$/i.test((text(b) || b.value || "").trim()));
-      if (next.length !== 1) return false;
+      const caption = (b) => (text(b) || b.value || b.getAttribute("aria-label") || "").trim();
+      const buttons = [...document.querySelectorAll("button,input[type=button],input[type=submit],[role=button]")].filter((b) => visible(b) && !disabled(b) && !b.closest("nav,[role=navigation]"));
+      if (buttons.some((b) => /submit (?:my |your )?application|finish application/i.test(caption(b)))) return false;
+      const next = buttons.filter((b) => /^(?:save (?:and|&) continue|continue(?: to (?:the )?next (?:step|section))?|next(?: step| section)?)$/i.test(caption(b)));
+      const distinct = next.filter((b) => !next.some((other) => b !== other && b.contains(other)));
+      if (distinct.length !== 1) return null;
+      const button = distinct[0];
       const current = document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]');
       if (current && /review|submit|certif|signature|final/i.test(text(current))) return false;
-      if (next[0].type === "submit" && !/save (?:and|&) continue/i.test(text(next[0]) || next[0].value) && !current) return false;
-      if (next[0].form && !next[0].form.checkValidity() || [...document.querySelectorAll("[aria-invalid=true]")].some(visible)) return false;
-      next[0].click();
+      const scope = button.form || button.closest("form,main,[role=main],[role=dialog]") || document;
+      if (button.form?.matches(":invalid") || [...scope.querySelectorAll("[aria-invalid=true]")].some(visible)) return null;
+      const inputs = elements().filter((e) => scope.contains(e) && visible(e) && !disabled(e) && !e.closest("nav,[role=navigation],[role=search]") && !["hidden", "button", "submit", "reset", "search"].includes(type(e)));
+      if (inputs.some(phoneError) || !inputs.length && !current) return null;
+      if (inputs.some((e) => (e.required || e.getAttribute("aria-required") === "true") && empty(e))) return null;
+      if (!current && !inputs.some((e) => !empty(e))) return null;
+      const emails = inputs.filter((e) => e.type === "email" || e.autocomplete === "email" || /^(?:personal )?email(?: address)?$/.test(norm(label(e))));
+      if (expectedEmail && emails.some((e) => e.value && e.value.trim().toLowerCase() !== expectedEmail.trim().toLowerCase())) return null;
+      return button;
+    }
+    if (action === "advance") {
+      if (location.href !== url) return false;
+      const button = nextControl();
+      if (!button) return false;
+      button.click();
       return true;
     }
     if (action === "prepare-education") {
@@ -2571,7 +2649,7 @@
       const posting = postings.length === 1 ? postings[0] : null;
       const jobEmployer = posting?.hiringOrganization?.name || "", jobIndustry = typeof posting?.industry === "string" ? posting.industry : "";
       const all = elements();
-      return { url: location.href, jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
+      return { url: location.href, stepLabel: text(document.querySelector('[aria-current="step"],[data-automation-id="progressBarActiveStep"]')) || text([...document.querySelectorAll("h1,h2")].find(visible)), canAdvance: !!nextControl(), jobLocation, jobEmployer, jobIndustry, needsEmailVerification: !!document.querySelector("input[type=password]") && /please verify your account|verify your account before you sign in|verify your email before/i.test(text(document.body)), fields: all.map(snapshot).filter((f) => choice(all[f.index]) ? choiceVisible(all[f.index]) : visible(all[f.index])).concat(listFields()), applicationFrames: [...document.querySelectorAll("iframe[src]")].filter(visible).flatMap((frame) => {
         try {
           const u = new URL(frame.src, location.href);
           return u.origin === location.origin && u.protocol === "https:" ? [u.href] : [];
@@ -2842,6 +2920,28 @@
               continue;
             }
             if (/^MM\/DD\/YYYY$/i.test(e.placeholder || "")) fillValue = fillValue.slice(5, 7) + "/" + fillValue.slice(8, 10) + "/" + fillValue.slice(0, 4);
+          }
+          if (phoneInput(e) && /^[\d ()+.-]+$/.test(fillValue)) {
+            const digits = fillValue.replace(/\D/g, "");
+            const options = [fillValue, digits];
+            if (digits.length === 10) {
+              const area = digits.slice(0, 3), local = digits.slice(3, 6), end = digits.slice(6);
+              options.push(area + "-" + local + "-" + end, "(" + area + ") " + local + "-" + end, area + " " + local + " " + end);
+            }
+            let accepted = false;
+            for (const candidate of new Set(options)) {
+              if (!e.isConnected || location.href !== url || disabled(e)) break;
+              Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(e, candidate);
+              for (const name of ["input", "change", "blur"]) e.dispatchEvent(new Event(name, { bubbles: true }));
+              await pause(160);
+              if (e.isConnected && e.value.replace(/\D/g, "") === digits && !phoneError(e)) {
+                accepted = true;
+                break;
+              }
+            }
+            if (accepted) filled++;
+            else skipped++;
+            continue;
           }
           const proto = e.tagName === "SELECT" ? HTMLSelectElement.prototype : e.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
           Object.getOwnPropertyDescriptor(proto, "value").set.call(e, fillValue);

@@ -8,7 +8,7 @@ These labels describe project topics. Individually attributed tool use is
 recorded in `project-facts.json`.
 `profile-facts.json` contains existing public profile statements.
 `evidence-lock.json` detects unreviewed source changes. See
-`../../APPLICATION_DATA.md` for the editing and review workflow.
+`../../docs/APPLICATION_DATA.md` for the editing and review workflow.
 
 The published detail views load `projects/box-*.html` only when selected. These
 files are the source of the displayed project write-ups. Shared controls live

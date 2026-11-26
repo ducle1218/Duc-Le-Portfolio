@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="../">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Duc Le | Mechanical Engineer</title>
@@ -9935,7 +9936,8 @@ void loop() {
 
       // Belt-and-suspenders against the click-focus outline flash: an inline
       // style always wins the cascade regardless of when the Tailwind CDN
-      // script injects its own stylesheet into <head>, so this can't lose a
+      // script injects its own stylesheet into <head>
+  <base href="../">, so this can't lose a
       // specificity/ordering race the way an external CSS rule could.
       document.querySelectorAll('details[data-group] > summary').forEach(function (s) {
         s.style.outline = 'none';
